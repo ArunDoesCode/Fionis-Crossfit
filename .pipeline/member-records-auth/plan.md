@@ -55,6 +55,13 @@ before Stream 0's S3 (`writeAudit`, Origin check) anyway. Backend-dev then build
 1, 3, 4) wait for Stream 0's frontend S3 (shell, messages, `API_ROUTES`).
 Contract decisions accepted (contract.md): `expiresAt` = the sign-in's expiry (not the access token's); E05 checks the
 signature only (a revoked session's token still reads /me until it expires, BR-REC-33); `TRUST_PROXY_HOPS` default 0.
+Test decisions accepted: BR-REC-28 "service test with injected clock" is covered over HTTP by moving the
+`login_attempts` / `auth_sessions` timestamps back (no service names in the contract); `signin/**` runs a real API
+child process (unique `X-Forwarded-For`, `TRUST_PROXY_HOPS=1`), `session/**` uses `createApp().request` + a probe child
+for env-dependent rules; audit `session_id` = acting/affected session (null for E01 failures and `--unlock`).
+Red runs: signin 94 (90 red, 4 pass), session 77 (64 red, 13 pass). Frontend parts of BR-REC-01, 02, 25, 27, 29, 35
+(Login copy, Account form, cache clear) go to a frontend test-writer brief with slices 1, 3, 4.
+Run the two folders on separate DBs when run in parallel (one-row tables); the normal `bun test` run is serial.
 
 - [ ] **1. Login + lock** — BR-REC-25, 27, 01, 28, 29, 171
   - backend: E01 (lock check → argon2id verify → global counter in `login_attempts`, one atomic update; 429 `LOGIN_LOCKED`
