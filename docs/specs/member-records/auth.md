@@ -2,7 +2,7 @@
 module: member-records/auth
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 1
+version: 2
 frozen_on: 2026-10-03
 owner: Arun
 depends_on: [member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -48,12 +48,12 @@ screens S1 Login, S17 Settings → Account · `frontend/src/proxy.ts` · command
 | BR-REC-25 | There is exactly one login; the developer creates it with `bun run bootstrap-admin`; there is no sign-up page. | Fresh install → Login page has no "create account" | No public route creates an account; script refuses if one exists |
 | BR-REC-26 | A forgotten password is reset by the developer with `bootstrap-admin --reset`, which signs out every device. | Owner forgets password → developer resets → all phones see Login | Script test: all sessions revoked, reason `reset` |
 | BR-REC-27 | Passwords are 8–128 characters of any kind (no other complexity rules) and stored only as an argon2id hash. | 129 characters → "Use at most 128 characters" | DB value starts `$argon2id$`; no plain text anywhere |
-| BR-REC-28 | The lock is one counter for the whole login (every device, network and typed username), kept in the database so a restart does not reset it; tries older than 15 minutes drop off; a correct sign-in clears the count. | 3 wrong on the tablet + 2 wrong on a phone → locked; 4 wrong, wait 16 min, 1 wrong → not locked | Service test with injected clock; tries from two addresses add up |
+| BR-REC-28 | The lock is one counter for the whole login (every device, network and typed username), kept in the database so a restart does not reset it; the 15 minutes start at the first wrong try, after which the count starts again from zero; a correct sign-in clears the count. | 3 wrong on the tablet + 2 wrong on a phone → locked; 4 wrong, wait 16 min, 1 wrong → not locked | Service test with injected clock; tries from two addresses add up |
 | BR-REC-29 | While locked, every try (even the right password) is refused without extending the lock, and Login says, without naming which part was wrong, "Too many wrong tries, so sign-in is paused. Try again in 9 minutes." (minutes rounded up). | Locked 10:00, try 10:06 → "… Try again in 9 minutes."; at 10:15 the right password works | 429 with `details.retryAfterSeconds` and `Retry-After` header; lock end unchanged by tries |
 | BR-REC-171 | A lock only stops new sign-ins and password changes: devices already signed in keep working, and the developer can end a lock at once with `bun run bootstrap-admin --unlock`, which is logged. | Stranger locks login at 10:00 → gym tablet keeps working; developer unlocks → owner signs in at 10:02 | E02 refresh succeeds while locked; script resets the counter; audit row `auth.unlock` |
 | BR-REC-30 | Signing in sets two cookies, both httpOnly, Secure in production, SameSite=Lax, Path=/: `access_token` (JWT HS256, 15 min) and `refresh_token` (random 256-bit value; the database keeps only its HMAC). | Page script reads `document.cookie` → sees neither | Cookie attribute test; DB has no raw token |
 | BR-REC-31 | "Keep me signed in" is ticked by default: ticked → signed in until 7 days without use (every use starts the 7 days again); unticked → cookie ends when the browser closes and the server ends it after 12 hours. | Tablet used daily → never asked; phone unused 6 days → still in; 8 days → Login | Service test of `expires_at` sliding 7 days and the 12 h cap |
-| BR-REC-32 | Each refresh replaces the refresh token; the replaced one still works for 60 seconds (two tabs at once); using it later ends that device's sign-in and is logged as a stolen-token signal. | Old token replayed after 2 min → 401 `SESSION_EXPIRED`, session revoked `reuse` | Rotation, grace and reuse tests |
+| BR-REC-32 | Each refresh replaces the refresh token; the replaced one still works for 60 seconds (two tabs at once: it gets a new access token and the sign-in is not replaced again); using it later ends that device's sign-in and is logged as a stolen-token signal. | Old token replayed after 2 min → 401 `SESSION_EXPIRED`, session revoked `reuse` | Rotation, grace and reuse tests |
 | BR-REC-33 | Access tokens are checked by signature only (no database read), so a signed-out device loses access within 15 minutes at most. | After "Sign out all devices", a copied access token works until it expires, refresh fails at once | Token test |
 | BR-REC-34 | Changing the password signs out all other devices and keeps this one signed in; a wrong current password shows "Current password is not right", counts toward the lock and never signs out. | Wrong current password → 400 `CURRENT_PASSWORD_WRONG` | Other sessions revoked `password_change`; this one kept |
 | BR-REC-35 | "Sign out" ends this device's sign-in and clears cookies and the app's cached data; "Sign out all devices" ends every sign-in, this one too. | Sign out → back button shows Login, not member data | `queryClient.clear()` called; sessions revoked |
@@ -63,8 +63,8 @@ screens S1 Login, S17 Settings → Account · `frontend/src/proxy.ts` · command
 | BR-REC-39 | Opening any page without a sign-in goes to Login, then back to the page asked for; `next` must be a path inside the app, otherwise Home. The page guard never runs on `/api/*`. | `/admin/members/42` → Login → `/admin/members/42`; `next=https://evil.com` → Home | `proxy.ts` test; matcher excludes `/api` |
 | BR-REC-40 | If the access cookie has expired but the refresh cookie is valid, the page guard refreshes on the server before the page renders, so no Login or flash appears. | Phone idle 2 hours → tap Members → list shows | Proxy test: new cookies on response and forwarded request |
 | BR-REC-41 | When an API call gets 401, the app refreshes once and retries; if that fails it shows "Please sign in again", keeps unsaved assessment drafts (BR-REC-85) and opens Login with the current page as `next`. | Password changed on tablet → phone's next tap → Login, draft kept | One refresh in flight for parallel 401s |
-| BR-REC-42 | Opening Login while signed in goes straight to Home. | Signed-in tablet opens `/login` → `/admin` | Proxy test |
-| BR-REC-43 | Sign-in events go to the change log (success, wrong password, lock, unlock, sign out, sign out all, password change, stolen-token signal) with time, network address and device type, never the password. | Wrong password → `auth.login_failed` row without the typed text | Audit test greps for the password |
+| BR-REC-42 | Opening Login while signed in goes straight to Home, except when the app just sent the device there because its sign-in ended (BR-REC-41). | Signed-in tablet opens `/login` → `/admin` | Proxy test |
+| BR-REC-43 | Sign-in events go to the change log (success, wrong password, lock, unlock, sign out, sign out all, password change, stolen-token signal, login created and password reset by the developer's command) with time, network address and device type, never the password. | Wrong password → `auth.login_failed` row without the typed text | Audit test greps for the password |
 | BR-REC-44 | Changing the access secret is seamless (devices refresh); changing the refresh secret signs every device out and is only for a leaked secret. | Rotate `ACCESS_TOKEN_SECRET` → users notice nothing | Test: old access token → 401 → refresh succeeds |
 
 ## Known trade-off (Q1 = B, accepted 2026-10-03)
@@ -140,3 +140,7 @@ username, a lock per network address.
 - 2026-10-03 v0 — answers folded: global lock (BR-REC-28, 29 reworded, new BR-REC-171, trade-off section);
   7-day sliding sign-in (BR-REC-31, env); hosting chain D-018; S17 wireframe shortened to one line
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-03 v2 — clarified during build (review R-1, R-4, R-5, R-6; no change of intent): BR-REC-28 window starts at
+  the first wrong try (one counter row); BR-REC-32 a replaced token inside the grace gets an access token only, no second
+  rotation; BR-REC-42 does not apply right after BR-REC-41 sent the device to Login; BR-REC-43 also logs the two
+  developer-command events.

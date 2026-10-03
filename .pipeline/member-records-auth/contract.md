@@ -62,8 +62,9 @@ Uses `DATABASE_URL` of its own process (tests spawn it with the `*_test` URL). N
 Modes are exclusive (2 if mixed or on unknown flags); `--username` with `--reset` is rejected (2). Prompts only when a value is missing; no TTY and a missing value → 2.
 
 Also written (build, 2026-10-03): audit actions `auth.account_created` and `auth.password_reset` (script; `session_id` null, device
-"bootstrap-admin"); script exit code 3 = unexpected failure. Refresh grace keeps one replaced token: a third concurrent refresh with the same
-old token gets 401 `SESSION_EXPIRED` without a revoke; a replaced token used after 60 s revokes the sign-in (`reuse`).
+"bootstrap-admin"); script exit code 3 = unexpected failure. Refresh grace (spec v2 BR-REC-32, review R-1): a replaced token used within 60 s of the rotation gets 200 with a new
+`access_token` cookie only — no rotation, no new `refresh_token` cookie, `prev_token_hash` unchanged; used later it revokes
+the sign-in (`reuse`). `--reset` does not clear the lock: run `--unlock` too.
 
 ## Env (backend; both new ones have defaults, existing `.env` files keep working)
 `SESSION_SHORT_TTL_SECONDS` int > 0, default 43200 · `TRUST_PROXY_HOPS` int ≥ 0, default 0 (D-018 production value 1, see `.env.example`).
@@ -80,7 +81,8 @@ Existing: `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `ACCESS_TOKEN_TTL_SECON
   `POST <API base>/api/auth/refresh` with headers `Cookie: refresh_token=<value>` and **`Origin: <APP_ORIGIN>`** (a server fetch sends no Origin, so
   set it or get 403). On 200 read `response.headers.getSetCookie()`: copy every `Set-Cookie` to the response **and** put the new `access_token` /
   `refresh_token` values into the forwarded request's `Cookie` header so the page renders signed in. Any other answer → `/login?next=`.
-  Matcher excludes `/api`, static files, manifest. Signed in on `/login` → `/admin`.
+  Forward the incoming `X-Forwarded-For` (unchanged) and `User-Agent` on that E02 call (review R-2, BR-REC-38/43).
+  Matcher excludes `/api`, static files, manifest. Signed in on `/login` → `/admin`, except `/login?reason=expired` (BR-REC-42 v2), which renders Login.
 - **Fetch wrapper (browser):** only a 401 with `code: "UNAUTHORIZED"` triggers a refresh (E01's 401 `INVALID_CREDENTIALS` and E06's 400 never do). One
   `POST /api/auth/refresh` in flight for parallel 401s (same origin: the browser adds cookies and `Origin`), then retry the call once. Refresh answers
   401 → "Please sign in again", keep drafts, go to `/login?next=<current path>`. E03 / E04 success → `queryClient.clear()` then `/login`.
