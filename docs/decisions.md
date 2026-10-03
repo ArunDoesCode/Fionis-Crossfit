@@ -72,3 +72,42 @@ Use `<HugeiconsIcon icon={SomeIcon} />`. `lucide-react` is removed. Why: the sha
 Owner chose v9. React Compiler needs no `'use no memo'` for stateless tables. Pages never import tanstack directly:
 they build columns with `createDataTableColumnHelper` from `components/common/DataTable`. Server-paginated tables register
 no features (nuqs `offset`/`limit` + `TablePagination`). Patterns: `docs/standards/nextjs-standards.md` §15.
+
+**D-015 · 2026-10-03 · member-records sign-in: 15-min access JWT + rotating opaque refresh token in the DB, both httpOnly cookies on the app's own address (`/api` forwarded by Next.js).**
+Access: HS256 JWT checked by signature only. Refresh: random 256-bit value, stored as HMAC in `auth_sessions`,
+rotated on each use with a 60 s grace, reuse revokes the session. Cookies SameSite=Lax, Path=/, Secure in prod
+(refresh cookie deviates from nextjs-standards §8.1 Strict/path-scoped: the page guard must read it); writes
+need a matching `Origin`. Lock counter in the DB (`login_attempts`). `proxy.ts` refreshes on the server when
+the access cookie is gone. Why: the standard asks for short access + rotating refresh (§8.2, §13); the owner
+must be able to sign out every device after a password change (BR-REC-02, 34); same-origin cookies avoid CORS
+preflights and cross-site cookie problems on phones. Rejected: stateless refresh JWT (no revoke), a DB read
+on every request (heavier, not the standard), tokens in browser storage (forbidden), cross-site API domain.
+Detail: `docs/specs/member-records/auth.md`.
+
+**D-016 · 2026-10-03 · member-records v2 is split into 10 sub-specs with one continuous BR-REC-NN sequence, built contract-first (Stream 0) then in parallel streams; UI is mobile-first.**
+Shared sub-specs (data-model, api-contract, ux, performance) are built once by Stream 0; six feature sub-specs
+(auth, members, setup, assessments, due-list, progress) own disjoint files. IDs continue from BR-REC-25 so
+they stay unique across sub-specs; v1 rules moved word for word. Why: the user wants parallel sessions and a
+detailed, reviewable plan; one ID sequence keeps tests (`BR-REC-NN …`) unambiguous. User decision: phone + tablet
+first (bottom tabs, bottom action bar, no Reset button) — overrides `nextjs-standards.md` §14 button placement
+for this app; record in `frontend/CLAUDE.md` when Stream 0 lands. Open: per-stream worktrees vs the
+one-worktree rule (index Q6). Rejected: per-sub-spec ID prefixes (two IDs for one module), one 400-line spec.
+
+**D-017 · 2026-10-03 · member-records only: one session + worktree + branch per build stream; each stream opens its own PR to `main`.**
+Each stream (index "Parallel build plan") runs in its own desktop-app session and worktree, started from fresh
+`main`. Stream 0 merges first (M0); streams A–F start from that `main`; PRs merge in merge-point order and open
+streams sync from `main` after each merge. Why: the user wants parallel sessions, which need separate working
+copies; streams own disjoint files, so merges stay small. Scoped exception to the root CLAUDE.md rule "one
+branch, one worktree" (that file is not changed; every other module keeps the rule). Answers index Q6 of D-016.
+Amended 2026-10-03: the first draft used an integration branch `work/member-records` and branches
+`work/mr-<stream>` with one PR at M4; dropped because the app makes one worktree per session from `main` and the
+user merges PRs on GitHub. Rejected: one session at a time (no parallelism).
+
+**D-018 · 2026-10-03 · Hosting: one small server in Mumbai (ap-south-1), next to the Supabase database, runs Next.js and the API behind one public address.**
+Chain: browser → HTTPS front on the server → Next.js → API on the same machine; the browser calls relative
+`/api/…` and Next forwards it (`NEXT_PUBLIC_API_URL=/api`, server code uses `API_URL`); the API port is not
+public. Why: same origin means first-party cookies, no CORS preflight, CSRF handled by SameSite=Lax + Origin
+check (D-015); one hop from Next to the API and a few ms to the database meet the speed budgets
+(performance.md); one deploy for a solo developer. Rejected: Vercel for Next + a separate API host (two deploys,
+cross-site cookie and CORS set-up, an extra network hop). The provider and machine size are picked at deploy
+time; they must be in ap-south-1. Answers member-records index Q7.

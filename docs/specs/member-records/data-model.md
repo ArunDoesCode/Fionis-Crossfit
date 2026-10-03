@@ -1,0 +1,151 @@
+---
+module: member-records/data-model
+parent: member-records
+status: frozen           # draft | frozen | changed-after-freeze
+version: 1
+frozen_on: 2026-10-03
+owner: Arun
+depends_on: []
+---
+# Member records · Data model (shared contract)
+
+## Summary
+
+Every table, column, constraint and index of member-records (Drizzle files in `backend/src/db/schemas/`), built
+once by **Stream 0** first; other streams only read it, a change goes through `/freeze` on this file. Behaviour
+rules per table live in the sub-spec named in its comment. Done = one migration builds it all on an empty
+database, `bun run seed` adds settings + the catalog, `bun run seed:perf` the 1,000-member perf data set.
+
+## Owns
+
+Rules BR-REC-163…170, 175 · all 13 tables below · commands `db:reset`, `seed`, `seed:perf`.
+
+## Who can do what
+
+| Action | Allowed |
+|---|---|
+| change the schema | developer only, through a reviewed migration file |
+
+## Rules
+
+| ID | Rule | Example (given → then) | Check |
+|---|---|---|---|
+| BR-REC-163 | Calendar days (birth, join, membership, assessment, due, snooze) are `date` with no time; moments (created, login, change log) are `timestamptz` in UTC. | Assessment typed at 23:30 IST on 3 Oct → `assessed_on` = 2026-10-03 | Schema review: no day column is `timestamptz` |
+| BR-REC-164 | Values are `numeric(12,3)`: durations in whole seconds, weights in kg, never a formatted text like "2:02". | Plank "2:02" → 122.000 | Repository test reads back 122 |
+| BR-REC-165 | Rows are never hard-deleted, except: an assessment with its values (Delete), sign-ins 30 days after they end, idempotency keys after 48 h. | Archive a member → row stays, `archived_at` set | Grep: no other `delete` in repositories |
+| BR-REC-166 | `measurements.member_id` and `measured_on` copy their assessment's member and date in the same transaction; moving an assessment's date moves its values. | Move 12 Mar → 15 Mar → all 9 values now 15 Mar | Repository test after PATCH date |
+| BR-REC-167 | The database itself blocks overlapping membership periods (exclusion constraint), behind the service check of BR-REC-09. | Two renewals saved at the same moment → second gets 409 `PERIOD_OVERLAP` | Concurrent insert test |
+| BR-REC-168 | Exactly one login account, one settings row and one lock-counter row can exist. | Second account insert → refused by the database | Constraint test for all three tables |
+| BR-REC-169 | `pg_trgm` and `btree_gist` are created by the first migration; production changes use reviewed migration files, never `db:push`. | Fresh Supabase DB → migrate → search index exists | CI runs migrations on an empty DB |
+| BR-REC-170 | `seed:perf` refuses any non-local database and creates 1,000 members (half male, ages 18–65, joined over 3 years, 10% archived) with continuous memberships, monthly body composition and two-monthly fitness tests with realistic noise. | Run against a Supabase URL → exits with an error | Script guard test; row counts printed |
+| BR-REC-175 | Every enum-like column is `text` with a check listing its allowed values (never a Postgres enum), and each list equals the one TS union all layers use. | Insert plan "weekly" → refused by the database | CI schema test compares each check list with its union; grep finds no `pgEnum` |
+
+## Tables
+
+Audit columns are `created_at` / `updated_at` only: D-012 has no per-person attribution; the change log
+(`audit_log`) records the sign-in (session) instead. Enum-like columns: `text` + check, one TS union each (BR-REC-175).
+
+```sql
+-- infrastructure (Stream 0) -----------------------------------------------------------------
+audit_log (id bigint identity pk, at timestamptz not null default now(),
+  session_id uuid,                       -- null = server command or failed sign-in
+  action text not null,                  -- 'member.update', 'auth.login_failed', 'auth.unlock', ...
+  entity text, entity_id text,
+  before jsonb, after jsonb,             -- changed fields only; never passwords or tokens
+  ip text, device text)                  -- device = "Chrome on Android", max 60 chars
+  index (entity, entity_id, at desc); index (at desc)
+idempotency_keys (session_id uuid, key uuid, endpoint text not null, request_hash text not null,
+  status_code int not null, response jsonb not null, created_at timestamptz not null default now(),
+  primary key (session_id, key))         -- pruned after 48 h (BR-REC-156)
+
+-- auth (auth.md) ----------------------------------------------------------------------------
+app_account (id uuid pk, username text not null unique,   -- stored lower-case
+  password_hash text not null,           -- argon2id via Bun.password (BR-REC-27)
+  password_changed_at timestamptz not null, created_at, updated_at)
+  unique index app_account_one_row on ((true))
+auth_sessions (id uuid pk, account_id uuid not null references app_account on delete cascade,
+  token_hash text not null unique,       -- HMAC-SHA256(REFRESH_TOKEN_SECRET, refresh token)
+  prev_token_hash text, rotated_at timestamptz,   -- 60 s grace (BR-REC-32)
+  remember boolean not null, expires_at timestamptz not null,   -- remember: last use + 7 days; else 12 h cap
+  last_used_at timestamptz not null, revoked_at timestamptz,
+  revoke_reason text check in ('logout','logout_all','password_change','reuse','reset','expired'),
+  ip text, device text, created_at)
+  index (prev_token_hash); index (account_id) where revoked_at is null
+login_attempts (id smallint pk default 1 check (id = 1),   -- ONE row: the lock is global (auth Q1 = B)
+  failed_count smallint not null default 0, window_started_at timestamptz,
+  locked_until timestamptz, updated_at)  -- seeded by the migration; reset, never deleted
+
+-- setup (setup.md) --------------------------------------------------------------------------
+gym_settings (id smallint pk default 1 check (id = 1),
+  gym_name text not null default 'Fionis CrossFit', timezone text not null default 'Asia/Kolkata',
+  upcoming_lead_days smallint not null default 7 check (between 0 and 30),
+  expiry_lead_days smallint not null default 14 check (between 0 and 60), updated_at)
+assessment_types (id uuid pk, name text not null, interval_count smallint not null check (between 1 and 24),
+  interval_unit text not null check in ('week','month'), is_active boolean not null default true,
+  sort_order int not null, created_at, updated_at)
+  unique index (lower(name))
+metrics (id uuid pk, type_id uuid not null references assessment_types on delete restrict,
+  name text not null, unit text not null default '',      -- max 12 chars, label only
+  datatype text not null check in ('number','duration'),
+  decimals smallint not null default 1 check (between 0 and 2),   -- duration → 0
+  better text not null check in ('higher','lower','none'),        -- 'none' = No direction (setup Q1 = A)
+  plausible_min numeric(12,3), plausible_max numeric(12,3),       -- min < max when both set
+  interval_count smallint check (between 1 and 24), interval_unit text check in ('week','month'),
+  table_group text, table_part text check in ('whole_body','arms','trunk','legs'),
+  is_active boolean not null default true, sort_order int not null, created_at, updated_at)
+  -- interval_count/unit: both or neither; table_group/part: both or neither
+  unique index (type_id, lower(name)); index (type_id, sort_order)
+
+-- members (members.md) ----------------------------------------------------------------------
+members (id uuid pk, full_name text not null, phone text not null,
+  phone_digits text not null,            -- digits only, '+' dropped (BR-REC-46)
+  email text, date_of_birth date not null, sex text not null check in ('male','female'),
+  joined_on date not null, objective text check in ('fat_loss','strength','general_fitness','other'),
+  notes text, archived_at timestamptz, created_at, updated_at)   -- archived: hidden, still editable (BR-REC-58)
+  gin (lower(full_name) gin_trgm_ops); gin (phone_digits gin_trgm_ops); gin (lower(email) gin_trgm_ops)
+  index (right(phone_digits, 10)); index (lower(full_name), id) where archived_at is null
+membership_periods (id uuid pk, member_id uuid not null references members on delete restrict,
+  plan text not null check in ('monthly','quarterly','half_annual','annual'),
+  start_on date not null, end_on date not null check (end_on >= start_on),  -- end set by service (BR-REC-51)
+  created_at, updated_at,
+  exclude using gist (member_id with =, daterange(start_on, end_on, '[]') with &&))
+  index (member_id, start_on desc); index (end_on)
+
+-- assessments (assessments.md) --------------------------------------------------------------
+assessments (id uuid pk, member_id uuid not null references members on delete restrict,
+  type_id uuid not null references assessment_types on delete restrict,
+  assessed_on date not null, is_estimated boolean not null default false, created_at, updated_at,
+  unique (member_id, type_id, assessed_on))
+  index (member_id, assessed_on desc)
+measurements (assessment_id uuid not null references assessments on delete cascade,
+  metric_id uuid not null references metrics on delete restrict,
+  member_id uuid not null references members, measured_on date not null,   -- copies (BR-REC-166)
+  value numeric(12,3) not null, created_at, updated_at,
+  primary key (assessment_id, metric_id))
+  index (member_id, metric_id, measured_on desc); index (metric_id, measured_on)   -- member maths; progress
+
+-- due list (due-list.md) --------------------------------------------------------------------
+due_overrides (member_id uuid not null references members, type_id uuid not null references assessment_types,
+  kind text not null check in ('flag','snooze'),
+  set_on date not null,                  -- gym day it was set (flag clearing, BR-REC-98)
+  until_on date,                         -- snooze only, at most set_on + 90 days
+  created_at, primary key (member_id, type_id), check ((kind = 'snooze') = (until_on is not null)))
+```
+
+## Not now
+
+Summary tables (performance.md: only if a budget fails), multi-gym `gym_id`, per-person `created_by`,
+soft-delete of assessments.
+
+## Questions (all answered 2026-10-03)
+
+| # | Question | Options | Answer |
+|---|---|---|---|
+| Q1 | (developer) Enum-like columns as Postgres enums or `text` + check? | **A** `text` + check (easier migrations) / B `pgEnum` | **A** → BR-REC-175 |
+
+## Changelog
+
+- 2026-10-03 v0 — draft, split out of member-records v2
+- 2026-10-03 v0 — answers folded: `login_attempts` is one row (global lock), BR-REC-165/168 updated; 7-day
+  sign-in noted on `auth_sessions`; archived members stay editable; new BR-REC-175 (text + check, CI test)
+- 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
