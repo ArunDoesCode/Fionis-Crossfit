@@ -1,0 +1,91 @@
+name: CI
+
+# Aligned with the checks in CLAUDE.md. Package jobs skip themselves until the package exists
+# (see docs/FOUNDATIONS.md); adjust env names to backend/src/lib/env.ts once it is written.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('backend/package.json') != '' }}
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gym_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Only the test DB exists in CI. DATABASE_URL is required by env.ts but never connected to:
+      # `bun test` swaps it for DATABASE_URL_TEST (preload refuses anything not ending in _test).
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/gym
+      DATABASE_URL_TEST: postgres://postgres:postgres@localhost:5432/gym_test
+      ACCESS_TOKEN_SECRET: ci-access-token-secret-0123456789abcdef
+      REFRESH_TOKEN_SECRET: ci-refresh-token-secret-0123456789abcdef
+      APP_ORIGIN: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - name: Test DB schema
+        run: bun run db:test:prepare
+      - run: bun test
+      - name: Contract manifest + openapi are committed and current
+        run: bun run contract:check
+
+  frontend:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend/package.json') != '' }}
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      API_URL: http://localhost:4000/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun test --pass-with-no-tests
+
+  member:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('member/package.json') != '' }}
+    defaults:
+      run:
+        working-directory: member
+    env:
+      EXPO_PUBLIC_API_URL: http://localhost:4000/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun test --pass-with-no-tests
+
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shared golden fixtures identical in backend and frontend
+        run: bash scripts/check-fixtures.sh

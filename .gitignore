@@ -1,0 +1,82 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# --- Logs / temp ---
+*.log
+logs/
+.cache/
+.temp/
+tmp/
+temp/
+
+# --- Dependencies ---
+node_modules/
+
+# --- Build outputs ---
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# --- Next.js ---
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# --- Expo / React Native ---
+member/.expo/
+member/dist/
+member/ios/
+member/android/
+member/web-build/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# --- Environment & secrets ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.keystore
+*.asc
+*.gpg
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# --- Local databases / dumps ---
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.dump
+
+# --- Test artifacts ---
+playwright-report/
+test-results/
+*.lcov
+
+# --- Claude Code / pipeline tooling ---
+.claude/worktrees/
+.claude/settings.local.json
+# CodeGraph index (per worktree, rebuilt by /feature)
+.codegraph/
+
+# backend/.contracts/api-manifest.json and openapi.json are generated AND committed;
+# CI's `contract:check` fails if they are stale.
