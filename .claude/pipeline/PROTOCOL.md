@@ -61,6 +61,7 @@ reason. Findings table: `# | severity | area | file:line | finding | fix`.
 - test-writer: only test files and the manual checklist. Test files = `**/*.test.ts(x)`, `backend/tests/**`
   (incl. `fixtures/`), `backend/src/scenarios/**`, `frontend/tests/**`, `frontend/e2e/**`, `member/tests/**`, `member/.maestro/**`
 - coordinator: `.pipeline/**`, `docs/**`, GitHub issues · reviewer, test-runner, explorer: read-only
+- While agents have uncommitted work in the worktree, the coordinator commits with explicit paths, never `git commit -a`.
 
 ## Test independence (non-negotiable)
 Tests are the spec turned into code; they must not be shaped by the implementation.

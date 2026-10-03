@@ -65,7 +65,7 @@ hold the detailed conventions the dev/review agents read.
 - Each item is its own commit (`fix(…)`, `test(…)`, `feat(…)`, `docs(…)`); STATUS/map updates are commits too.
 - **Don't push until a batch is ready.** One PR per batch, only when the user asks or a related group is done
   and checked. The user merges; then start the next batch from fresh `main`.
-- Pipeline PRs carry label `agent-pipeline`; pipeline replies on GitHub start with `🤖`. CI green before handing a PR over.
+- Pipeline PRs carry label `agent-pipeline`; pipeline replies on GitHub start with `🤖`. CI green before handing a PR over — check the checks really ran (`gh pr checks`); a 0 s failure means GitHub rejected the workflow file.
 
 ## Checks (run before calling anything done)
 - Backend: `cd backend && bun run typecheck && bun run lint && bun test` (needs `docker compose up -d` + `bun run db:test:prepare`; tests only ever touch the `*_test` DB)
