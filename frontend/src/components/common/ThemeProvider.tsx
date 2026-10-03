@@ -7,9 +7,9 @@ function ThemeProvider({ children, ...props }: React.ComponentProps<typeof NextT
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
+      defaultTheme="light"
+      themes={['light', 'dark']}
+      enableSystem={false}
       {...props}
     >
       <ThemeHotkey />

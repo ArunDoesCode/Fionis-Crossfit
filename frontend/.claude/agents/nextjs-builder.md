@@ -4,7 +4,7 @@ description: >
   Use when building admin-web features in frontend/src: Next.js App Router pages, views, components,
   fetchers, query hooks and UI state for the trainer/owner admin. Enforces the external-api archetype
   (HTTP layer + TanStack Query, no Server Actions), generated API types and the page → view → pages-component
-  pattern. Trigger: nextjs feature, app router page, tanstack query, shadcn form, nuqs, tanstack table, new
+  pattern. Trigger: nextjs feature, app router page, tanstack query, shadcn form, nuqs, tanstack table v9, new
   screen, list page, detail page, live control screen.
 tools: Read, Edit, Write, Bash, Skill, AskUserQuestion, ToolSearch, mcp__codegraph__codegraph_explore
 ---
@@ -47,15 +47,15 @@ filters/pagination → 6. components in `components/pages/<feature>/` → 7. vie
 - Show only actions the spec allows for the session status and the user's permissions.
 - Live control: three taps for the happy path (open → START → END); destructive actions confirm via `AlertDialog`;
   corrections require a reason field.
-- Lists are server-paginated (`manualPagination`) with a shape-matching skeleton.
+- Lists are server-paginated (nuqs `offset`/`limit` + `TablePagination`) with a shape-matching skeleton.
 
 ## Must-follow digest (from the standard; the file stays the authority)
 - Next 16: `await` `params`, `searchParams`, `cookies()`, `headers()`; `proxy.ts` not `middleware.ts`; never write route segment configs (`dynamic`, `revalidate`, `fetchCache`) under `cacheComponents`; runtime data only inside `<Suspense>`/under `loading.tsx`; never read `cookies()`/`headers()` inside `'use cache'`.
 - `page.tsx`/`layout.tsx` are Server Components, `'use client'` at the leaves; every data route has a shape-matching `loading.tsx` skeleton (no generic spinner) and `error.tsx` (`'use client'`, uses `retry`).
 - Server-only modules start with `import 'server-only'`; secrets never in `NEXT_PUBLIC_*`; tokens only in httpOnly cookies; env validated in `lib/env.ts`; every var in `.env.example`.
-- Use `next/image`, `next/font`, `next/link`, `next/script`; `lucide-react` icons only; `date-fns` only; theme tokens (`text-destructive`, `bg-muted`) not raw palette colors; `cn()` for class merging; shadcn imported per component, no barrel imports; no barrels for components.
+- Use `next/image`, `next/font`, `next/link`, `next/script`; Hugeicons only (`<HugeiconsIcon icon={…} />` from `@hugeicons/react` + `@hugeicons/core-free-icons`); `date-fns` only; theme tokens (`text-destructive`, `bg-muted`) not raw palette colors; `cn()` for class merging; shadcn imported per component, no barrel imports; no barrels for components.
 - Forms: RHF + Zod v4 (`z.email()`, `error:` param) with shared schemas, `defaultValues` for every field, shadcn `Field` + `Controller`, required `*`, `h-4` error slot, Reset = secondary `type="button"`, Submit disabled with "Saving..." while `isPending`, toasts in the mutation hook.
-- Tables: shared `DataTable` + `TablePagination`, column factory with callbacks, `manualPagination` + server sort/filter, ids/codes `font-mono text-sm`, virtualize above ~100 rows.
+- Tables (TanStack Table v9): shared `DataTable` + `TablePagination`, column factory with callbacks built via `createDataTableColumnHelper` (pages never import `@tanstack/react-table`), server pagination/sort/filter (nuqs → query key, no `manual*` flags), no `'use no memo'`, ids/codes `font-mono text-sm`, virtualize above ~100 rows.
 - Performance: `Promise.all` for independent fetches, `React.cache()` for per-request shared reads, `prefetchQuery` + `HydrationBoundary` with `staleTime > 0`, heavy widgets (charts) via `next/dynamic`, debounce search 300 ms, no `useQuery` per table row.
 - Style: Biome (`biome check`), single quotes in TS, semicolons, 2 spaces, `@/*` alias, import order React/Next → third-party → components → lib → types → relative, `export default` for components/pages, `[Name]Props` interfaces.
 - Working style: state assumptions and ask when unclear; minimum code; surgical diffs; reuse before writing; locate callers before changing shared code.

@@ -1,6 +1,7 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -59,7 +60,7 @@ export default function TablePagination({
           disabled={offset <= 0}
           onClick={() => onPageChange(Math.max(0, offset - limit))}
         >
-          <ChevronLeft />
+          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} />
         </Button>
         <Button
           variant="outline"
@@ -69,7 +70,7 @@ export default function TablePagination({
           disabled={offset + limit >= total}
           onClick={() => onPageChange(offset + limit)}
         >
-          <ChevronRight />
+          <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
         </Button>
       </div>
     </div>

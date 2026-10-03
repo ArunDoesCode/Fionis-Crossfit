@@ -48,7 +48,7 @@ Per the standard (§4): `app/` (thin server pages + `loading.tsx` + `error.tsx`)
 
 ## Stack
 Bun, Biome (`biome check`), Tailwind 4 tokens, shadcn (`components/ui` never hand-edited — a hook blocks it),
-TanStack Query v5, TanStack Table, nuqs, Zustand v5, RHF + Zod v4, Sonner, `lucide-react`, `date-fns`, `motion`
+TanStack Query v5, TanStack Table v9, nuqs, Zustand v5, RHF + Zod v4, Sonner, Hugeicons (`@hugeicons/react` `HugeiconsIcon` + `@hugeicons/core-free-icons`), `date-fns`, `motion`
 (TV), `canvas-confetti` (TV). User-facing text: typed dictionaries in `lib/messages/` if more than one language.
 
 ## Commands
