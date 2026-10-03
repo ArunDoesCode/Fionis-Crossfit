@@ -36,11 +36,11 @@ Auth: P = public (E01–E03 only), A = `{ type: 'any-authenticated' }`. Errors b
 | E14 | PATCH /api/metrics/:metricId | A | `metricIdParamsSchema` · `updateMetricBodySchema` | `metricSchema` | 404 · 409 NAME_TAKEN, METRIC_LOCKED |
 | E15 | PUT /api/assessment-types/:typeId/metric-order | A | `typeIdParamsSchema` · `metricOrderBodySchema` | `{}` | 404 |
 | E16 | GET /api/members | A | `memberListQuerySchema` (`MEMBER_SORT_FIELDS`) | list of `memberListItemSchema` | — |
-| E17 | POST /api/members | A | `createMemberBodySchema` + header `Idempotency-Key` | 201 `memberDetailSchema` | 400 DATE_IN_FUTURE, START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED |
+| E17 | POST /api/members | A | `createMemberBodySchema` + header `Idempotency-Key` | 201 `memberDetailSchema` | 400 DATE_IN_FUTURE, START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED · 429 RATE_LIMITED |
 | E18 | GET /api/members/:memberId | A | `memberIdParamsSchema` | `memberDetailSchema` | 404 |
 | E19 | PATCH /api/members/:memberId | A | `memberIdParamsSchema` · `updateMemberBodySchema` | `memberDetailSchema` | 404 · 400 DATE_IN_FUTURE |
 | E20 / E21 | POST /api/members/:memberId/archive · /restore | A | `memberIdParamsSchema` | `memberDetailSchema` | 404 |
-| E22 | POST /api/members/:memberId/periods | A | `memberIdParamsSchema` · `createPeriodBodySchema` + header `Idempotency-Key` | 201 `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED |
+| E22 | POST /api/members/:memberId/periods | A | `memberIdParamsSchema` · `createPeriodBodySchema` + header `Idempotency-Key` | 201 `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED · 429 RATE_LIMITED |
 | E23 | PATCH /api/members/:memberId/periods/:periodId | A | `periodParamsSchema` · `updatePeriodBodySchema` | `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN |
 | E24 | GET /api/memberships/ending | A | `endingMembershipsQuerySchema` (`status` required) | list of `endingMembershipItemSchema` | — |
 | E25 | GET /api/members/:memberId/entry-form | A | `memberIdParamsSchema` · `entryFormQuerySchema` | `entryFormSchema` | 404 |
