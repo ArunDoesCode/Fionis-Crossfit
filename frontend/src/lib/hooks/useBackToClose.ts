@@ -1,11 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 // BR-REC-138: "Back closes" a sheet or dialog. While it is open we keep one extra history entry, so the
 // phone's Back button (or browser Back) pops that entry and closes the sheet instead of leaving the page.
 // If the sheet is closed another way (button, swipe, outside tap) the entry is removed again.
 // The push is deferred one tick so React Strict Mode's mount/unmount/mount in development does not
-// leave a stray entry behind.
+// leave a stray entry behind. `close` lives in a ref and the effect depends on `open` only, so a new
+// `close` function on every render cannot tear the effect down (that would call history.back()).
 export function useBackToClose(open: boolean, close: () => void) {
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  });
+
   useEffect(() => {
     if (!open) return;
     let pushed = false;
@@ -20,7 +26,7 @@ export function useBackToClose(open: boolean, close: () => void) {
       // Landed on another sheet entry (stale traversal): not ours to close.
       if (window.history.state?.sheet) return;
       closedByBack = true;
-      close();
+      closeRef.current();
     };
     window.addEventListener('popstate', onPopState);
 
@@ -29,5 +35,5 @@ export function useBackToClose(open: boolean, close: () => void) {
       window.removeEventListener('popstate', onPopState);
       if (pushed && !closedByBack && window.history.state?.sheet) window.history.back();
     };
-  }, [open, close]);
+  }, [open]);
 }

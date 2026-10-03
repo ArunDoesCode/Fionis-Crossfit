@@ -15,3 +15,10 @@ Permission: any signed-in user (shared login; proxy.ts guard, auth stream refine
 **Placeholder screens** ("This screen is not built yet."): `/admin/members`, `/admin/members/new`, `/admin/members/[id]/{edit,assess,assessments,report}`, `/admin/reports`, `/admin/settings`. Route folders with only loading + error (no page yet): `/admin/due`, `/admin/memberships`, `/admin/settings/{assessments,general,account,export}`.
 
 **Look and feel to check by eye:** inputs and default buttons are 48 px tall, text 16 px; the three fonts (Outfit text, Raleway titles, Geist Mono only where digits line up); status words come with an icon; light and dark both readable.
+
+**Fix round 1 (frontend)** — same screens, no new buttons
+- Offline banner: while offline and scrolled, the page header (back arrow + title) stays visible just below the banner.
+- Bottom tab bar: 8 px between the four tabs.
+- Time fields (`DurationField`, used by assessment entry later): pasting "2:02" fills minutes 2 / seconds 02 (also "1:05:30" -> 65 / 30); typing ":" after the minutes jumps to seconds.
+- Back closes a sheet/dialog: no stray history step when the screen re-renders while it is open.
+- Membership status: a renewal that starts after today shows Active, never Ends soon.
