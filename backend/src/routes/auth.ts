@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { authController } from "../controller/authController";
+import { asyncHandler } from "../lib/async-handler";
 import {
   badRequestResponse,
   errorResponse,
@@ -18,14 +20,9 @@ import {
   sessionInfoSchema,
 } from "../types/auth.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import {
-  ANY_AUTHENTICATED,
-  notImplemented,
-  PUBLIC,
-  routeMounter,
-} from "./mount-route";
+import { ANY_AUTHENTICATED, PUBLIC, routeMounter } from "./mount-route";
 
-// Owner: auth stream. E01-E06. Handlers answer 501 until Stream A builds them.
+// Owner: auth stream. E01-E06.
 const authRouter = new Hono<AppEnv>();
 const route = routeMounter(authRouter, MAIN_ROUTES.auth);
 const EP = END_POINTS.auth;
@@ -62,7 +59,7 @@ route(
       ORIGIN_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(authController.login),
 );
 
 route(
@@ -85,7 +82,7 @@ route(
       ORIGIN_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(authController.refresh),
 );
 
 route(
@@ -102,7 +99,7 @@ route(
       ORIGIN_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(authController.logout),
 );
 
 route(
@@ -122,7 +119,7 @@ route(
       ORIGIN_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(authController.logoutAll),
 );
 
 route(
@@ -140,7 +137,7 @@ route(
       "Does not check whether the sign-in was revoked (signature only, BR-REC-33); `remember` and `expiresAt` come from the session row of the token's `sid`.",
     ],
   },
-  notImplemented,
+  asyncHandler(authController.me),
 );
 
 route(
@@ -165,7 +162,7 @@ route(
       ORIGIN_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(authController.changePassword),
 );
 
 export { authRouter as authRoutes };

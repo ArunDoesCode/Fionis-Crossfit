@@ -11,12 +11,24 @@ export const USERNAME_MAX_LENGTH = 64;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
+/** `bootstrap-admin` input; the login form and E01 accept any non-empty value up to this length. */
+export const usernameSchema = z.string().min(1).max(USERNAME_MAX_LENGTH);
+
+/**
+ * A password to store (E06 `newPassword`, `bootstrap-admin`): 8-128 characters of any
+ * kind (BR-REC-27). Lengths count JavaScript string length.
+ */
+export const newPasswordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Use at most ${PASSWORD_MAX_LENGTH} characters`);
+
 /**
  * E01. `remember` is required: the Login page sends its tick-box (default ticked, BR-REC-31).
  * The caps keep a huge body away from the password hash; no valid password is longer.
  */
 export const loginBodySchema = z.object({
-  username: z.string().min(1).max(USERNAME_MAX_LENGTH),
+  username: usernameSchema,
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
   remember: z.boolean(),
 });
@@ -51,12 +63,21 @@ export type LogoutAllResult = z.infer<typeof logoutAllResultSchema>;
  */
 export const changePasswordBodySchema = z.object({
   currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
-  newPassword: z
-    .string()
-    .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`)
-    .max(PASSWORD_MAX_LENGTH, `Use at most ${PASSWORD_MAX_LENGTH} characters`),
+  newPassword: newPasswordSchema,
 });
 export type ChangePasswordBody = z.infer<typeof changePasswordBodySchema>;
 
 /** E06 `data`. */
 export const changePasswordResultSchema = emptyDataSchema;
+
+// ─── Service shapes (not part of the HTTP contract) ─────────────────────────
+
+/** Where a request came from, for session rows and the change log (BR-REC-43); each at most 60 characters. */
+export type RequestMeta = { ip: string | null; device: string | null };
+
+/** The single `login_attempts` row: the global sign-in lock (BR-REC-28). */
+export type LockState = {
+  failedCount: number;
+  windowStartedAt: Date | null;
+  lockedUntil: Date | null;
+};
