@@ -1,7 +1,7 @@
 name: CI
 
-# Aligned with the checks in CLAUDE.md. Package jobs skip themselves until the package exists
-# (see docs/FOUNDATIONS.md); adjust env names to backend/src/lib/env.ts once it is written.
+# Aligned with the checks in CLAUDE.md. `hashFiles()` is not allowed in a job-level `if:` (GitHub rejects
+# the whole file), so a package that may not exist yet (member/) skips its steps instead (docs/FOUNDATIONS.md).
 
 on:
   pull_request:
@@ -15,7 +15,6 @@ concurrency:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('backend/package.json') != '' }}
     defaults:
       run:
         working-directory: backend
@@ -52,12 +51,11 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('frontend/package.json') != '' }}
     defaults:
       run:
         working-directory: frontend
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      NEXT_PUBLIC_API_URL: /api          # same origin (D-018); Next forwards /api to API_URL
       API_URL: http://localhost:4000/api
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +67,6 @@ jobs:
 
   member:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('member/package.json') != '' }}
     defaults:
       run:
         working-directory: member
@@ -77,11 +74,17 @@ jobs:
       EXPO_PUBLIC_API_URL: http://localhost:4000/api
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run lint
-      - run: bun test --pass-with-no-tests
+      # Steps skip until member/ is scaffolded (step-level `if:` may use hashFiles, job-level may not).
+      - if: ${{ hashFiles('member/package.json') != '' }}
+        uses: oven-sh/setup-bun@v2
+      - if: ${{ hashFiles('member/package.json') != '' }}
+        run: bun install --frozen-lockfile
+      - if: ${{ hashFiles('member/package.json') != '' }}
+        run: bun run typecheck
+      - if: ${{ hashFiles('member/package.json') != '' }}
+        run: bun run lint
+      - if: ${{ hashFiles('member/package.json') != '' }}
+        run: bun test --pass-with-no-tests
 
   fixtures:
     runs-on: ubuntu-latest

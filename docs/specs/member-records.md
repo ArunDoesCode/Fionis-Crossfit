@@ -69,7 +69,7 @@ v1 rules BR-REC-01…24 moved word for word; the v1 "Metric list" moved to setup
 Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths from several of them).
 | Stream | Sub-spec | Starts after | Delivers |
 |---|---|---|---|
-| 0 Foundation | data-model, api-contract, ux (+ BR-REC-12, 51, 52, 94 maths, fonts BR-REC-150, 174) | freeze | all tables + migration (incl. the one `login_attempts` row) + `seed` + `seed:perf`; every route registered (Zod + descriptor, handlers answer 501); change-log, idempotency, Origin check, gzip, Server-Timing, ETag middleware; `lib/domain/{dates,duration,membership}` in backend and frontend; `contract:generate` + `types:api`; full `API_ROUTES`; `/api` rewrite (same origin, D-018); root layout fonts; app shell, shared components, error-code dictionary; Home and Member-page frames with empty slots; empty route folders with `loading.tsx` + `error.tsx` |
+| 0 Foundation | data-model, api-contract, ux (+ BR-REC-12, 51, 52, 94 maths, fonts BR-REC-150, 174) | freeze | all tables (Drizzle, `db:push`, no hand SQL) + `seed` (incl. the one `login_attempts` row) + `seed:perf`; every route registered (Zod + descriptor, handlers answer 501); change-log, idempotency, Origin check, gzip, Server-Timing, ETag middleware; `lib/domain/{dates,duration,membership}` in backend and frontend; `contract:generate` + `types:api`; full `API_ROUTES`; `/api` rewrite (same origin, D-018); root layout fonts; app shell, shared components, error-code dictionary; Home and Member-page frames with empty slots; empty route folders with `loading.tsx` + `error.tsx` |
 | A | auth | M0 | E01–E06, `bootstrap-admin` (`--reset`, `--unlock`), `proxy.ts`, Login, Account |
 | B | members | M0 | E16–E24, S4–S9, Home membership sections, archived banner |
 | C | setup | M0 | E07–E15, S14–S16 |
@@ -77,6 +77,10 @@ Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths fro
 | E | due-list | M0 | E31–E34, `computeDue`, Home due sections, S3, member "Assessments" block |
 | F | progress | M0 | E35–E39, S12, S13, S18 |
 | G | performance | M3 | Pass items: service worker + install, CI bundle/font/Lighthouse checks on every PR, vitals (E40), `bench`, deploy to the D-018 server |
+
+Implementation status: **Stream 0 built** (branch `claude/member-records-foundation-57e849`): data-model, api-contract,
+ux shell rules + BR-REC-12, 51, 52, 75, 94, 150, 174 — BR → test file in the map's Tests table; merged to `main` (M0).
+Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Streams B–G: not started.
 
 Merge points: **M0** Stream 0 → **M1** A (needed to click through anything) → **M2** C, B → **M3** D, E, F
 → **M4** G + scenario test (3 real binder members typed in end to end) + owner/coach check → done. A–F may
@@ -96,14 +100,14 @@ Shared files (everyone else reads only; a needed change goes to the coordinator,
 | `backend/src/{types,routes,controller,service,repository}/<feature>*`, `lib/domain/due.ts` (E), `lib/domain/report.ts` (F) | that stream |
 | `backend/src/lib/{token,auth-middleware,rate-limiter}.ts`, `scripts/bootstrap-admin.ts`, `frontend/src/proxy.ts` | A auth |
 | `.contracts/*`, `frontend/src/types/api.generated.ts` | generated — re-run, never hand-merge |
-| `frontend/src/{lib/api/routes.ts,lib/messages/**,lib/searchParams.ts,components/common/**,components/shells/**}`, `next.config.ts`, `app/layout.tsx`, `app/(app)/admin/layout.tsx`, the Home and Member-page frames | Stream 0 |
+| `frontend/src/{lib/api/{routes,client}.ts,lib/messages/**,lib/format.ts,lib/domain/**,lib/hooks/**,lib/searchParams.ts,components/common/**,components/shells/**}`, `next.config.ts`, `app/layout.tsx`, `app/(app)/admin/layout.tsx`, the Home and Member-page frames | Stream 0 |
 | `frontend/src/components/pages/home/DueSections.tsx`, `pages/member/DueBlock.tsx` | E due-list |
-| `frontend/src/components/pages/home/MembershipSections.tsx`, `pages/member/{MemberHeader,MembershipBlock}.tsx` | B members |
+| `frontend/src/components/pages/home/{MembershipSections,HomeSearch}.tsx`, `pages/member/{MemberHeader,MembershipBlock}.tsx` | B members |
 | `frontend/src/components/pages/member/RecentBlock.tsx` | D assessments |
 | `frontend/src/{lib/api,lib/validators,components/views,components/pages}/<feature>/**` + the routes in the ux screen index | that stream |
 | `frontend/src/app/manifest.ts`, service worker, CI budget workflow, `backend/scripts/bench.ts`, deploy files | G performance |
 
-Contract files that must exist before streams A–F start: the Drizzle schema + migration, `routes/end-points.ts`,
+Contract files that must exist before streams A–F start: the Drizzle schema, `routes/end-points.ts`,
 every `types/*.types.ts`, `.contracts/{api-manifest,openapi}.json`, `frontend/src/types/api.generated.ts`,
 `frontend/src/lib/api/routes.ts`, and the golden fixtures `duration-cases.json` and
 `membership-end-cases.json` (test-writer, both packages, checked by `scripts/check-fixtures.sh`).
@@ -150,3 +154,6 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
   D-018), members Q7 = B (auto-restore on a period covering today, BR-REC-58); new BR-REC-171…175;
   `MEMBER_ARCHIVED` removed; v1 re-read list added; benchmark moved to the map; no open questions left.
 - 2026-10-03 v2 — frozen: index + 10 sub-specs; the 9 v1 re-reads accepted by the owner. Build process only: D-017 amended (own PR per stream, no integration branch); no rule changed.
+- 2026-10-03 v2 — data-model v2 during the Stream 0 build (user: keep the MVP light): BR-REC-167 struck, BR-REC-169
+  rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
+- 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.

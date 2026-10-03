@@ -3,13 +3,15 @@
 import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes';
 import * as React from 'react';
 
+// BR-REC-136: the device decides (light/dark); a manual choice (ThemeToggle, wired in Settings) is stored
+// and wins. next-themes sets the class in a blocking script before paint, so there is no wrong-theme flash.
 function ThemeProvider({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="light"
+      defaultTheme="system"
       themes={['light', 'dark']}
-      enableSystem={false}
+      enableSystem
       {...props}
     >
       <ThemeHotkey />

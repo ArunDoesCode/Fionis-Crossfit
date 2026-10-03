@@ -1,5 +1,7 @@
 import { type ZodType, z } from "zod";
 
+import type { ErrorCode } from "./errors";
+
 /** Shared shape for every list endpoint's pagination envelope. */
 export const paginationMetaSchema = z.object({
   page: z.number().int().min(1),
@@ -37,3 +39,26 @@ export const errorResponseSchema = z.object({
   code: z.string().optional(),
   details: z.record(z.string(), z.unknown()).optional(),
 });
+
+/**
+ * The error envelope with its `code` narrowed to the codes a route can return
+ * for one status (shown in the contract). Pass codes from `ERROR_CODES`.
+ */
+export function errorResponse<
+  const Codes extends readonly [ErrorCode, ...ErrorCode[]],
+>(codes: Codes) {
+  return errorResponseSchema.extend({ code: z.enum(codes) });
+}
+
+/** 401 on every route that needs the sign-in. */
+export const unauthorizedResponse = errorResponse(["UNAUTHORIZED"]);
+
+/** 404 for a missing resource. */
+export const notFoundResponse = errorResponse(["NOT_FOUND"]);
+
+/** 400: always `VALIDATION_ERROR`, plus the route's own 400 codes (e.g. `INVALID_JSON`). */
+export function badRequestResponse<const Extra extends readonly ErrorCode[]>(
+  ...extra: Extra
+) {
+  return errorResponse(["VALIDATION_ERROR", ...extra] as const);
+}

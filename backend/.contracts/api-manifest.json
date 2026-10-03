@@ -9,6 +9,749 @@
   },
   "routes": [
     {
+      "id": "GET /api/members/:memberId/entry-form",
+      "method": "GET",
+      "path": "/api/members/:memberId/entry-form",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E25 Entry form: measurements with previous values and any saved assessment",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "typeId": "string.uuid.required",
+          "date": "string.required"
+        },
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "member": {
+              "id": "string.uuid.required",
+              "fullName": "string.required",
+              "joinedOn": "string.required"
+            },
+            "type": {
+              "id": "string.uuid.required",
+              "name": "string.required"
+            },
+            "existing": {
+              "assessmentId": "string.uuid.required",
+              "isEstimated": "boolean.required",
+              "values": {}
+            },
+            "metrics": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "`previous` is the latest value dated before `date` (BR-REC-81). Durations are seconds."
+      ]
+    },
+    {
+      "id": "POST /api/assessments",
+      "method": "POST",
+      "path": "/api/assessments",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E26 Save an assessment (creates, or edits the one for member + type + date)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "memberId": "string.uuid.required",
+          "typeId": "string.uuid.required",
+          "date": "string.required",
+          "isEstimated": "boolean.required",
+          "values": "array<object>.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "assessmentId": "string.uuid.required",
+            "created": "boolean.required",
+            "saved": "integer.nonnegative.required",
+            "removed": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,DATE_IN_FUTURE,NO_VALUES,METRIC_NOT_IN_TYPE.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Upsert: always 200; `created` says whether a new assessment was made. `value: null` removes a saved value; at most 60 values."
+      ]
+    },
+    {
+      "id": "GET /api/assessments",
+      "method": "GET",
+      "path": "/api/assessments",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E27 A member's assessments, newest first",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "memberId": "string.uuid.required",
+          "typeId": "string.uuid.optional",
+          "sortDir": "enum:asc,desc.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [],
+        "searchable": false
+      },
+      "notes": [
+        "Sorted by date then id; only `sortDir` is selectable (default `desc`)."
+      ]
+    },
+    {
+      "id": "GET /api/assessments/:assessmentId",
+      "method": "GET",
+      "path": "/api/assessments/:assessmentId",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E28 One assessment with its values",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "assessmentId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "memberId": "string.uuid.required",
+            "typeId": "string.uuid.required",
+            "typeName": "string.required",
+            "date": "string.required",
+            "isEstimated": "boolean.required",
+            "values": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "PATCH /api/assessments/:assessmentId",
+      "method": "PATCH",
+      "path": "/api/assessments/:assessmentId",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E29 Move an assessment's date or mark it estimated",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "date": "string.optional",
+          "isEstimated": "boolean.optional"
+        },
+        "params": {
+          "assessmentId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "memberId": "string.uuid.required",
+            "typeId": "string.uuid.required",
+            "typeName": "string.required",
+            "date": "string.required",
+            "isEstimated": "boolean.required",
+            "values": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,DATE_IN_FUTURE.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:ASSESSMENT_DATE_TAKEN.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Unknown fields rejected; at least one field. Moving the date moves its values."
+      ]
+    },
+    {
+      "id": "DELETE /api/assessments/:assessmentId",
+      "method": "DELETE",
+      "path": "/api/assessments/:assessmentId",
+      "tags": [
+        "assessments"
+      ],
+      "summary": "E30 Delete an assessment with its values",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "assessmentId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "removed": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "The one hard delete besides sign-ins and idempotency keys (BR-REC-165)."
+      ]
+    },
+    {
+      "id": "POST /api/auth/login",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E01 Sign in with the shared login",
+      "auth": {
+        "type": "public"
+      },
+      "request": {
+        "body": {
+          "username": "string.nonempty.required",
+          "password": "string.nonempty.required",
+          "remember": "boolean.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "username": "string.required",
+            "remember": "boolean.required",
+            "expiresAt": "string.date-time.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:INVALID_CREDENTIALS.required",
+          "details": {}
+        },
+        "429": "union<[object Object]|[object Object]>.required"
+      },
+      "notes": [
+        "Sets two cookies (httpOnly, Secure in production, SameSite=Lax, Path=/): `access_token` (JWT, Max-Age 15 min) and `refresh_token` (Max-Age 7 days when `remember`, a browser-session cookie when not).",
+        "`remember: false`: the server ends the sign-in after 12 hours (`SESSION_SHORT_TTL_SECONDS`).",
+        "Unknown username and wrong password give the same 401 INVALID_CREDENTIALS. The 5th wrong try in 15 minutes is still 401; the 6th is 429.",
+        "429 LOGIN_LOCKED: one lock for the whole login, 15 minutes, never extended by tries; `details.retryAfterSeconds` (>= 1) and a `Retry-After` header in seconds. Even the right password is refused.",
+        "429 RATE_LIMITED: 10 requests a minute per network address (after body validation, before the lock check).",
+        "A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37)."
+      ]
+    },
+    {
+      "id": "POST /api/auth/refresh",
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E02 Refresh the sign-in (rotates the refresh cookie)",
+      "auth": {
+        "type": "public"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "expiresAt": "string.date-time.required"
+          }
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:SESSION_EXPIRED.required",
+          "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Reads the `refresh_token` cookie; no body. Works while the login is locked (BR-REC-171).",
+        "200 sets both cookies again, as E01 (a new access token and a new refresh token); `expiresAt` is when the sign-in ends if unused.",
+        "A replaced refresh token used within 60 s of its replacement (two tabs at once) gets 200 with a new `access_token` cookie only: no second rotation and no `refresh_token` cookie (BR-REC-32).",
+        "401 SESSION_EXPIRED: no, unknown, expired or revoked token, or a replaced token used after its 60 s grace (the sign-in is then revoked).",
+        "429 RATE_LIMITED: 30 requests a minute per network address.",
+        "A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37)."
+      ]
+    },
+    {
+      "id": "POST /api/auth/logout",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E03 Sign out this device",
+      "auth": {
+        "type": "public"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {}
+        }
+      },
+      "notes": [
+        "Clears both cookies (Max-Age=0, Path=/) and ends this device's sign-in. Public: it must work with an expired access token.",
+        "Always 200, also when there is no sign-in to end.",
+        "A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37)."
+      ]
+    },
+    {
+      "id": "POST /api/auth/logout-all",
+      "method": "POST",
+      "path": "/api/auth/logout-all",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E04 Sign out every device (this one too)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "signedOut": "integer.nonnegative.required"
+          }
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Ends every active sign-in, this one too, and clears both cookies. `signedOut` counts the sign-ins ended.",
+        "Other devices lose access within 15 minutes (access tokens are checked by signature only, BR-REC-33); their refresh fails at once.",
+        "A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37)."
+      ]
+    },
+    {
+      "id": "GET /api/auth/me",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E05 The signed-in account",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "username": "string.required",
+            "remember": "boolean.required",
+            "expiresAt": "string.date-time.required"
+          }
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Does not check whether the sign-in was revoked (signature only, BR-REC-33); `remember` and `expiresAt` come from the session row of the token's `sid`."
+      ]
+    },
+    {
+      "id": "POST /api/auth/password",
+      "method": "POST",
+      "path": "/api/auth/password",
+      "tags": [
+        "auth"
+      ],
+      "summary": "E06 Change the password (other devices are signed out)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "currentPassword": "string.nonempty.required",
+          "newPassword": "string.nonempty.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {}
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,CURRENT_PASSWORD_WRONG.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:LOGIN_LOCKED.required",
+          "details": {
+            "retryAfterSeconds": "integer.nonnegative.required"
+          }
+        }
+      },
+      "notes": [
+        "`newPassword` must be 8-128 characters, else 400 VALIDATION_ERROR on `newPassword` (BR-REC-02, 27).",
+        "A wrong current password is 400, never 401: a 401 makes the app try a refresh and sign out.",
+        "A wrong current password counts toward the lock; while locked: 429 LOGIN_LOCKED as E01 (`details.retryAfterSeconds`, `Retry-After`).",
+        "Every other sign-in is revoked; this one stays and its cookies do not change.",
+        "A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37)."
+      ]
+    },
+    {
+      "id": "GET /api/due",
+      "method": "GET",
+      "path": "/api/due",
+      "tags": [
+        "due"
+      ],
+      "summary": "E31 Who is overdue or due soon (Home and Due list)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "status": "enum:overdue,upcoming.required",
+          "typeId": "string.uuid.optional"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [],
+        "searchable": false
+      },
+      "notes": [
+        "One row per member per assessment. Order: Assess soon first, then most days overdue, then soonest due, then name (BR-REC-97). Archived and expired members are excluded (BR-REC-17)."
+      ]
+    },
+    {
+      "id": "GET /api/members/:memberId/due",
+      "method": "GET",
+      "path": "/api/members/:memberId/due",
+      "tags": [
+        "due"
+      ],
+      "summary": "E32 One member's due status per assessment",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required"
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "A plain array, not paginated: one entry per turned-on assessment (bounded by the catalog)."
+      ]
+    },
+    {
+      "id": "PUT /api/members/:memberId/due-actions/:typeId",
+      "method": "PUT",
+      "path": "/api/members/:memberId/due-actions/:typeId",
+      "tags": [
+        "due"
+      ],
+      "summary": "E33 Assess soon (flag) or Remind me later (snooze)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": "union<[object Object]|[object Object]>.required",
+        "params": {
+          "memberId": "string.uuid.required",
+          "typeId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "kind": "enum:flag,snooze.required",
+            "setOn": "string.required",
+            "untilOn": "string.nullable.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,SNOOZE_TOO_FAR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Body `{ action: 'flag' }` or `{ action: 'snooze', until: 'YYYY-MM-DD' }`. `until` is after today and at most 90 days ahead. The two replace each other."
+      ]
+    },
+    {
+      "id": "DELETE /api/members/:memberId/due-actions/:typeId",
+      "method": "DELETE",
+      "path": "/api/members/:memberId/due-actions/:typeId",
+      "tags": [
+        "due"
+      ],
+      "summary": "E34 Clear Assess soon or Remind me later",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required",
+          "typeId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {}
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
       "id": "GET /api/health",
       "method": "GET",
       "path": "/api/health",
@@ -38,6 +781,1372 @@
       },
       "notes": [
         "503 is returned when the database is unreachable (db: 'down')."
+      ]
+    },
+    {
+      "id": "GET /api/members",
+      "method": "GET",
+      "path": "/api/members",
+      "tags": [
+        "members"
+      ],
+      "summary": "E16 Find and list members",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "sortBy": "enum:name,joinedOn,lastAssessedOn.optional",
+          "sortDir": "enum:asc,desc.required",
+          "q": "string.nonempty.optional",
+          "phone": "string.nonempty.optional",
+          "status": "enum:active,expiring,expired,archived,any.optional"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [
+          "name",
+          "joinedOn",
+          "lastAssessedOn"
+        ],
+        "searchable": true
+      },
+      "notes": [
+        "`q` (2+ characters) matches name, phone or email; `phone` matches the last 10 digits.",
+        "Without `status`, archived members are left out; `status=any` includes them."
+      ]
+    },
+    {
+      "id": "POST /api/members",
+      "method": "POST",
+      "path": "/api/members",
+      "tags": [
+        "members"
+      ],
+      "summary": "E17 Add a member with the first membership period",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "fullName": "string.required",
+          "phone": "string.required",
+          "email": "unknown.optional",
+          "dateOfBirth": "string.required",
+          "sex": "enum:male,female.required",
+          "joinedOn": "string.required",
+          "objective": "enum:fat_loss,strength,general_fitness,other.nullable.optional",
+          "notes": "unknown.optional",
+          "firstPeriod": {
+            "plan": "enum:monthly,quarterly,half_annual,annual.required",
+            "startOn": "string.required"
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "fullName": "string.required",
+            "phone": "string.required",
+            "email": "unknown.required",
+            "dateOfBirth": "string.required",
+            "age": "integer.required",
+            "sex": "enum:male,female.required",
+            "joinedOn": "string.required",
+            "objective": "enum:fat_loss,strength,general_fitness,other.nullable.required",
+            "notes": "unknown.required",
+            "archivedAt": "string.date-time.nullable.required",
+            "membership": {
+              "status": "enum:active,expiring,expired.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "endOn": "string.required",
+              "daysLeft": "integer.required",
+              "startOn": "string.required"
+            },
+            "periods": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,DATE_IN_FUTURE,START_BEFORE_JOIN,IDEMPOTENCY_KEY_MISSING.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "422": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:IDEMPOTENCY_KEY_REUSED.required",
+          "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key."
+      ]
+    },
+    {
+      "id": "GET /api/members/:memberId",
+      "method": "GET",
+      "path": "/api/members/:memberId",
+      "tags": [
+        "members"
+      ],
+      "summary": "E18 One member with membership and periods",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "fullName": "string.required",
+            "phone": "string.required",
+            "email": "unknown.required",
+            "dateOfBirth": "string.required",
+            "age": "integer.required",
+            "sex": "enum:male,female.required",
+            "joinedOn": "string.required",
+            "objective": "enum:fat_loss,strength,general_fitness,other.nullable.required",
+            "notes": "unknown.required",
+            "archivedAt": "string.date-time.nullable.required",
+            "membership": {
+              "status": "enum:active,expiring,expired.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "endOn": "string.required",
+              "daysLeft": "integer.required",
+              "startOn": "string.required"
+            },
+            "periods": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "PATCH /api/members/:memberId",
+      "method": "PATCH",
+      "path": "/api/members/:memberId",
+      "tags": [
+        "members"
+      ],
+      "summary": "E19 Edit a member (archived members too)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "fullName": "string.optional",
+          "phone": "string.optional",
+          "email": "unknown.optional",
+          "dateOfBirth": "string.optional",
+          "sex": "enum:male,female.optional",
+          "joinedOn": "string.optional",
+          "objective": "enum:fat_loss,strength,general_fitness,other.nullable.optional",
+          "notes": "unknown.optional"
+        },
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "fullName": "string.required",
+            "phone": "string.required",
+            "email": "unknown.required",
+            "dateOfBirth": "string.required",
+            "age": "integer.required",
+            "sex": "enum:male,female.required",
+            "joinedOn": "string.required",
+            "objective": "enum:fat_loss,strength,general_fitness,other.nullable.required",
+            "notes": "unknown.required",
+            "archivedAt": "string.date-time.nullable.required",
+            "membership": {
+              "status": "enum:active,expiring,expired.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "endOn": "string.required",
+              "daysLeft": "integer.required",
+              "startOn": "string.required"
+            },
+            "periods": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,DATE_IN_FUTURE.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Unknown fields rejected; at least one field."
+      ]
+    },
+    {
+      "id": "POST /api/members/:memberId/archive",
+      "method": "POST",
+      "path": "/api/members/:memberId/archive",
+      "tags": [
+        "members"
+      ],
+      "summary": "E20 Archive a member",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "fullName": "string.required",
+            "phone": "string.required",
+            "email": "unknown.required",
+            "dateOfBirth": "string.required",
+            "age": "integer.required",
+            "sex": "enum:male,female.required",
+            "joinedOn": "string.required",
+            "objective": "enum:fat_loss,strength,general_fitness,other.nullable.required",
+            "notes": "unknown.required",
+            "archivedAt": "string.date-time.nullable.required",
+            "membership": {
+              "status": "enum:active,expiring,expired.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "endOn": "string.required",
+              "daysLeft": "integer.required",
+              "startOn": "string.required"
+            },
+            "periods": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "POST /api/members/:memberId/restore",
+      "method": "POST",
+      "path": "/api/members/:memberId/restore",
+      "tags": [
+        "members"
+      ],
+      "summary": "E21 Restore an archived member",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "fullName": "string.required",
+            "phone": "string.required",
+            "email": "unknown.required",
+            "dateOfBirth": "string.required",
+            "age": "integer.required",
+            "sex": "enum:male,female.required",
+            "joinedOn": "string.required",
+            "objective": "enum:fat_loss,strength,general_fitness,other.nullable.required",
+            "notes": "unknown.required",
+            "archivedAt": "string.date-time.nullable.required",
+            "membership": {
+              "status": "enum:active,expiring,expired.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "endOn": "string.required",
+              "daysLeft": "integer.required",
+              "startOn": "string.required"
+            },
+            "periods": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "POST /api/members/:memberId/periods",
+      "method": "POST",
+      "path": "/api/members/:memberId/periods",
+      "tags": [
+        "members"
+      ],
+      "summary": "E22 Add a membership period (renew)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "plan": "enum:monthly,quarterly,half_annual,annual.required",
+          "startOn": "string.required"
+        },
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "201": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "plan": "enum:monthly,quarterly,half_annual,annual.required",
+            "startOn": "string.required",
+            "endOn": "string.required",
+            "memberRestored": "boolean.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,START_BEFORE_JOIN,IDEMPOTENCY_KEY_MISSING.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:PERIOD_OVERLAP.required",
+          "details": {}
+        },
+        "422": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:IDEMPOTENCY_KEY_REUSED.required",
+          "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.",
+        "`memberRestored` is true when the period covers today and the member was archived (BR-REC-58)."
+      ]
+    },
+    {
+      "id": "PATCH /api/members/:memberId/periods/:periodId",
+      "method": "PATCH",
+      "path": "/api/members/:memberId/periods/:periodId",
+      "tags": [
+        "members"
+      ],
+      "summary": "E23 Edit a membership period",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "plan": "enum:monthly,quarterly,half_annual,annual.optional",
+          "startOn": "string.optional"
+        },
+        "params": {
+          "memberId": "string.uuid.required",
+          "periodId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "plan": "enum:monthly,quarterly,half_annual,annual.required",
+            "startOn": "string.required",
+            "endOn": "string.required",
+            "memberRestored": "boolean.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON,START_BEFORE_JOIN.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:PERIOD_OVERLAP.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Unknown fields rejected; at least one field. Periods are never deleted."
+      ]
+    },
+    {
+      "id": "GET /api/memberships/ending",
+      "method": "GET",
+      "path": "/api/memberships/ending",
+      "tags": [
+        "members"
+      ],
+      "summary": "E24 Memberships ending soon or recently ended",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "status": "enum:expiring,expired.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [],
+        "searchable": false
+      },
+      "notes": [
+        "`status=expiring`: soonest end first. `status=expired`: ended in the last 30 days, most recent first. Archived members are never listed (BR-REC-53)."
+      ]
+    },
+    {
+      "id": "GET /api/members/:memberId/report-card",
+      "method": "GET",
+      "path": "/api/members/:memberId/report-card",
+      "tags": [
+        "progress"
+      ],
+      "summary": "E35 A member's report card",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "memberId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "gymName": "string.required",
+            "printedOn": "string.required",
+            "member": {
+              "fullName": "string.required",
+              "age": "integer.required",
+              "sex": "enum:male,female.required",
+              "plan": "enum:monthly,quarterly,half_annual,annual.required",
+              "membershipStatus": "enum:active,expiring,expired.required",
+              "joinedOn": "string.required"
+            },
+            "types": "array<object>.required",
+            "segmental": {
+              "on": "string.required",
+              "isEstimated": "boolean.required",
+              "groups": "array<string>.required",
+              "rows": "array<object>.required"
+            }
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "GET /api/reports/progress",
+      "method": "GET",
+      "path": "/api/reports/progress",
+      "tags": [
+        "progress"
+      ],
+      "summary": "E36 Gym-wide progress for one measurement",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "metricId": "string.uuid.required",
+          "joinedFrom": "string.optional",
+          "joinedTo": "string.optional",
+          "plan": "enum:monthly,quarterly,half_annual,annual.optional",
+          "sex": "enum:male,female.optional",
+          "ageBand": "enum:under20,20to29,30to39,40to49,50to59,60plus.optional"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "metric": {
+              "id": "string.uuid.required",
+              "name": "string.required",
+              "unit": "string.required",
+              "datatype": "enum:number,duration.required",
+              "decimals": "integer.required",
+              "better": "enum:higher,lower,none.required"
+            },
+            "n": "integer.nonnegative.required",
+            "notCounted": "integer.nonnegative.required",
+            "avgChange": "unknown.required",
+            "improved": "integer.nonnegative.required",
+            "noChange": "integer.nonnegative.required",
+            "worse": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "404 when `metricId` does not exist. Only members with 2+ readings count; `notCounted` says how many were left out."
+      ]
+    },
+    {
+      "id": "GET /api/reports/leaderboard",
+      "method": "GET",
+      "path": "/api/reports/leaderboard",
+      "tags": [
+        "progress"
+      ],
+      "summary": "E37 Leaderboard for one measurement and sex",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "metricId": "string.uuid.required",
+          "sex": "enum:male,female.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,NO_DIRECTION.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [],
+        "searchable": false
+      },
+      "notes": [
+        "Ranked by latest value, best first by direction; equal values share a rank. 400 NO_DIRECTION for a measurement with no better direction."
+      ]
+    },
+    {
+      "id": "GET /api/reports/active-by-plan",
+      "method": "GET",
+      "path": "/api/reports/active-by-plan",
+      "tags": [
+        "progress"
+      ],
+      "summary": "E38 Active members by plan",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "monthly": "integer.nonnegative.required",
+            "quarterly": "integer.nonnegative.required",
+            "halfAnnual": "integer.nonnegative.required",
+            "annual": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required"
+          }
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "GET /api/exports/:file",
+      "method": "GET",
+      "path": "/api/exports/:file",
+      "tags": [
+        "progress"
+      ],
+      "summary": "E39 CSV export (members, memberships or measurements)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "params": {
+          "file": "string.required"
+        }
+      },
+      "responses": {
+        "200": "string.required",
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Not JSON: the 200 body is CSV text (`text/csv; charset=utf-8`, UTF-8 with BOM, streamed), a documented exception to the envelope. `file` is one of members.csv, memberships.csv, measurements.csv; anything else is 404 NOT_FOUND."
+      ]
+    },
+    {
+      "id": "GET /api/settings",
+      "method": "GET",
+      "path": "/api/settings",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E07 Gym settings",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "gymName": "string.required",
+            "timezone": "string.required",
+            "upcomingLeadDays": "integer.required",
+            "expiryLeadDays": "integer.required"
+          }
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Sends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160)."
+      ]
+    },
+    {
+      "id": "PATCH /api/settings",
+      "method": "PATCH",
+      "path": "/api/settings",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E08 Change gym settings",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "gymName": "string.optional",
+          "timezone": "string.optional",
+          "upcomingLeadDays": "integer.optional",
+          "expiryLeadDays": "integer.optional"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "gymName": "string.required",
+            "timezone": "string.required",
+            "upcomingLeadDays": "integer.required",
+            "expiryLeadDays": "integer.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Any of the settings; unknown fields rejected; at least one field."
+      ]
+    },
+    {
+      "id": "GET /api/assessment-types",
+      "method": "GET",
+      "path": "/api/assessment-types",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E09 Assessment catalog (assessments with their measurements)",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "query": {
+          "page": "integer.nonnegative.required",
+          "pageSize": "integer.nonnegative.required",
+          "includeInactive": "enum:true,false.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": "array<object>.required",
+          "meta": {
+            "page": "integer.nonnegative.required",
+            "pageSize": "integer.nonnegative.required",
+            "total": "integer.nonnegative.required",
+            "totalPages": "integer.nonnegative.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "pagination": {
+        "sortableFields": [],
+        "searchable": false
+      },
+      "notes": [
+        "Ordered by setup order (`sortOrder`). Inactive ones only with includeInactive=true.",
+        "Sends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160)."
+      ]
+    },
+    {
+      "id": "POST /api/assessment-types",
+      "method": "POST",
+      "path": "/api/assessment-types",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E10 Add an assessment",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "name": "string.required",
+          "intervalCount": "integer.required",
+          "intervalUnit": "enum:week,month.required"
+        }
+      },
+      "responses": {
+        "201": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "name": "string.required",
+            "intervalCount": "integer.required",
+            "intervalUnit": "enum:week,month.required",
+            "isActive": "boolean.required",
+            "sortOrder": "integer.required",
+            "hasValues": "boolean.required",
+            "metrics": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NAME_TAKEN.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "PUT /api/assessment-types/order",
+      "method": "PUT",
+      "path": "/api/assessment-types/order",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E12 Set the order of the assessments",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "typeIds": "array<string.uuid>.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {}
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "`typeIds` lists every assessment once each, in the new order."
+      ]
+    },
+    {
+      "id": "PATCH /api/assessment-types/:typeId",
+      "method": "PATCH",
+      "path": "/api/assessment-types/:typeId",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E11 Change or turn off an assessment",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "name": "string.optional",
+          "intervalCount": "integer.optional",
+          "intervalUnit": "enum:week,month.optional",
+          "isActive": "boolean.optional"
+        },
+        "params": {
+          "typeId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "name": "string.required",
+            "intervalCount": "integer.required",
+            "intervalUnit": "enum:week,month.required",
+            "isActive": "boolean.required",
+            "sortOrder": "integer.required",
+            "hasValues": "boolean.required",
+            "metrics": "array<object>.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NAME_TAKEN.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Unknown fields rejected; at least one field."
+      ]
+    },
+    {
+      "id": "POST /api/assessment-types/:typeId/metrics",
+      "method": "POST",
+      "path": "/api/assessment-types/:typeId/metrics",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E13 Add a measurement to an assessment",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "name": "string.required",
+          "unit": "string.optional",
+          "datatype": "enum:number,duration.required",
+          "decimals": "integer.optional",
+          "better": "enum:higher,lower,none.required",
+          "plausibleMin": "unknown.optional",
+          "plausibleMax": "unknown.optional",
+          "intervalCount": "integer.nullable.optional",
+          "intervalUnit": "enum:week,month.nullable.optional",
+          "tableGroup": "unknown.optional",
+          "tablePart": "enum:whole_body,arms,trunk,legs.nullable.optional"
+        },
+        "params": {
+          "typeId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "201": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "name": "string.required",
+            "unit": "string.required",
+            "datatype": "enum:number,duration.required",
+            "decimals": "integer.required",
+            "better": "enum:higher,lower,none.required",
+            "plausibleMin": "unknown.required",
+            "plausibleMax": "unknown.required",
+            "intervalCount": "integer.nullable.required",
+            "intervalUnit": "enum:week,month.nullable.required",
+            "tableGroup": "unknown.required",
+            "tablePart": "enum:whole_body,arms,trunk,legs.nullable.required",
+            "isActive": "boolean.required",
+            "sortOrder": "integer.required",
+            "hasValues": "boolean.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NAME_TAKEN.required",
+          "details": {}
+        }
+      }
+    },
+    {
+      "id": "PUT /api/assessment-types/:typeId/metric-order",
+      "method": "PUT",
+      "path": "/api/assessment-types/:typeId/metric-order",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E15 Set the order of an assessment's measurements",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "metricIds": "array<string.uuid>.required"
+        },
+        "params": {
+          "typeId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {}
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "`metricIds` lists every measurement of the assessment once each, in the new order."
+      ]
+    },
+    {
+      "id": "PATCH /api/metrics/:metricId",
+      "method": "PATCH",
+      "path": "/api/metrics/:metricId",
+      "tags": [
+        "setup"
+      ],
+      "summary": "E14 Change or turn off a measurement",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "name": "string.optional",
+          "unit": "string.optional",
+          "datatype": "enum:number,duration.optional",
+          "decimals": "integer.optional",
+          "better": "enum:higher,lower,none.optional",
+          "plausibleMin": "unknown.optional",
+          "plausibleMax": "unknown.optional",
+          "intervalCount": "integer.nullable.optional",
+          "intervalUnit": "enum:week,month.nullable.optional",
+          "tableGroup": "unknown.optional",
+          "tablePart": "enum:whole_body,arms,trunk,legs.nullable.optional",
+          "isActive": "boolean.optional"
+        },
+        "params": {
+          "metricId": "string.uuid.required"
+        }
+      },
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "id": "string.uuid.required",
+            "name": "string.required",
+            "unit": "string.required",
+            "datatype": "enum:number,duration.required",
+            "decimals": "integer.required",
+            "better": "enum:higher,lower,none.required",
+            "plausibleMin": "unknown.required",
+            "plausibleMax": "unknown.required",
+            "intervalCount": "integer.nullable.required",
+            "intervalUnit": "enum:week,month.nullable.required",
+            "tableGroup": "unknown.required",
+            "tablePart": "enum:whole_body,arms,trunk,legs.nullable.required",
+            "isActive": "boolean.required",
+            "sortOrder": "integer.required",
+            "hasValues": "boolean.required"
+          }
+        },
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "404": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NOT_FOUND.required",
+          "details": {}
+        },
+        "409": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:NAME_TAKEN,METRIC_LOCKED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "Unknown fields rejected; at least one field.",
+        "METRIC_LOCKED: datatype and unit cannot change once any value exists (BR-REC-11)."
+      ]
+    },
+    {
+      "id": "POST /api/vitals",
+      "method": "POST",
+      "path": "/api/vitals",
+      "tags": [
+        "vitals"
+      ],
+      "summary": "E40 Report one web-vitals measurement",
+      "auth": {
+        "type": "any-authenticated"
+      },
+      "request": {
+        "body": {
+          "name": "enum:LCP,INP,CLS.required",
+          "value": "number.required",
+          "rating": "enum:good,needs-improvement,poor.required",
+          "route": "string.required"
+        }
+      },
+      "responses": {
+        "204": "unknown.required",
+        "400": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:VALIDATION_ERROR,INVALID_JSON.required",
+          "details": {}
+        },
+        "401": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:UNAUTHORIZED.required",
+          "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
+        }
+      },
+      "notes": [
+        "204 with no body. The server only logs a `vitals` line (BR-REC-152)."
       ]
     }
   ]

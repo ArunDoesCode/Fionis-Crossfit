@@ -61,3 +61,54 @@ export class TooManyRequestsError extends AppError {
     super(message, 429, code);
   }
 }
+
+/**
+ * 501 placeholder for endpoints whose stream has not built them yet (D-019).
+ * Each stream replaces the placeholder handler of its own endpoints.
+ */
+export class NotImplementedError extends AppError {
+  constructor(
+    message = "This endpoint is not built yet",
+    code = "NOT_IMPLEMENTED",
+  ) {
+    super(message, 501, code);
+  }
+}
+
+/**
+ * Every error `code` the member-records API can return, by HTTP status
+ * (api-contract.md "Error codes" + the 501 placeholder). The route
+ * descriptors build their error response schemas from this list and the
+ * frontend error dictionary must have a message for each code (BR-REC-154).
+ */
+export const ERROR_CODES = {
+  400: [
+    "VALIDATION_ERROR",
+    "INVALID_JSON",
+    "DATE_IN_FUTURE",
+    "START_BEFORE_JOIN",
+    "NO_VALUES",
+    "METRIC_NOT_IN_TYPE",
+    "SNOOZE_TOO_FAR",
+    "NO_DIRECTION",
+    "CURRENT_PASSWORD_WRONG",
+    "IDEMPOTENCY_KEY_MISSING",
+  ],
+  401: ["UNAUTHORIZED", "INVALID_CREDENTIALS", "SESSION_EXPIRED"],
+  403: ["CSRF_ORIGIN"],
+  404: ["NOT_FOUND"],
+  409: [
+    "NAME_TAKEN",
+    "METRIC_LOCKED",
+    "PERIOD_OVERLAP",
+    "ASSESSMENT_DATE_TAKEN",
+  ],
+  413: ["PAYLOAD_TOO_LARGE"],
+  422: ["IDEMPOTENCY_KEY_REUSED"],
+  429: ["LOGIN_LOCKED", "RATE_LIMITED"],
+  500: ["INTERNAL_ERROR"],
+  501: ["NOT_IMPLEMENTED"],
+} as const;
+
+export type ErrorStatus = keyof typeof ERROR_CODES;
+export type ErrorCode = (typeof ERROR_CODES)[ErrorStatus][number];

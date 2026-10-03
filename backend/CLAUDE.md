@@ -36,9 +36,13 @@ backend/
   `auth-members` spec.
 - **Domain code:** ranking, scoring, PR, streak and award rules live in `src/lib/domain/` as pure functions.
   Services load data, call them, and write. They never read the clock or the DB.
+- **No CORS (D-018, BR-REC-36):** the browser calls `/api` on the app's own address (Next.js forwards), so `createApp()`
+  has no CORS middleware (deviation from the standard's "explicit CORS"). Instead `originCheck` refuses a write
+  (POST/PUT/PATCH/DELETE) whose `Origin` is not `APP_ORIGIN` / `APP_ORIGINS_EXTRA` (403 `CSRF_ORIGIN`, BR-REC-37).
 - **Idempotency (project addition):** every member-facing write endpoint requires `Idempotency-Key`
   (table `idempotency_keys`, scoped to actor + key + request hash; replay returns the stored response; key
   reuse with a different body → 422). The mobile app queues writes offline, so this is mandatory.
+- **Server-Timing `db` (BR-REC-161):** measured automatically — `db/client.ts` times every Drizzle query; don't wrap repository calls in `measureDb` (raw `queryClient` calls are not counted).
 - **Concurrency:** one transaction per business operation; result/session operations take
   `pg_advisory_xact_lock(hashtext(session_id::text))` first; re-check state after the lock.
 - **TV feed:** table `tv_events` is an outbox (bigint identity id). Events are inserted in the same
@@ -68,7 +72,7 @@ bun run contract:generate | contract:check | contract:query "<term | METHOD /pat
 
 ## Env (validated at startup by `src/lib/env.ts`; documented in `.env.example`)
 `DATABASE_URL`, `DATABASE_URL_TEST` (must end `_test`), `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`
-(different values), `APP_ORIGIN` (+ extra allowed origins), `EXPO_ACCESS_TOKEN` (push, optional), `SENTRY_DSN` (optional).
+(different values), `APP_ORIGIN` (+ `APP_ORIGINS_EXTRA`, both for the Origin check), `EXPO_ACCESS_TOKEN` (push, optional), `SENTRY_DSN` (optional).
 
 ## Gym-domain conventions
 - Score encoding and `scoreSort` (higher is always better) live in `src/lib/domain/scoring.ts`; one union per

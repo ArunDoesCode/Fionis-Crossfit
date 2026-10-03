@@ -16,13 +16,13 @@
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.96 0.002 17.2);
-  --muted-foreground: oklch(0.547 0.021 43.1);
+  --muted-foreground: oklch(0.48 0.021 43.1);
   --accent: oklch(0.96 0.002 17.2);
   --accent-foreground: oklch(0.214 0.009 43.1);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.48 0.225 27.3);
   --border: oklch(0.922 0.005 34.3);
-  --input: oklch(0.922 0.005 34.3);
-  --ring: oklch(0.714 0.014 41.2);
+  --input: oklch(0.64 0.01 40);
+  --ring: oklch(0.508 0.118 165.612);
   --chart-1: oklch(0.879 0.169 91.605);
   --chart-2: oklch(0.769 0.188 70.08);
   --chart-3: oklch(0.666 0.179 58.318);
@@ -37,6 +37,36 @@
   --sidebar-accent-foreground: oklch(0.214 0.009 43.1);
   --sidebar-border: oklch(0.922 0.005 34.3);
   --sidebar-ring: oklch(0.714 0.014 41.2);
+
+  /* Status colours (ux.md, BR-REC-124/125). `--x` is text and icon colour (>= 4.5:1 on the page,
+     the card and on its own `-soft` fill); `-soft` is the badge fill. Always paired with words and an icon. */
+  --success: oklch(0.43 0.12 155);
+  --success-soft: oklch(0.95 0.05 155);
+  --warning: oklch(0.46 0.1 65);
+  --warning-soft: oklch(0.96 0.06 90);
+  --danger: oklch(0.5 0.2 27);
+  --danger-soft: oklch(0.95 0.035 25);
+  --neutral: oklch(0.44 0.02 45);
+  --neutral-soft: oklch(0.94 0.005 45);
+
+  /* Sizes and rhythm (ux.md "Design tokens"): 4 px steps (Tailwind --spacing), 48 px controls,
+     44 px touch targets, 64 px rows, page padding 16 px phone / 24 px desktop, 24 px between sections. */
+  --control-height: 3rem;
+  --tap-min: 2.75rem;
+  --row-height: 4rem;
+  --header-height: 3.5rem;
+  --tabbar-h: 4rem;
+  --actionbar-h: 4rem;
+  --page-padding: 1rem;
+  --section-gap: 1.5rem;
+  --motion: 150ms;
+  --control-fill: oklch(1 0 0);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-padding: 1.5rem;
+  }
 }
 
 .dark {
@@ -54,10 +84,10 @@
   --muted-foreground: oklch(0.714 0.014 41.2);
   --accent: oklch(0.268 0.011 36.5);
   --accent-foreground: oklch(0.986 0.002 67.8);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.83 0.14 22);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.547 0.021 43.1);
+  --input: oklch(0.56 0.012 40);
+  --ring: oklch(0.696 0.17 162.48);
   --chart-1: oklch(0.879 0.169 91.605);
   --chart-2: oklch(0.769 0.188 70.08);
   --chart-3: oklch(0.666 0.179 58.318);
@@ -71,11 +101,34 @@
   --sidebar-accent-foreground: oklch(0.986 0.002 67.8);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.547 0.021 43.1);
+
+  --success: oklch(0.82 0.15 155);
+  --success-soft: oklch(0.3 0.07 155);
+  --warning: oklch(0.85 0.14 85);
+  --warning-soft: oklch(0.32 0.07 80);
+  --danger: oklch(0.8 0.14 22);
+  --danger-soft: oklch(0.32 0.09 22);
+  --neutral: oklch(0.78 0.015 45);
+  --neutral-soft: oklch(0.3 0.01 45);
+  --control-fill: oklch(1 0 0 / 6%);
 }
 
 @theme inline {
-  --font-sans: var(--font-sans);
-  --font-heading: var(--font-heading);
+  --font-sans: var(--font-outfit);
+  --font-heading: var(--font-raleway);
+  --font-mono: var(--font-geist-mono);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.25rem;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -129,5 +182,112 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Layout helpers that read the tokens above (4 px steps come from Tailwind's --spacing). */
+@utility page-px {
+  padding-inline: var(--page-padding);
+}
+@utility section-gap {
+  gap: var(--section-gap);
+}
+@utility min-h-row {
+  min-height: var(--row-height);
+}
+@utility h-control {
+  height: var(--control-height);
+}
+@utility min-h-tap {
+  min-height: var(--tap-min);
+}
+@utility min-w-tap {
+  min-width: var(--tap-min);
+}
+
+/*
+ * ux.md rules the shadcn classes cannot express. shadcn files are never hand-edited, and unlayered
+ * rules beat every Tailwind layer, so the sizes are set here once for every screen:
+ * - BR-REC-122/123: default and large buttons, inputs and select triggers are 48 px tall, text 16 px;
+ *   small and icon buttons keep their own size on purpose (use them with a 44 px hit area).
+ * - checkbox and switch draw small but their hit area is 48 px.
+ * - tabs are 48 px tall.
+ */
+[data-slot="button"]:where(.h-9, .h-10),
+[data-slot="input"],
+[data-slot="select-trigger"][data-size="default"] {
+  min-height: var(--control-height);
+}
+[data-slot="input"],
+[data-slot="select-trigger"],
+[data-slot="select-item"] {
+  font-size: 1rem;
+}
+[data-slot="select-item"] {
+  min-height: var(--tap-min);
+}
+[data-slot="checkbox"]::after,
+[data-slot="switch"]::after {
+  inset: -1rem;
+}
+[data-slot="tabs-list"][data-variant] {
+  height: var(--control-height);
+}
+/* Inputs keep a 3:1 border (--input) with a plain fill; shadcn's `bg-input/30` would tint the whole box. */
+[data-slot="input"],
+[data-slot="select-trigger"],
+[data-slot="button"][class*="bg-input/30"] {
+  background-color: var(--control-fill);
+}
+[data-slot="button"][class*="bg-input/30"]:hover {
+  background-color: var(--muted);
+}
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+/* Sheets and dialogs use the app motion speed (BR-REC-137 turns it off below). */
+[data-slot="sheet-content"],
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"] {
+  transition-duration: var(--motion);
+  animation-duration: var(--motion);
+}
+
+/* BR-REC-120: the bottom tab bar steps aside while a sheet, a dialog or a form (a screen whose action
+   bar is marked `data-hide-tabs`) is open; the action bar then sits on the bottom edge. */
+body:has(
+  [data-slot="responsive-sheet"],
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-hide-tabs]
+) {
+  --tabbar-h: 0px;
+}
+body:has(
+    [data-slot="responsive-sheet"],
+    [data-slot="sheet-content"],
+    [data-slot="dialog-content"],
+    [data-slot="alert-dialog-content"],
+    [data-hide-tabs]
+  )
+  [data-slot="bottom-tab-bar"] {
+  display: none;
+}
+
+/* BR-REC-137: no animation when the device asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat inline and component styles */
+    animation-duration: 1ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat inline and component styles */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat inline and component styles */
+    transition-duration: 1ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat inline and component styles */
+    scroll-behavior: auto !important;
   }
 }

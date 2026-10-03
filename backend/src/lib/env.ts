@@ -12,7 +12,7 @@ const envSchema = z
   .object({
     PORT: z.coerce.number().int().positive().default(4000),
     APP_ORIGIN: z.url(),
-    /** Extra allowed CORS origins, comma separated. */
+    /** Extra addresses a write request may come from (Origin check, BR-REC-37), comma separated. */
     APP_ORIGINS_EXTRA: z
       .string()
       .default("")
@@ -29,6 +29,17 @@ const envSchema = z
     REFRESH_TOKEN_SECRET: z.string().min(32),
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().positive().default(900),
     REFRESH_TOKEN_TTL_SECONDS: z.coerce.number().positive().default(604800),
+    /** Server-side limit of a sign-in without "Keep me signed in" (12 h, BR-REC-31). */
+    SESSION_SHORT_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(43200),
+    /**
+     * How many proxies in front of the API append to `X-Forwarded-For` (BR-REC-38).
+     * 0 = ignore the header and key the rate limit on the connecting address.
+     */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
     // "test" is included because `bun test` sets NODE_ENV=test by default.
     NODE_ENV: z
       .enum(["development", "production", "test"])

@@ -12,6 +12,9 @@
     "db:push": "bun drizzle-kit push",
     "db:reset": "bun scripts/db-reset.ts",
     "db:test:prepare": "bun scripts/prepare-test-db.ts",
+    "seed": "bun scripts/seed.ts",
+    "seed:perf": "bun scripts/seed-perf.ts",
+    "bootstrap-admin": "bun scripts/bootstrap-admin.ts",
     "contract:generate": "bun scripts/generate-api-manifest.ts",
     "contract:check": "bun scripts/generate-api-manifest.ts --check",
     "contract:query": "bun scripts/query-api-manifest.ts"

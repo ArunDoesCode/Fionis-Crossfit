@@ -10,6 +10,8 @@ import type { AppEnv } from "./types";
 export type Actor = {
   id: string;
   name: string;
+  /** The sign-in session (`sid` claim); keys idempotency records and change-log rows. */
+  sessionId: string;
   permissions: ReadonlySet<PermissionKey>;
 };
 
@@ -20,7 +22,8 @@ export function can(actor: Actor, key: PermissionKey): boolean {
 
 export const ACCESS_COOKIE = "access_token";
 
-function readToken(
+/** The access token of a request: `Authorization: Bearer` first, else the `access_token` cookie. */
+export function readAccessToken(
   c: Parameters<MiddlewareHandler<AppEnv>>[0],
 ): string | undefined {
   const header = c.req.header("authorization");
@@ -31,7 +34,7 @@ function readToken(
 /** Token check (401). Sets `actor` on the context; runs once per request. */
 export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (!c.get("actor")) {
-    const token = readToken(c);
+    const token = readAccessToken(c);
     if (!token) throw new UnauthorizedError("Unauthorized");
 
     let payload: Awaited<ReturnType<typeof verifyAccessToken>>;
@@ -44,6 +47,7 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
     c.set("actor", {
       id: payload.userId,
       name: payload.userName,
+      sessionId: payload.sid,
       permissions: new Set(payload.permissions),
     });
   }

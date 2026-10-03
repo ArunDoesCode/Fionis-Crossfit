@@ -5,6 +5,8 @@ root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 fail=0
 pairs=(
   "backend/tests/fixtures/timer-cases.json frontend/tests/fixtures/timer-cases.json"
+  "backend/tests/fixtures/duration-cases.json frontend/tests/fixtures/duration-cases.json"
+  "backend/tests/fixtures/membership-end-cases.json frontend/tests/fixtures/membership-end-cases.json"
 )
 for pair in "${pairs[@]}"; do
   set -- $pair
