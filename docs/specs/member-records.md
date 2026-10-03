@@ -84,10 +84,10 @@ all run at once after M0: backend tests seed their own rows and mint tokens with
 are built against the contract and clicked through after M1/M2. After each merge: re-run `contract:generate`
 and `types:api`, then all package checks.
 
-Working copies (D-017, this module only): Stream 0 runs on `work/member-records`. At its merge point each stream
-gets its own branch `work/mr-<stream>` and worktree `.claude/worktrees/mr-<stream>` from that commit; at each
-merge point the coordinator merges the ready streams into `work/member-records`, the others merge it back in.
-One PR to `main` when M4 is done (or per batch the user asks for).
+Working copies (D-017, this module only): every stream runs in its own session, worktree and branch (made by the
+desktop app from fresh `main`) and opens its own PR to `main` when done and green. Stream 0 merges first (M0);
+A–F start from that `main`; later PRs merge in merge-point order and open streams sync from `main` after each.
+No shared integration branch.
 
 Shared files (everyone else reads only; a needed change goes to the coordinator, never a quiet edit):
 | Files | Owner |
@@ -149,4 +149,4 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
   archived stays editable + banner; performance Q1 = B three fonts; progress Q2 = B age bands; Q6/Q7 → D-017,
   D-018), members Q7 = B (auto-restore on a period covering today, BR-REC-58); new BR-REC-171…175;
   `MEMBER_ARCHIVED` removed; v1 re-read list added; benchmark moved to the map; no open questions left.
-- 2026-10-03 v2 — frozen: index + 10 sub-specs; the 9 v1 re-reads accepted by the owner.
+- 2026-10-03 v2 — frozen: index + 10 sub-specs; the 9 v1 re-reads accepted by the owner. Build process only: D-017 amended (own PR per stream, no integration branch); no rule changed.

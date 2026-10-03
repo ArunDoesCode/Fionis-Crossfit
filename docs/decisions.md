@@ -93,15 +93,15 @@ first (bottom tabs, bottom action bar, no Reset button) — overrides `nextjs-st
 for this app; record in `frontend/CLAUDE.md` when Stream 0 lands. Open: per-stream worktrees vs the
 one-worktree rule (index Q6). Rejected: per-sub-spec ID prefixes (two IDs for one module), one 400-line spec.
 
-**D-017 · 2026-10-03 · member-records only: one worktree + branch per build stream, merged into `work/member-records` at each merge point.**
-Stream 0 runs on `work/member-records`. When a stream may start (index "Parallel build plan"), it gets branch
-`work/mr-<stream>` and worktree `.claude/worktrees/mr-<stream>` from that merge-point commit. At each merge point
-the coordinator merges the ready streams into `work/member-records`, re-runs `contract:generate`, `types:api` and
-all checks; the other streams merge it back in. One PR to `main` at M4 (or per batch the user asks for).
-Worktrees are removed after their merge. Why: the user wants parallel sessions, which need separate working
+**D-017 · 2026-10-03 · member-records only: one session + worktree + branch per build stream; each stream opens its own PR to `main`.**
+Each stream (index "Parallel build plan") runs in its own desktop-app session and worktree, started from fresh
+`main`. Stream 0 merges first (M0); streams A–F start from that `main`; PRs merge in merge-point order and open
+streams sync from `main` after each merge. Why: the user wants parallel sessions, which need separate working
 copies; streams own disjoint files, so merges stay small. Scoped exception to the root CLAUDE.md rule "one
 branch, one worktree" (that file is not changed; every other module keeps the rule). Answers index Q6 of D-016.
-Rejected: one session at a time in the single worktree (no parallelism).
+Amended 2026-10-03: the first draft used an integration branch `work/member-records` and branches
+`work/mr-<stream>` with one PR at M4; dropped because the app makes one worktree per session from `main` and the
+user merges PRs on GitHub. Rejected: one session at a time (no parallelism).
 
 **D-018 · 2026-10-03 · Hosting: one small server in Mumbai (ap-south-1), next to the Supabase database, runs Next.js and the API behind one public address.**
 Chain: browser → HTTPS front on the server → Next.js → API on the same machine; the browser calls relative

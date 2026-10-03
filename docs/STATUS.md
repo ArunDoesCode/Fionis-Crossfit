@@ -4,7 +4,7 @@
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
 **Updated:** 2026-10-03 · **Milestone:** M0 Foundations (backend + frontend scaffolded; `member/` skipped for the member-records MVP)
-**Next action:** create `backend/.env` + `frontend/.env.local` from the `.env.example` files (`docker compose up -d` in `backend/`), then run Stream 0 (Foundation) of member-records on `work/member-records`; streams A–F start after its merge point M0 (index → Parallel build plan).
+**Next action:** merge the member-records spec PR, start Postgres once (`docker compose up -d` in `backend/`), then open a new session for Stream 0 (Foundation); streams A–F start after M0 is merged (index → Parallel build plan; each stream = own session, worktree and PR, D-017).
 
 ## Modules
 | Module | Spec | Map | Code | Next step |

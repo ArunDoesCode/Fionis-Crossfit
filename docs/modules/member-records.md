@@ -95,4 +95,4 @@ See "Gaps found".
 | Date | PR / commit | Change |
 |---|---|---|
 | 2026-10-03 | — | Map created with spec v2 (split into 10 sub-specs); no feature code |
-| 2026-10-03 | — | v2 answers folded (36 questions; D-017 worktrees, D-018 hosting); gaps 3, 9, 11, 16 updated; benchmark moved here from the index; tech notes added |
+| 2026-10-03 | — | v2 answers folded (36 questions; D-017 own session+PR per stream, D-018 hosting); gaps 3, 9, 11, 16 updated; benchmark moved here from the index; tech notes added |
