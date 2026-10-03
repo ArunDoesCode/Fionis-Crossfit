@@ -1,0 +1,44 @@
+{
+  "version": "1.0.0",
+  "baseUrl": "/api",
+  "errorEnvelope": {
+    "success": false,
+    "message": "string",
+    "code": "string.optional",
+    "details": "object.optional"
+  },
+  "routes": [
+    {
+      "id": "GET /api/health",
+      "method": "GET",
+      "path": "/api/health",
+      "tags": [
+        "health"
+      ],
+      "summary": "Liveness and database connectivity probe",
+      "auth": {
+        "type": "public"
+      },
+      "request": {},
+      "responses": {
+        "200": {
+          "success": "boolean.required",
+          "data": {
+            "status": "enum:ok,degraded.required",
+            "db": "enum:up,down.required"
+          }
+        },
+        "503": {
+          "success": "boolean.required",
+          "data": {
+            "status": "enum:ok,degraded.required",
+            "db": "enum:up,down.required"
+          }
+        }
+      },
+      "notes": [
+        "503 is returned when the database is unreachable (db: 'down')."
+      ]
+    }
+  ]
+}
