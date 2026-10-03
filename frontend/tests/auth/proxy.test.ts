@@ -74,6 +74,20 @@ function request(path: string, cookies: Record<string, string> = {}) {
   });
 }
 
+/** Like `request`, with extra incoming headers (what the HTTPS front puts on the visitor's request). */
+function requestWithHeaders(
+  path: string,
+  cookies: Record<string, string>,
+  headers: Record<string, string>,
+) {
+  const cookie = Object.entries(cookies)
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ');
+  return new next.NextRequest(`${APP_ORIGIN}${path}`, {
+    headers: { ...(cookie ? { cookie } : {}), ...headers },
+  });
+}
+
 const isRedirect = (res: Response) =>
   res.status >= 300 && res.status < 400 && res.headers.has('location');
 
@@ -395,5 +409,160 @@ describe('BR-REC-40 an expired access cookie is refreshed on the server before t
     const res = await next.proxy(request('/login', { refresh_token: OLD_REFRESH }));
     if (isRedirect(res)) expect(locationOf(res).pathname).not.toBe('/login');
     else expect(res.status).toBeLessThan(300);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Review R-2: the server-side refresh is made on behalf of the visitor. BR-REC-38 rate-limits refresh
+// "per network address ... from our own proxy's header", and BR-REC-43 logs the network address and the
+// device type of sign-in events. If the guard's call to the API carried neither, every visitor's guard
+// refresh would share one address (and one rate-limit bucket) and rows would show the Next.js server.
+
+const CHROME_ON_ANDROID =
+  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36';
+
+describe('BR-REC-38 the page guard refresh carries the visitor’s network address', () => {
+  test('BR-REC-38 the incoming X-Forwarded-For is sent on the server refresh unchanged', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '198.51.100.7' },
+      ),
+    );
+    expect(fetchSpy.calls).toHaveLength(1);
+    expect(fetchSpy.calls[0]?.headers.get('x-forwarded-for')).toBe('198.51.100.7');
+  });
+
+  test('BR-REC-38 a longer X-Forwarded-For chain is passed on exactly as received (no hop added, none dropped)', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '203.0.113.9, 198.51.100.7' },
+      ),
+    );
+    expect(fetchSpy.calls[0]?.headers.get('x-forwarded-for')).toBe('203.0.113.9, 198.51.100.7');
+  });
+
+  test('BR-REC-38 the address of one visitor does not leak into the refresh of another', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '198.51.100.7' },
+      ),
+    );
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '198.51.100.8' },
+      ),
+    );
+    expect(fetchSpy.calls.map((call) => call.headers.get('x-forwarded-for'))).toEqual([
+      '198.51.100.7',
+      '198.51.100.8',
+    ]);
+  });
+});
+
+describe('BR-REC-43 the page guard refresh carries the visitor’s device type', () => {
+  test('BR-REC-43 the incoming User-Agent is sent on the server refresh unchanged', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'user-agent': CHROME_ON_ANDROID },
+      ),
+    );
+    expect(fetchSpy.calls).toHaveLength(1);
+    expect(fetchSpy.calls[0]?.headers.get('user-agent')).toBe(CHROME_ON_ANDROID);
+  });
+
+  test('BR-REC-43 address and device go together, next to the refresh cookie and the app Origin', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '198.51.100.7', 'user-agent': CHROME_ON_ANDROID },
+      ),
+    );
+    const headers = fetchSpy.calls[0]?.headers;
+    expect(headers?.get('x-forwarded-for')).toBe('198.51.100.7');
+    expect(headers?.get('user-agent')).toBe(CHROME_ON_ANDROID);
+    expect(headers?.get('origin')).toBe(APP_ORIGIN);
+    expect((headers?.get('cookie') ?? '').split(';').map((pair) => pair.trim())).toContain(
+      `refresh_token=${OLD_REFRESH}`,
+    );
+  });
+
+  test('BR-REC-43 forwarding the headers does not change what the visitor gets back (new cookies, no redirect)', async () => {
+    fetchSpy = installFetch(() => refreshSucceeds());
+    const res = await next.proxy(
+      requestWithHeaders(
+        '/admin/members',
+        { refresh_token: OLD_REFRESH },
+        { 'x-forwarded-for': '198.51.100.7', 'user-agent': CHROME_ON_ANDROID },
+      ),
+    );
+    expect(isRedirect(res)).toBe(false);
+    expect(setCookieOf(res, 'access_token')).toContain(`access_token=${NEW_ACCESS}`);
+    expect(forwardedCookies(res).access_token).toBe(NEW_ACCESS);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Spec v2 (review R-4), BR-REC-42: "Opening Login while signed in goes straight to Home, except when the
+// app just sent the device there because its sign-in ended (BR-REC-41)." The app marks that hand-over with
+// `reason=expired` on the Login address (contract: "Signed in on /login -> /admin, except
+// /login?reason=expired, which renders Login"). Without the exception an access cookie that the API keeps
+// refusing bounces Login <-> /admin forever.
+
+describe('BR-REC-42 v2 Login right after the app ended the sign-in is shown, not bounced to Home', () => {
+  const EXPIRED_LOGIN = '/login?reason=expired&next=%2Fadmin%2Fmembers%2F42';
+
+  test('BR-REC-42 an access cookie and ?reason=expired: Login renders (no redirect)', async () => {
+    fetchSpy = installFetch(() => {
+      throw new Error('no API call expected when the access cookie is present');
+    });
+    const res = await next.proxy(request(EXPIRED_LOGIN, { access_token: OLD_ACCESS }));
+    expect(isRedirect(res)).toBe(false);
+    expect(res.status).toBeLessThan(300);
+  });
+
+  test('BR-REC-42 both cookies and ?reason=expired: Login renders (no redirect)', async () => {
+    fetchSpy = installFetch(() => {
+      throw new Error('no API call expected when the access cookie is present');
+    });
+    const res = await next.proxy(
+      request(EXPIRED_LOGIN, { access_token: OLD_ACCESS, refresh_token: OLD_REFRESH }),
+    );
+    expect(isRedirect(res)).toBe(false);
+    expect(res.status).toBeLessThan(300);
+  });
+
+  test('BR-REC-42 ?reason=expired without any cookie: Login renders', async () => {
+    const res = await next.proxy(request('/login?reason=expired'));
+    expect(isRedirect(res)).toBe(false);
+  });
+
+  test('BR-REC-42 the same address without the marker still goes to Home when signed in', async () => {
+    const res = await next.proxy(
+      request('/login?next=%2Fadmin%2Fmembers%2F42', { access_token: OLD_ACCESS }),
+    );
+    expect(isRedirect(res)).toBe(true);
+    expect(locationOf(res).pathname).toBe('/admin');
+  });
+
+  test('BR-REC-42 the exception covers Login only: a page with ?reason=expired is still guarded', async () => {
+    const res = await next.proxy(request('/admin/members?reason=expired'));
+    expect(isRedirect(res)).toBe(true);
+    expect(locationOf(res).pathname).toBe('/login');
   });
 });

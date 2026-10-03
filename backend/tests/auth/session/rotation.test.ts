@@ -201,3 +201,179 @@ describe("BR-REC-32 refresh needs a known, current sign-in", () => {
     expect(reply.body?.code).toBe("SESSION_EXPIRED");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Spec v2 (clarified during build, review R-1): "a replaced token inside the grace gets an
+// access token only, no second rotation". The device already holds the newest refresh token
+// from the first refresh; handing out another one would drop it and could sign the device out
+// with a false `reuse` (two tabs, cookies applied in either order).
+// ---------------------------------------------------------------------------
+
+type SessionRow = Awaited<ReturnType<typeof sessionRow>>;
+
+const refreshCookieOf = (reply: Reply) =>
+  reply.setCookies.find((c) => c.name === "refresh_token");
+
+describe("BR-REC-32 v2 a replaced token inside the 60 seconds gets an access token only", () => {
+  let device: SignedIn;
+  let replaced: string;
+  let rowBefore: SessionRow;
+  let inGrace: Reply;
+
+  beforeAll(async () => {
+    device = await signIn();
+    replaced = device.refreshToken;
+    adopt(device, await refreshSession(replaced));
+    await patchSession(device.sid, { rotatedAt: ago(30 * SECOND) });
+    rowBefore = await sessionRow(device.sid);
+    inGrace = await refreshSession(replaced);
+  });
+
+  test("BR-REC-32 v2 the replaced token used 30 s after its replacement is answered 200", () => {
+    expect(inGrace.status).toBe(200);
+  });
+
+  test("BR-REC-32 v2 the in-grace answer carries a new access_token for the same sign-in", async () => {
+    const access = inGrace.setCookies.find((c) => c.name === "access_token");
+    expect(access?.value).toBeTruthy();
+    const claims = JSON.parse(
+      Buffer.from(String(access?.value.split(".")[1]), "base64url").toString(),
+    ) as { sid?: string };
+    expect(claims.sid).toBe(device.sid);
+    expect((await me(access?.value ?? "")).status).toBe(200);
+  });
+
+  test("BR-REC-32 v2 the in-grace answer sets no refresh_token cookie (the sign-in is not replaced again)", () => {
+    expect(refreshCookieOf(inGrace)).toBeUndefined();
+  });
+
+  test("BR-REC-32 v2 the stored refresh token is not replaced again by the in-grace use", async () => {
+    const row = await sessionRow(device.sid);
+    expect(row?.tokenHash).toBe(rowBefore?.tokenHash as string);
+    expect(row?.prevTokenHash).toBe(rowBefore?.prevTokenHash ?? null);
+  });
+
+  test("BR-REC-32 v2 the in-grace use does not restart the 60 seconds (rotated_at is unchanged)", async () => {
+    const row = await sessionRow(device.sid);
+    expect(row?.rotatedAt?.getTime()).toBe(rowBefore?.rotatedAt?.getTime());
+  });
+
+  test("BR-REC-32 v2 the in-grace use keeps the sign-in alive", async () => {
+    const row = await sessionRow(device.sid);
+    expect(row?.revokedAt).toBeNull();
+    expect(row?.revokeReason).toBeNull();
+  });
+});
+
+describe("BR-REC-32 v2 the device's newest refresh token survives an in-grace use of the replaced one", () => {
+  let device: SignedIn;
+  let newest: string;
+  let later: Reply;
+
+  beforeAll(async () => {
+    device = await signIn();
+    const replaced = device.refreshToken;
+    adopt(device, await refreshSession(replaced));
+    newest = device.refreshToken;
+    await patchSession(device.sid, { rotatedAt: ago(20 * SECOND) });
+    // The other tab still holds the replaced token and refreshes inside the 60 seconds.
+    const inGrace = await refreshSession(replaced);
+    expect(inGrace.status).toBe(200);
+    // More than 60 seconds after the first replacement, this tab refreshes with its token.
+    await patchSession(device.sid, { rotatedAt: ago(120 * SECOND) });
+    later = await refreshSession(newest);
+  });
+
+  test("BR-REC-32 v2 the newest token still refreshes after the grace ended (no false reuse)", () => {
+    expect(later.status).toBe(200);
+  });
+
+  test("BR-REC-32 v2 the sign-in is not revoked after that refresh", async () => {
+    const row = await sessionRow(device.sid);
+    expect(row?.revokedAt).toBeNull();
+    expect(row?.revokeReason).toBeNull();
+  });
+
+  test("BR-REC-32 v2 that refresh is a normal rotation: a different refresh_token is set", () => {
+    const next = refreshCookieOf(later);
+    expect(next?.value).toBeTruthy();
+    expect(next?.value).not.toBe(newest);
+  });
+});
+
+describe("BR-REC-32 v2 an in-grace use does not stretch the 60 seconds", () => {
+  let device: SignedIn;
+  let replaced: string;
+  let late: Reply;
+
+  beforeAll(async () => {
+    device = await signIn();
+    replaced = device.refreshToken;
+    adopt(device, await refreshSession(replaced));
+    await patchSession(device.sid, { rotatedAt: ago(30 * SECOND) });
+    const inGrace = await refreshSession(replaced);
+    expect(inGrace.status).toBe(200);
+    // 65 seconds after the replacement (35 s after the in-grace use).
+    await patchSession(device.sid, { rotatedAt: ago(65 * SECOND) });
+    late = await refreshSession(replaced);
+  });
+
+  test("BR-REC-32 v2 the replaced token used 65 s after its replacement is 401 SESSION_EXPIRED", () => {
+    expect(late.status).toBe(401);
+    expect(late.body?.code).toBe("SESSION_EXPIRED");
+  });
+
+  test("BR-REC-32 v2 that late use ends the sign-in with reason reuse", async () => {
+    const row = await sessionRow(device.sid);
+    expect(row?.revokedAt).not.toBeNull();
+    expect(row?.revokeReason).toBe("reuse");
+  });
+});
+
+describe("BR-REC-32 v2 two tabs refreshing with the same token at once: the sign-in is replaced only once", () => {
+  let device: SignedIn;
+  let replaced: string;
+  let replies: Reply[];
+  let issued: string[];
+
+  beforeAll(async () => {
+    device = await signIn();
+    replaced = device.refreshToken;
+    replies = await Promise.all([
+      call("/api/auth/refresh", {
+        method: "POST",
+        cookies: { refresh_token: replaced },
+        ip: freshIp(),
+      }),
+      call("/api/auth/refresh", {
+        method: "POST",
+        cookies: { refresh_token: replaced },
+        ip: freshIp(),
+      }),
+    ]);
+    issued = replies
+      .map((reply) => refreshCookieOf(reply)?.value)
+      .filter((value): value is string => Boolean(value));
+  });
+
+  test("BR-REC-32 v2 both tabs are answered 200 and both get an access_token", () => {
+    for (const reply of replies) {
+      expect(reply.status).toBe(200);
+      expect(reply.setCookies.some((c) => c.name === "access_token")).toBe(
+        true,
+      );
+    }
+  });
+
+  test("BR-REC-32 v2 exactly one of the two answers sets a refresh_token (one rotation)", () => {
+    expect(issued).toHaveLength(1);
+    expect(issued[0]).not.toBe(replaced);
+  });
+
+  test("BR-REC-32 v2 the one refresh_token handed out is the device's token whichever cookie the browser applies last", async () => {
+    await patchSession(device.sid, { rotatedAt: ago(120 * SECOND) });
+    const next = await refreshSession(issued[0] ?? "");
+    expect(next.status).toBe(200);
+    expect((await sessionRow(device.sid))?.revokedAt).toBeNull();
+  });
+});

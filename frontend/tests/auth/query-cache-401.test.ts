@@ -138,3 +138,34 @@ describe('BR-REC-41 only a 401 opens Login', () => {
     });
   }
 });
+
+// Spec v2 (review R-4), BR-REC-42: Login is shown even though an access cookie is still present when
+// "the app just sent the device there because its sign-in ended (BR-REC-41)". The page guard recognises that
+// hand-over by `reason=expired` on the Login address (contract: "Signed in on /login -> /admin, except
+// /login?reason=expired"). So the address the 401 handler opens must carry it, or a cookie the API keeps
+// refusing bounces Login <-> /admin forever.
+describe('BR-REC-42 v2 the address opened after a failed refresh tells the page guard why', () => {
+  test('BR-REC-42 a 401 UNAUTHORIZED opens /login with reason=expired and still the page as next', async () => {
+    const { visited } = stubBrowser('/admin/members/42');
+    await failQuery(new ApiError(401, 'Sign in required', 'UNAUTHORIZED'));
+    const target = loginTarget(visited);
+    expect(target.pathname).toBe('/login');
+    expect(target.searchParams.get('reason')).toBe('expired');
+    expect(target.searchParams.get('next')).toBe('/admin/members/42');
+  });
+
+  test('BR-REC-42 a 401 SESSION_EXPIRED carries reason=expired too', async () => {
+    const { visited } = stubBrowser('/admin/settings/account');
+    await failQuery(new ApiError(401, 'Sign in again', 'SESSION_EXPIRED'));
+    const target = loginTarget(visited);
+    expect(target.pathname).toBe('/login');
+    expect(target.searchParams.get('reason')).toBe('expired');
+    expect(target.searchParams.get('next')).toBe('/admin/settings/account');
+  });
+
+  test('BR-REC-42 the address stays on the app (no other site)', async () => {
+    const { visited } = stubBrowser('/admin/reports');
+    await failQuery(new ApiError(401, 'Sign in required', 'UNAUTHORIZED'));
+    expect(loginTarget(visited).origin).toBe(APP_ORIGIN);
+  });
+});
