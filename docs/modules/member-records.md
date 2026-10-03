@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: 95bd081
+last_verified_commit: c6fcdda
 last_verified_on: 2026-10-03
 depends_on: []
 ---
@@ -16,6 +16,8 @@ descriptors (handlers answer 501 `NOT_IMPLEMENTED` until their stream builds the
 log, domain maths in both packages, seeds, and the mobile-first admin shell with empty slots. Streams A–F fill
 their own files (ownership: spec index → "Shared files"). Working copies per stream: D-017. Hosting: D-018.
 Stream 0 choices: D-019. Run notes: `.pipeline/member-records-foundation/` (plan, contract, findings, screens, checklist).
+Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), Account (S17); choices D-020; run notes
+`.pipeline/member-records-auth/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -34,6 +36,9 @@ Stream 0 choices: D-019. Run notes: `.pipeline/member-records-foundation/` (plan
 | frontend shared | `frontend/src/lib/{format.ts,messages/errors.ts,messages/words.ts,hooks/*}` | `formatDay`, `formatRelativeDay`, `formatValue`, `formatPhone`, `messageForCode`, `UI_TEXT` |
 | shell | `frontend/src/components/shells/*`, `app/(app)/admin/layout.tsx` | `AppShell`, `BottomTabBar` (< 1024 px), `SideNav`, `SignOutButton` (slot for A) |
 | shared UI | `frontend/src/components/common/*` | PageHeader (+ActionBar), Section, ListRow, StatusBadge, ChipList, ResponsiveSheet, ConfirmSheet, NumberField, DurationField, DateField, ChoiceChips, Sparkline, OfflineBanner, Skeletons, EmptyState, ErrorState |
+| auth (A) backend | `backend/src/{routes,controller,service,repository}/auth*`, `service/authLock.ts` (pure lock rules), `scripts/bootstrap-admin.ts` | `authService.{login,refresh,logout,logoutAll,me,changePassword,createAccount,resetPassword,unlock}(…, meta, now)`, `authRepository.{lockForUpdate,rotateSession,touchSession,…}` |
+| auth (A) libs | `backend/src/lib/{token,http,auth-middleware,rate-limiter}.ts` | `signAccessToken` (iss/aud pinned), `generateRefreshToken`, `hashRefreshToken` (HMAC hex); `setAccessCookie`, `setRefreshCookie(c, token, remember)`, `clearAuthCookies`, `clientAddress` (`TRUST_PROXY_HOPS`), `deviceLabel`; `readAccessToken`; `rateLimiter({windowMs,max})` |
+| auth (A) admin | `frontend/src/proxy.ts`, `lib/auth/{safeNextPath,loginError,loginUrl,signOut}.ts`, `lib/validators/auth.ts`, `lib/api/auth/{fetchers,queries}.ts`, `components/{views,pages}/auth/*`, `app/(auth)/login`, `app/(app)/admin/settings/account` | page guard + server E02; `useMe`, `useLogin`, `useChangePassword`, `useSignOut(All)`; `authKeys.me()`; global 401 handler in `lib/queryClient.ts` |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
@@ -62,14 +67,20 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 - `API_ROUTES` leaves are manifest paths with `:param`; `apiPath(template, params)` fills them. `next.config.ts` rewrites are baked at build time (`API_URL` needed for `next build`); run `bunx next typegen` after adding routes.
 - `PageHeader`'s `action` is drawn twice (desktop header / phone `ActionBar`); `ActionBar form` hides the tab bar. Sticky elements under the offline banner use `top-[var(--offline-h,0px)]`.
 - Dark `--primary` fails 4.5:1 as text: no `text-primary` / `variant="link"`. 48 px controls and 44 px hit areas are unlayered CSS in `globals.css` (shadcn files are never edited).
-- `src/proxy.ts` matcher still catches `/api/*` and `/` (auth stream A fixes, BR-REC-39).
+- Auth lock: one `login_attempts` row read `FOR UPDATE`; fixed 15-min window from the first wrong try (spec v2); tries refused while locked are not counted; the counter update and the reuse revoke commit BEFORE the 401/429 is thrown (a throw inside the transaction would roll them back).
+- Refresh grace: a replaced token within 60 s gets an access cookie only (no rotation, no refresh cookie); after 60 s it revokes `reuse`. E05 reads the `sid` row (revoked too); a random `sid` → 401 (use `createSignedInSession()` in tests).
+- Rate limiter is in-memory per process; key = `clientAddress` (`TRUST_PROXY_HOPS`, default 0; D-018 production 1 — Next 16 rewrites pass `X-Forwarded-For` through). The page guard forwards the visitor's `X-Forwarded-For` and `User-Agent` on its E02 call.
+- Page guard: its server E02 must send `Origin` (= `request.nextUrl.origin`; behind the HTTPS front Next must see the public origin, #8); `/login?reason=expired` renders Login even with an access cookie (no loop); only a 401 `UNAUTHORIZED` triggers the client refresh.
+- argon2id: 64 MiB / t=2 pinned; minimum cost only under `NODE_ENV=test`; a decoy hash at import keeps unknown-user timing equal.
+- Live server tests: `backend/tests/auth/signin` spawns the real API (`bun --no-env-file src/index.ts`); do not run two auth suites at once on one DB (one-row tables).
 - Theme follows the device (`defaultTheme="system"`); Settings (C) must render `ThemeToggle` for the manual choice.
 
-## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list)
+## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
 |---|---|---|
-| 2, 3, 4, 10 | refresh-token store/rotation, cookie names, rate-limiter key, proxy matcher + server refresh | auth (A) |
-| 7 | `bootstrap-admin` script | auth (A) |
+| — | transient refresh failures (5xx, 429, network) sign the device out (R-3) | [#7](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/7) (A) |
+| — | page-guard refresh behind the HTTPS front: public origin + `TRUST_PROXY_HOPS=1` check (R-12) | [#8](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/8) (G) |
+| — | no component tests for Login / Account (no DOM test library) (R-13) | [#9](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/9) |
 | 13 | manifest / installable app | performance (G) |
 | — | idempotency answer outside the handler transaction | [#3](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/3) (B) |
 | — | ResponsiveSheet ships Drawer + Dialog + AlertDialog together (RV-11) | [#4](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/4) (G) |
@@ -118,7 +129,9 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 | seeds | `backend/tests/scripts/{seed,seed-perf}.test.ts` | 10, 13, 65, 68, 168, 170 |
 | domain | `{backend,frontend}/tests/lib/domain/*.test.ts` + golden `duration-cases.json`, `membership-end-cases.json` | 03, 12, 51, 52, 75, 93, 94, 105 |
 | frontend libs | `frontend/tests/lib/{format,messages/errors}.test.ts` | 127, 128, 154 |
-| manual | `.pipeline/member-records-foundation/checklist.md` | shell / ux rules, fonts, same origin |
+| auth backend | `backend/tests/auth/signin/*` (live API child), `backend/tests/auth/session/*` (`createApp().request` + probe child) | 01, 02, 25–35, 37, 38, 43, 44, 171 |
+| auth admin | `frontend/tests/auth/{proxy,fetch-wrapper,query-cache-401,locked-line,login-error,safe-next-path,sign-out,validators}.test.ts` | 01, 02, 27, 29, 35, 38–42 |
+| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
 
 ## History
 | Date | PR / commit | Change |
@@ -126,3 +139,4 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 | 2026-10-03 | — | Map created with spec v2 (split into 10 sub-specs); no feature code |
 | 2026-10-03 | — | v2 answers folded (36 questions; D-017, D-018); benchmark moved here; tech notes added |
 | 2026-10-03 | Stream 0 branch `claude/member-records-foundation-57e849` | Foundation built (M0): schema, 40 routes (501), middleware, change log, domain maths, seeds, shell + slots; data-model v2 (no hand SQL); D-019; 2 review rounds (round 2 READY), issues #3–#6; 551 backend + 506 frontend tests |
+| 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |

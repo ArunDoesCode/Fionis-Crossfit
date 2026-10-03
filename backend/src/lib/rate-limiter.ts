@@ -1,10 +1,18 @@
 import type { MiddlewareHandler } from "hono";
 
 import { TooManyRequestsError } from "./errors";
+import { clientAddress } from "./http";
 
-// In-memory, per-process: resets on restart and is not shared across instances.
-// Fine for a single-process deployment; swap for a shared store if that changes.
-// The key is the first X-Forwarded-For hop, so deploy behind a proxy that sets it.
+/**
+ * Fixed-window limit per network address (BR-REC-38): the `max + 1`-th request inside
+ * `windowMs` is 429 `RATE_LIMITED`. The address is `clientAddress(c)`: the connecting
+ * address, or the `X-Forwarded-For` entry our own proxy appended (`TRUST_PROXY_HOPS`);
+ * whatever the browser put in that header is never the key.
+ *
+ * In-memory, per process: resets on restart and is not shared across instances. Fine for the
+ * single-process deployment (D-018); swap for a shared store if that changes. Mount it as route
+ * `extra` middleware so it runs after auth and body validation.
+ */
 export function rateLimiter({
   windowMs,
   max,
@@ -13,18 +21,21 @@ export function rateLimiter({
   max: number;
 }): MiddlewareHandler {
   const hits = new Map<string, { count: number; resetAt: number }>();
+  let nextSweep = 0;
 
   return async (c, next) => {
-    const key =
-      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const key = clientAddress(c) ?? "unknown";
     const now = Date.now();
 
-    for (const [k, entry] of hits) {
-      if (now > entry.resetAt) hits.delete(k);
+    if (now >= nextSweep) {
+      for (const [k, entry] of hits) {
+        if (now >= entry.resetAt) hits.delete(k);
+      }
+      nextSweep = now + windowMs;
     }
 
     const entry = hits.get(key);
-    if (!entry) {
+    if (!entry || now >= entry.resetAt) {
       hits.set(key, { count: 1, resetAt: now + windowMs });
     } else if (entry.count >= max) {
       throw new TooManyRequestsError("Too many attempts, try again later");
