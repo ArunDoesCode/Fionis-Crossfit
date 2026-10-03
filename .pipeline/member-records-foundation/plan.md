@@ -44,8 +44,8 @@ BR-REC-153, 155, 157, 159, 162, 163, 164, 168, 169, 175   (167 struck, data-mode
   full `API_ROUTES`; Home + Member-page frames with empty slots; route folders of the ux screen index with
   `loading.tsx` + `error.tsx`; `frontend/CLAUDE.md` env text + D-016 §14 override; make S2 frontend tests green.
 
-### Verify  [ ]   reviewer + test-runner, max 2 fix loops
-### Knowledge  [ ]   map (code locations, font sizes, gaps closed), spec implementation status, STATUS, decisions D-019
+### Verify  [x]   reviewer + test-runner, max 2 fix loops
+### Knowledge  [x]   map (code locations, font sizes, gaps closed), spec implementation status, STATUS, decisions D-019
 
 ## Out (streams A–G)
 Endpoint behaviour E01–E40, `bootstrap-admin`, `proxy.ts` changes, feature screens, service worker, CI budget checks.
