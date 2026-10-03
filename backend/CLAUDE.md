@@ -73,6 +73,7 @@ bun run contract:generate | contract:check | contract:query "<term | METHOD /pat
 ## Env (validated at startup by `src/lib/env.ts`; documented in `.env.example`)
 `DATABASE_URL`, `DATABASE_URL_TEST` (must end `_test`), `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`
 (different values), `APP_ORIGIN` (+ `APP_ORIGINS_EXTRA`, both for the Origin check), `EXPO_ACCESS_TOKEN` (push, optional), `SENTRY_DSN` (optional).
+Parallel worktrees share the Postgres on 5433: give each its own `DATABASE_URL` and `DATABASE_URL_TEST` database names.
 
 ## Gym-domain conventions
 - Score encoding and `scoreSort` (higher is always better) live in `src/lib/domain/scoring.ts`; one union per

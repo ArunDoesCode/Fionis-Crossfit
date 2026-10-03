@@ -4,7 +4,7 @@
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
 **Updated:** 2026-10-03 · **Milestone:** M0 Foundations (backend + frontend scaffolded; `member/` skipped for the member-records MVP)
-**Next action:** open + merge the Stream 0 PR (branch `claude/member-records-foundation-57e849`) = merge point M0; then streams A–F start from fresh `main` (auth A is already stacking on the Stream 0 branch), each in its own session/worktree/PR (D-017).
+**Next action:** merge [#10](https://github.com/ArunDoesCode/Fionis-Crossfit/pull/10) once CI is green (= M0); then, in each stream's own session from fresh `main` (D-017), run `/feature member-records/auth` first (M1; the auth session already stacks on Stream 0 — sync it with `main`), then `/feature member-records/setup` and `/feature member-records/members` (M2).
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
@@ -28,7 +28,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
-| member-records Stream 0 | `claude/member-records-foundation-57e849` | verify done, ready for PR | — | you: ask for the PR |
+| member-records Stream 0 | `claude/member-records-foundation-57e849` | PR open | [#10](https://github.com/ArunDoesCode/Fionis-Crossfit/pull/10) | you: merge when CI is green |
 
 ## Waiting on you
 - [ ] Setup checklist (`docs/WORKFLOW.md` §Setup): create the GitHub repo, protect `main`, install `gh`.

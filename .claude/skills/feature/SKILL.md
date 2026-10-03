@@ -47,6 +47,9 @@ Load yourself (cheap, no exploring): `docs/STATUS.md`, the spec, `docs/modules/<
    test is wrong must quote the contradicting spec rule; decide against the spec; if the test really is wrong,
    re-brief **test-writer** (not the developer) and commit as `test(<module>): …`.
 5. Commit `feat(<module>): <slice> (BR-…)` — production code only. Tick the slice in `plan.md`.
+   Always commit with an explicit pathspec (`git commit -m … -- <paths>`): agents running in parallel stage
+   their own files (`git rm`), which otherwise leak into your commit. Once another stream session has merged
+   your branch (D-017), never amend or rebase the commits it took.
 
 ## 3. Verify (max 2 fix iterations)
 ```

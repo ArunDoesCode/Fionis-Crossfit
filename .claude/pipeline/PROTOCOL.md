@@ -59,7 +59,8 @@ reason. Findings table: `# | severity | area | file:line | finding | fix`.
 - backend-dev: `backend/**` except test files · frontend-dev: `frontend/**` except `src/tv/**`, `src/app/tv/**`, tests
 - tv-dev: `frontend/src/tv/**`, `frontend/src/app/tv/**`, `frontend/src/lib/timer/**` except tests · member-dev: `member/**` except tests
 - test-writer: only test files and the manual checklist. Test files = `**/*.test.ts(x)`, `backend/tests/**`
-  (incl. `fixtures/`), `backend/src/scenarios/**`, `frontend/tests/**`, `frontend/e2e/**`, `member/tests/**`, `member/.maestro/**`
+  (incl. `fixtures/`), `backend/src/scenarios/**`, `frontend/tests/**`, `frontend/e2e/**`, `member/tests/**`, `member/.maestro/**`, `scripts/check-fixtures.sh`
+  (fixture-pair list; allowed in `test(` commits)
 - coordinator: `.pipeline/**`, `docs/**`, GitHub issues · reviewer, test-runner, explorer: read-only
 
 ## Test independence (non-negotiable)
