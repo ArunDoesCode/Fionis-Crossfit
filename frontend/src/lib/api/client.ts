@@ -35,9 +35,22 @@ export function toSearchParams(query: QueryParams = {}): string {
   return qs ? `?${qs}` : '';
 }
 
+// Only a 401 with code UNAUTHORIZED means "the access cookie is gone, try a refresh" (BR-REC-41).
+// E01's 401 INVALID_CREDENTIALS and E06's 400 CURRENT_PASSWORD_WRONG are answers for the screen.
+async function isUnauthorized(res: Response): Promise<boolean> {
+  if (res.status !== 401) return false;
+  const body = (await res
+    .clone()
+    .json()
+    .catch(() => null)) as ErrorBody | null;
+  return body?.code === 'UNAUTHORIZED';
+}
+
 /**
  * Isomorphic fetch wrapper. Throws ApiError on non-2xx, 204 -> undefined, 10 s timeout by default.
- * `refresh` (browser only): called once on a 401, then the request is retried once. It never redirects.
+ * `refresh` (browser only): called once on a 401 UNAUTHORIZED, then the request is retried once. It never
+ * redirects: when the refresh fails the 401 is thrown and the global handler in `queryClient.ts` opens
+ * Login with the current page as `next`.
  * `options.etag`: see ApiOptions.
  */
 export function createApi(
@@ -76,7 +89,12 @@ export function createApi(
 
     let res = await send(path, opts, useEtag);
 
-    if (res.status === 401 && refresh && path !== API_ROUTES.AUTH.REFRESH && (await refresh())) {
+    if (
+      refresh &&
+      path !== API_ROUTES.AUTH.REFRESH &&
+      (await isUnauthorized(res)) &&
+      (await refresh())
+    ) {
       res = await send(path, opts, useEtag);
     }
 
