@@ -63,7 +63,7 @@ MVP = each stream builds it with its screens · Pass = performance stream, last 
 | 8 | Optimistic updates for Assess soon, Remind me later, clear, archive/restore, turn on/off (undo on error); never for saving results or adding members | MVP | due-list, members, setup |
 | 9 | Search: 250 ms debounce, 2-letter minimum, older requests cancelled, results cached per text | MVP | members |
 | 10 | Skeletons the same size as content; reserved message lines; fixed field heights | MVP | all |
-| 11 | Indexes: trigram search (name, phone, email); member + measurement + date; measurement + date; period exclusion (data-model) | MVP | Stream 0 |
+| 11 | Indexes: name (lower) and last-10-phone-digits b-tree; member + measurement + date; measurement + date (data-model). Trigram search indexes only if a budget fails (data-model v2) | MVP | Stream 0 |
 | 12 | No N+1: list rows get last assessment and membership status in one query; due engine = 3 queries then a pure function | MVP | members, due-list |
 | 13 | Offset paging per the standard with a parallel count; keyset paging only past 10,000 rows | Later | — |
 | 14 | Lists return only the columns shown; dates as strings | MVP | all |
@@ -103,3 +103,4 @@ Edge rendering, a CDN for API responses, offline saving with background sync, im
   CI on every PR (new BR-REC-173); BR-REC-151 checked by a manifest test (Lighthouse 12 has no PWA audit); D-018
   setup in BR-REC-141 and tactics 1, 2, 15, 17, 18
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-03 v1 — tactic 11 follows data-model v2 (no trigram or exclusion indexes); no rule changed

@@ -16,3 +16,7 @@ export const connectDb = async () => {
 export const disconnectDb = async () => {
   await queryClient.end({ timeout: 5 });
 };
+
+/** The shared client, and the handle a service gets inside `db.transaction(async (tx) => ...)`. */
+export type Db = typeof db;
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
