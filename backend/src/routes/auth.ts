@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { authController } from "../controller/authController";
 import { asyncHandler } from "../lib/async-handler";
+import { rateLimiter } from "../lib/rate-limiter";
 import {
   badRequestResponse,
   errorResponse,
@@ -27,6 +28,10 @@ const authRouter = new Hono<AppEnv>();
 const route = routeMounter(authRouter, MAIN_ROUTES.auth);
 const EP = END_POINTS.auth;
 const TAGS = ["auth"];
+
+/** BR-REC-38: per network address, on top of the lock. Runs after body validation, before the handler. */
+const loginRateLimit = rateLimiter({ windowMs: 60_000, max: 10 });
+const refreshRateLimit = rateLimiter({ windowMs: 60_000, max: 30 });
 
 /** 429 while the login is locked: `details.retryAfterSeconds` (>= 1) = wait until a new try is allowed. */
 const loginLockedResponse = errorResponse(["LOGIN_LOCKED"]).extend({
@@ -60,6 +65,7 @@ route(
     ],
   },
   asyncHandler(authController.login),
+  [loginRateLimit],
 );
 
 route(
@@ -83,6 +89,7 @@ route(
     ],
   },
   asyncHandler(authController.refresh),
+  [refreshRateLimit],
 );
 
 route(
