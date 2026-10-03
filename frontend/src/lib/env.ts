@@ -2,8 +2,15 @@ import { z } from 'zod';
 
 // Client-visible env. Each NEXT_PUBLIC_* var must be read as a literal `process.env.X`
 // so Next can inline it into the browser bundle.
+// Same origin (D-018): a path such as `/api`. A full URL is still accepted (e.g. a separate API host).
+const apiBaseUrl = z
+  .union([z.url(), z.string().regex(/^\/(?!\/)/)], {
+    error: 'NEXT_PUBLIC_API_URL must be a path like /api or a valid URL',
+  })
+  .transform((value) => value.replace(/\/+$/, ''));
+
 const clientSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.url({ error: 'NEXT_PUBLIC_API_URL must be a valid URL' }),
+  NEXT_PUBLIC_API_URL: apiBaseUrl,
 });
 
 export const clientEnv = clientSchema.parse({
