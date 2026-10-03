@@ -8,17 +8,17 @@ Baseline (2026-10-03): backend typecheck/lint/test/contract:check, frontend type
 ## Decisions taken for this run (recorded as D-019)
 1. Handlers not built yet answer **501 `NOT_IMPLEMENTED`** (placeholder; each stream replaces its own).
 2. Access token gets a **`sid`** claim now (idempotency keys and the change log are keyed by session); auth (A) issues real ids.
-3. Schema ships as **committed migration files** (`drizzle-kit generate` + reviewed SQL for extensions, exclusion
-   constraint, one-row tables, `login_attempts` row, trigram indexes). `db:test:prepare`/`db:reset` migrate; no `db:push`.
+3. **No hand-written SQL** (user): all in Drizzle, dev/test/CI keep `db:push`; no extensions, trigram indexes or
+   exclusion constraint (data-model v2: BR-REC-167 struck, 169 rewritten); `login_attempts` row created by `seed`.
 4. Backend **CORS removed** (same origin, D-018); writes guarded by the Origin check (BR-REC-37).
 5. **BR-REC-127 formatters** and the gym-day "today" helper are shared frontend libs built here (every stream needs them).
 6. One union per enum-like column in `backend/src/lib/enums.ts`, used by Drizzle checks and Zod (BR-REC-175).
 
 ## Slices
 ### S1 — Contract  (backend-dev)  [ ]
-BR-REC-153, 155, 157, 159, 162, 163, 164, 167, 168, 169, 175
-- `lib/enums.ts`; Drizzle schema for all 13 tables (`db/schemas/*`); migration in `src/db/migrations/` with custom SQL;
-  `db:migrate`; db scripts switched to migrations; CI backend job migrates.
+BR-REC-153, 155, 157, 159, 162, 163, 164, 168, 169, 175   (167 struck, data-model v2)
+- `lib/enums.ts`; Drizzle schema for all 13 tables (`db/schemas/*`), every check/index in Drizzle; `db:push` +
+  `db:test:prepare` build it on an empty DB.
 - `types/<feature>.types.ts` (auth, settings, assessment-types/metrics, members, memberships, assessments, due,
   reports, exports, vitals): Zod request/response for E01–E40; `routes/<feature>.ts` registering all 40 with
   descriptors (E01–E03 public, rest `any-authenticated`; list routes use the shared pagination schema), handlers → 501.
@@ -27,7 +27,7 @@ BR-REC-153, 155, 157, 159, 162, 163, 164, 167, 168, 169, 175
   (domain maths both packages, middleware exports, audit helper, seed guard, golden-fixture JSON formats).
 
 ### S2 — Red tests  (test-writer ×2, zero-context)  [ ]
-- backend: schema constraints (163, 164, 167, 168, 169, 175), contract/route drift (153, 155, 157, 159 + E01–E40 present),
+- backend: schema constraints (163, 164, 168, 169, 175), contract/route drift (153, 155, 157, 159 + E01–E40 present),
   middleware (156 idempotency, 160 ETag, 161 headers/gzip/Server-Timing, 37 Origin), change-log helper (158),
   seed (10, 13, 65, 68) + seed:perf guard (170), domain maths (12, 51, 52, 94); golden fixtures
   `duration-cases.json`, `membership-end-cases.json` in both packages + `scripts/check-fixtures.sh` pairs.

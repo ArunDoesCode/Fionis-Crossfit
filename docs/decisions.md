@@ -112,14 +112,14 @@ check (D-015); one hop from Next to the API and a few ms to the database meet th
 cross-site cookie and CORS set-up, an extra network hop). The provider and machine size are picked at deploy
 time; they must be in ap-south-1. Answers member-records index Q7.
 
-**D-019 · 2026-10-03 · member-records Stream 0 build choices: 501 placeholders, `sid` claim now, migration files only, no CORS, shared formatters.**
+**D-019 · 2026-10-03 · member-records Stream 0 build choices: 501 placeholders, `sid` claim now, no hand-written SQL, no CORS, shared formatters.**
 (1) Endpoints whose stream has not built them yet answer 501 `NOT_IMPLEMENTED`; each stream replaces its own.
 (2) The access token carries `sid` (session id) from Stream 0, because `idempotency_keys` and `audit_log` are keyed
-by session; auth (Stream A) issues the real ids. (3) The schema ships as committed migration files (`drizzle-kit
-generate` plus reviewed SQL for `pg_trgm`/`btree_gist`, the period exclusion constraint, one-row tables and the
-`login_attempts` row); dev, test and CI migrate, `db:push` is no longer used, so every database matches production
-(BR-REC-169). (4) Backend CORS is removed: same origin (D-018), writes guarded by the Origin check (BR-REC-37).
+by session; auth (Stream A) issues the real ids. (3) No hand-written SQL (user decision, keep the MVP light): everything is
+expressed in Drizzle; dev, test and CI keep `db:push`; production gets a generated migration at deploy. So no
+extensions, no trigram indexes and no exclusion constraint (BR-REC-167 struck; overlap is the BR-REC-09 service
+check); the `login_attempts` row is created by `seed` (data-model v2). (4) Backend CORS is removed: same origin (D-018), writes guarded by the Origin check (BR-REC-37).
 (5) BR-REC-127 formatters and the gym-day "today" helper are shared frontend libs built by Stream 0. (6) One TS union
 per enum-like column in `backend/src/lib/enums.ts`, used by the Drizzle checks and Zod (BR-REC-175).
 Why: every stream needs these before it starts; deciding them once avoids six conflicting versions.
-Rejected: `db:push` for dev (extensions and exclusion constraints need hand SQL), formatters per stream.
+Rejected: hand SQL in custom migrations (the guard hook blocks editing migrations; not worth it for 1,000 members), formatters per stream.
