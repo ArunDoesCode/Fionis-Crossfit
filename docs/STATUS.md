@@ -4,12 +4,12 @@
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
 **Updated:** 2026-10-03 · **Milestone:** M0 Foundations (backend + frontend scaffolded; `member/` skipped for the member-records MVP)
-**Next action:** merge the `work/m0` scaffold PR, create `backend/.env` and `frontend/.env.local` from the `.env.example` files (`docker compose up -d` in `backend/`), then `/feature member-records` (spec is frozen v1).
+**Next action:** create `backend/.env` + `frontend/.env.local` from the `.env.example` files (`docker compose up -d` in `backend/`), then run Stream 0 (Foundation) of member-records on `work/member-records`; streams A–F start after its merge point M0 (index → Parallel build plan).
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
 |---|---|---|---|---|
-| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v1 | — | none | decide repo setup + stack, then `/feature member-records` |
+| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v2: index + 10 frozen sub-specs, 175 rules, 0 open questions | stub (gaps, benchmark, tech notes) | none | Stream 0 → streams A–F in parallel worktrees (D-017) |
 | auth-members (login, invites, roles, permissions) | none | — | none | M1 — `/spec auth-members` |
 | workouts (library, benchmarks, versions, timer config) | none | — | none | M1 |
 | sessions (templates, schedule, lifecycle state machine, jobs) | none | — | none | M1 |
