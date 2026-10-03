@@ -123,3 +123,14 @@ check); the `login_attempts` row is created by `seed` (data-model v2). (4) Backe
 per enum-like column in `backend/src/lib/enums.ts`, used by the Drizzle checks and Zod (BR-REC-175).
 Why: every stream needs these before it starts; deciding them once avoids six conflicting versions.
 Rejected: hand SQL in custom migrations (the guard hook blocks editing migrations; not worth it for 1,000 members), formatters per stream.
+
+**D-020 · 2026-10-03 · member-records auth (Stream A) build choices: stacked on Stream 0, grace without re-rotation, guard forwards the visitor, no new frontend env.**
+(1) Stream A was built stacked on the unmerged Stream 0 branch (user decision: do not wait for the M0 PR, do not
+overlap with that session); Stream 0 bugs found on the way went to that session (R-1 gzip, T-4), never patched here;
+after the M0 squash-merge the branch synced with `main` keeping its own side (trees verified equal). (2) A replaced refresh
+token used within 60 s gets an access cookie only — no second rotation — so concurrent refreshes cannot drop the newest
+token and fake a `reuse` (auth spec v2). (3) The page guard calls E02 with `Origin` = the request's origin and forwards
+the visitor's `X-Forwarded-For` and `User-Agent`, so limits and the change log see the real device; `TRUST_PROXY_HOPS`
+defaults to 0 (one shared bucket, fails closed) and is 1 on the D-018 server. (4) Auth owns the unlisted files
+`lib/env.ts`, `.env.example`, `package.json`, `lib/http.ts`, `client.ts`, `queryClient.ts` (user decision). Rejected:
+waiting for the M0 PR (idle hours), rotating again inside the grace (cookie-order race), a new `APP_ORIGIN` frontend env var.

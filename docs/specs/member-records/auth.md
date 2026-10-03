@@ -134,6 +134,27 @@ username, a lock per network address.
 | Q2 | "Keep me signed in" lasts… | **A** 30 days since last use / B 7 days / C 90 days | **B** 7 days since last use (sliding) |
 | Q3 | "Keep me signed in" unticked signs out… | **A** after 12 hours or when the browser closes / B only when the browser closes | **A** |
 
+## Implementation status (2026-10-03, branch `claude/member-records-parallel-build-f18292`)
+
+All 23 rules built. Backend tests: `backend/tests/auth/{signin,session}/`; admin tests: `frontend/tests/auth/`; manual: `.pipeline/member-records-auth/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 01, 28, 29 | `signin/login-lock.test.ts`; `frontend/tests/auth/{proxy,locked-line,login-error}.test.ts` |
+| 02, 27, 34 | `signin/password.test.ts`; `frontend/tests/auth/validators.test.ts` |
+| 25, 26 | `signin/bootstrap-admin.test.ts`, `signin/bootstrap-audit.test.ts` |
+| 30, 31 | `session/{cookies,lifetime}.test.ts` |
+| 32 | `session/rotation.test.ts` |
+| 33, 44 | `session/access-token.test.ts` |
+| 35 | `signin/sign-out.test.ts`; `frontend/tests/auth/sign-out.test.ts` |
+| 36 | Stream 0 `backend/tests/app.test.ts` (same origin, no CORS) |
+| 37 | `session/csrf-origin.test.ts` |
+| 38 | `session/rate-limit.test.ts`; `frontend/tests/auth/proxy.test.ts` (visitor headers) |
+| 39, 40, 42 | `frontend/tests/auth/{proxy,safe-next-path}.test.ts` |
+| 41 | `frontend/tests/auth/{fetch-wrapper,query-cache-401}.test.ts` |
+| 43 | `session/audit.test.ts`, `signin/bootstrap-audit.test.ts` |
+| 171 | `signin/lock-signed-in-and-unlock.test.ts` |
+Screens S1 and S17 have no automated UI test (no DOM test library, #9); covered by the manual checklist.
+
 ## Changelog
 
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-01, 02 from v1 unchanged

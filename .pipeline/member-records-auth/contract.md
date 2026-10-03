@@ -14,7 +14,7 @@ Generated: `backend/.contracts/*`, `frontend/src/types/api.generated.ts`. Handle
 | ID | Method + path | Request | `data` | Errors (beyond 403 / 400 above) |
 |---|---|---|---|---|
 | E01 | POST `/login` | body `{ username 1–64, password 1–128, remember: boolean }` (all required) | `{ username, remember, expiresAt }` + 2 cookies | 401 `INVALID_CREDENTIALS` · 429 `LOGIN_LOCKED` · 429 `RATE_LIMITED` |
-| E02 | POST `/refresh` | no body; `refresh_token` cookie | `{ expiresAt }` + 2 cookies | 401 `SESSION_EXPIRED` · 429 `RATE_LIMITED` |
+| E02 | POST `/refresh` | no body; `refresh_token` cookie | `{ expiresAt }` + `access_token`; `refresh_token` only when it rotates (not for a replaced token inside the 60 s grace) | 401 `SESSION_EXPIRED` · 429 `RATE_LIMITED` |
 | E03 | POST `/logout` | no body | `{}`; cookies cleared | none; 200 even with no sign-in to end |
 | E04 | POST `/logout-all` | no body | `{ signedOut: int ≥ 0 }`; cookies cleared | 401 |
 | E05 | GET `/me` | — | `{ username, remember, expiresAt }` | 401 |
@@ -40,7 +40,7 @@ not `remember` → sign-in time + `SESSION_SHORT_TTL_SECONDS` (12 h cap, refresh
   and before the lock check. Address = `X-Forwarded-For` entry counted from the right by `TRUST_PROXY_HOPS` (0 = ignore the header).
 
 ## Cookies (BR-REC-30, 31)
-Both: `HttpOnly; SameSite=Lax; Path=/`, plus `Secure` when `NODE_ENV=production`. Set by E01 and E02 (always both); cleared by E03 and E04 (`Max-Age=0`).
+Both: `HttpOnly; SameSite=Lax; Path=/`, plus `Secure` when `NODE_ENV=production`. Set by E01 (both) and E02 (`access_token` always, `refresh_token` only when it rotates); cleared by E03 and E04 (`Max-Age=0`).
 | Cookie | Value | Max-Age |
 |---|---|---|
 | `access_token` | JWT HS256: `userId`, `userName`, `permissions: []`, `sid`, `iss`, `aud`, `exp` | `ACCESS_TOKEN_TTL_SECONDS` (900) always, so the page guard sees it vanish |
