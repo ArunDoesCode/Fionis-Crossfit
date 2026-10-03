@@ -121,3 +121,10 @@ Cursor/keyset pagination (performance.md), public API keys, webhooks, a change-l
   `archivedAt`; E01/E06 lock is global with `Retry-After`; E36 `ageBand` 10-year bands; base URL per D-018
 - 2026-10-03 v0 — members Q7 = B: E22 (and E23) return `memberRestored` when a period covering today restores an archived member (BR-REC-58)
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-03 v1 — clarified during build (Stream 0, owner to confirm at merge): BR-REC-156 — only a successful (2xx)
+  answer is stored and replayed; a request that fails frees its key, so a corrected retry runs normally; a duplicate
+  that arrives while the first is still running waits up to 10 s for its answer, then gets 429 `RATE_LIMITED` (E17,
+  E22); a claim older than 60 s without an answer is treated as abandoned. Status codes: 201 for creates E10, E13,
+  E17, E22; E40 204; `VALIDATION_ERROR` carries `details.issues[{ path, message }]`; endpoints not built yet answer
+  501 `NOT_IMPLEMENTED` (temporary, D-019). E39 CSV is streamed and not gzip-compressed by the API (BR-REC-147
+  first byte; the HTTPS front may compress). No rule changed.
