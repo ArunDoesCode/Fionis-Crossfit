@@ -60,7 +60,7 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 - After `next()` a handler error does not throw (Hono sets `c.error`); route middleware checks status, not try/catch.
 - `z.guid()` for ids (well-formed unknown id → 404). `.partial()` keeps strictness; the "≥ 1 field" refine is invisible in OpenAPI. `date` columns `mode:"string"`, `numeric(12,3)` `mode:"number"`.
 - drizzle-kit push recreates indexes mixing columns and expressions unless the column goes through `asExpression()` (`db/schemas/helpers.ts`).
-- Shared Postgres on 5433: each parallel worktree needs its own `DATABASE_URL_TEST` database name.
+- Shared Postgres on 5433: each parallel worktree needs its own `DATABASE_URL_TEST` database name, and never runs `db:push` / `db:test:prepare` against a database another session uses while its schema differs (`push --force` drops the other tables).
 - `membershipStatus`: a not-yet-started latest period is Active; lead window inclusive; `daysLeft` 0 = ends today (+0).
 - `parseDuration` accepts `m:ss` / `h:mm:ss` only, ≤ 599:59; bare numbers → null. Timed metrics have unit "min:sec": never append it after `formatDuration`.
 - Use `messageForCode`, never `ERROR_MESSAGES[code]` (inherited keys like `constructor`). `LOGIN_LOCKED` text ends "Try again later." — Login (A) adds minutes from `details.retryAfterSeconds`.
