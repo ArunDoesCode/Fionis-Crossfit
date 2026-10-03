@@ -78,6 +78,9 @@ Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths fro
 | F | progress | M0 | E35–E39, S12, S13, S18 |
 | G | performance | M3 | Pass items: service worker + install, CI bundle/font/Lighthouse checks on every PR, vitals (E40), `bench`, deploy to the D-018 server |
 
+Implementation status: **Stream 0 built** (branch `claude/member-records-foundation-57e849`): data-model, api-contract,
+ux shell rules + BR-REC-12, 51, 52, 75, 94, 150, 174 — BR → test file in the map's Tests table. Streams A–G: not started on `main`.
+
 Merge points: **M0** Stream 0 → **M1** A (needed to click through anything) → **M2** C, B → **M3** D, E, F
 → **M4** G + scenario test (3 real binder members typed in end to end) + owner/coach check → done. A–F may
 all run at once after M0: backend tests seed their own rows and mint tokens with `signAccessToken`; screens

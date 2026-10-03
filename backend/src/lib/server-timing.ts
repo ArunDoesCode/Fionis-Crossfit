@@ -32,8 +32,11 @@ export function serverTiming(): MiddlewareHandler<AppEnv> {
 
 /**
  * Wraps one database call so its duration is added to the current request's
- * `db` timing. Repositories wrap their queries with it; outside a request it
- * just runs the call.
+ * `db` timing; outside a request it just runs the call. Do not wrap Drizzle
+ * calls: `db/client.ts` already times every Drizzle query, so wrapping would
+ * double-count. Use it only for raw `queryClient` calls. `db` is a sum of query
+ * durations, so parallel queries can make it exceed `total`; `db.$count()` is
+ * not timed.
  */
 export async function measureDb<T>(query: () => Promise<T>): Promise<T> {
   const timing = requestTiming.getStore();

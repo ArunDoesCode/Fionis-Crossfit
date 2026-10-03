@@ -23,7 +23,7 @@
 | RV-8 | minor | admin | OfflineBanner sticky over the sticky PageHeader | frontend-dev | fixed (round 1) |
 | RV-9 | minor | admin | `useBackToClose` depends on `close` identity → spurious history.back | frontend-dev | fixed (round 1) |
 | RV-10 | minor | admin | BottomTabBar `gap-1` (4 px) vs BR-REC-122 8 px | frontend-dev | fixed (round 1) |
-| RV-11 | minor | admin | ResponsiveSheet statically imports Drawer + Dialog + AlertDialog (BR-REC-146) | GitHub issue for Stream G (measure with the bundle check) | issue |
+| RV-11 | minor | admin | ResponsiveSheet statically imports Drawer + Dialog + AlertDialog (BR-REC-146) | GitHub issue for Stream G (measure with the bundle check) | issue #4 |
 | RV-12 | minor | contract | server-side writes send no `Origin` → 403 (affects auth's page-guard refresh, BR-REC-40) | coordinator: note in contract.md for Stream A | done — auth stream confirms its server-side E02 sends Origin |
 | RV-13 | minor | spec | ownership table misses `HomeSearch.tsx` (B), `lib/api/client.ts` (Stream 0); token/auth-middleware edits | coordinator: index table | fixed (round 1) |
 | RV-14 | minor | tests | no automated UI checks for shell rules; manual checklist pending | test-writer checklist mode before hand-over | at hand-over |
@@ -31,6 +31,16 @@
 | TR-1 | blocker | test | biome format error in `frontend/tests/lib/domain/membership.test.ts` (from c5057d0) | test-writer (format only) | fixed |
 | TR-2 | — | domain | 12 frontend R-0 failures = the red regression tests of R-0 (expected) | with R-0 | dup of R-0 |
 | TR-3 | blocker→rejected | process | test commit 0a3d629 touched `scripts/check-fixtures.sh` | — | rejected: the script is fixture-parity tooling, not production code; registering the pairs belongs with the fixtures (PROTOCOL "Shared golden fixture": only test-writer edits fixtures) and the brief assigned it |
+
+## Round 2 (review of the round-1 fixes: READY, 0 blocker, 0 major)
+| # | Sev | Finding | Resolution |
+|---|---|---|---|
+| R2-1 | minor | `measureDb` docstring told repositories to wrap queries (double count) | fixed |
+| R2-2 | minor | Server-Timing `db` is a sum (can exceed `total`); `db.$count()` untimed | documented (docstring, map) + issue #5 (G) |
+| R2-3 | minor | no test proves `db` > 0 for a real query | issue #5 (G) |
+| R2-4 | minor | RV-4 only partly closed: duplicate still possible after 60 s or a crash between commit and store | issue #3 comment (B) |
+| R2-5 | minor | DurationField: no table test for paste; ":" jump not in a rule | issue #6 (D) |
+| R2-6 | minor | offline banner under the notch with `viewport-fit=cover` | issue #6 (G) |
 
 ## Clarified during build (recorded in the spec changelogs)
 - `parseDuration` accepts only `m:ss` / `h:mm:ss`; a bare number such as "95" → null (BR-REC-12 "typed as mm:ss").
