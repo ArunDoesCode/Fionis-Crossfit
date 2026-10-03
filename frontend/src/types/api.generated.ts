@@ -84,8 +84,12 @@ export interface paths {
         put?: never;
         /**
          * E01 Sign in with the shared login
-         * @description Sets the httpOnly cookies `access_token` (JWT, 15 min) and `refresh_token`.
-         *     429 LOGIN_LOCKED: one lock for the whole login; `details.retryAfterSeconds` and a `Retry-After` header.
+         * @description Sets two cookies (httpOnly, Secure in production, SameSite=Lax, Path=/): `access_token` (JWT, Max-Age 15 min) and `refresh_token` (Max-Age 7 days when `remember`, a browser-session cookie when not).
+         *     `remember: false`: the server ends the sign-in after 12 hours (`SESSION_SHORT_TTL_SECONDS`).
+         *     Unknown username and wrong password give the same 401 INVALID_CREDENTIALS. The 5th wrong try in 15 minutes is still 401; the 6th is 429.
+         *     429 LOGIN_LOCKED: one lock for the whole login, 15 minutes, never extended by tries; `details.retryAfterSeconds` (>= 1) and a `Retry-After` header in seconds. Even the right password is refused.
+         *     429 RATE_LIMITED: 10 requests a minute per network address (after body validation, before the lock check).
+         *     A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).
          */
         post: operations["postApiAuthLogin"];
         delete?: never;
@@ -106,6 +110,10 @@ export interface paths {
         /**
          * E02 Refresh the sign-in (rotates the refresh cookie)
          * @description Reads the `refresh_token` cookie; no body. Works while the login is locked (BR-REC-171).
+         *     200 sets both cookies again, as E01 (a new access token and a new refresh token); `expiresAt` is when the sign-in ends if unused.
+         *     401 SESSION_EXPIRED: no, unknown, expired or revoked token, or a replaced token used after its 60 s grace (the sign-in is then revoked).
+         *     429 RATE_LIMITED: 30 requests a minute per network address.
+         *     A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).
          */
         post: operations["postApiAuthRefresh"];
         delete?: never;
@@ -125,7 +133,9 @@ export interface paths {
         put?: never;
         /**
          * E03 Sign out this device
-         * @description Clears the cookies. Public: it must work with an expired access token.
+         * @description Clears both cookies (Max-Age=0, Path=/) and ends this device's sign-in. Public: it must work with an expired access token.
+         *     Always 200, also when there is no sign-in to end.
+         *     A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).
          */
         post: operations["postApiAuthLogout"];
         delete?: never;
@@ -145,7 +155,9 @@ export interface paths {
         put?: never;
         /**
          * E04 Sign out every device (this one too)
-         * @description Clears the cookies.
+         * @description Ends every active sign-in, this one too, and clears both cookies. `signedOut` counts the sign-ins ended.
+         *     Other devices lose access within 15 minutes (access tokens are checked by signature only, BR-REC-33); their refresh fails at once.
+         *     A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).
          */
         post: operations["postApiAuthLogout-all"];
         delete?: never;
@@ -161,7 +173,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** E05 The signed-in account */
+        /**
+         * E05 The signed-in account
+         * @description Does not check whether the sign-in was revoked (signature only, BR-REC-33); `remember` and `expiresAt` come from the session row of the token's `sid`.
+         */
         get: operations["getApiAuthMe"];
         put?: never;
         post?: never;
@@ -182,8 +197,11 @@ export interface paths {
         put?: never;
         /**
          * E06 Change the password (other devices are signed out)
-         * @description A wrong current password is 400, never 401: a 401 makes the app try a refresh and sign out.
-         *     A wrong current password counts toward the lock; while locked: 429 LOGIN_LOCKED as E01.
+         * @description `newPassword` must be 8-128 characters, else 400 VALIDATION_ERROR on `newPassword` (BR-REC-02, 27).
+         *     A wrong current password is 400, never 401: a 401 makes the app try a refresh and sign out.
+         *     A wrong current password counts toward the lock; while locked: 429 LOGIN_LOCKED as E01 (`details.retryAfterSeconds`, `Retry-After`).
+         *     Every other sign-in is revoked; this one stays and its cookies do not change.
+         *     A write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).
          */
         post: operations["postApiAuthPassword"];
         delete?: never;
@@ -1373,7 +1391,16 @@ export interface operations {
                         success: false;
                         message: string;
                         /** @enum {string} */
-                        code: "LOGIN_LOCKED" | "RATE_LIMITED";
+                        code: "LOGIN_LOCKED";
+                        details: {
+                            retryAfterSeconds: number;
+                        };
+                    } | {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
                         details?: {
                             [key: string]: unknown;
                         };
@@ -1637,8 +1664,8 @@ export interface operations {
                         message: string;
                         /** @enum {string} */
                         code: "LOGIN_LOCKED";
-                        details?: {
-                            [key: string]: unknown;
+                        details: {
+                            retryAfterSeconds: number;
                         };
                     };
                 };
