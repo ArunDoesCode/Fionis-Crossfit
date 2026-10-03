@@ -119,7 +119,12 @@ let before = new Set<string>();
 let beforeCaptured = false;
 let seeded: Promise<PerfSeedSummary> | undefined;
 
-/** Seeds the catalog and the 1,000-member data set once; every test reads the same data. */
+// `bun test` proves the shape of the data set on a small run (memberCount) to stay fast.
+// SEED_PERF_FULL=1 runs the very same checks on the default 1,000 members (nightly / by hand).
+const COUNT = process.env.SEED_PERF_FULL === "1" ? 1000 : 100;
+const TIMEOUT = 300_000;
+
+/** Seeds the catalog and the data set once; every test reads the same data. */
 function perfData(): Promise<PerfSeedSummary> {
   seeded ??= (async () => {
     await resetCatalog();
@@ -128,7 +133,7 @@ function perfData(): Promise<PerfSeedSummary> {
     const existing = await rows(sql`select id from members`);
     before = new Set(existing.map((r) => String(r.id)));
     beforeCaptured = true;
-    return seedPerf({ today: TODAY, randomSeed: 170 });
+    return seedPerf({ today: TODAY, randomSeed: 170, memberCount: COUNT });
   })();
   return seeded;
 }
@@ -166,129 +171,167 @@ const notBefore = (column: string) =>
         [...before].map((id) => sql`${id}::uuid`),
         sql`, `,
       )})`;
-describe("BR-REC-170 seed:perf creates the 1,000-member data set", () => {
-  test("BR-REC-170 creates 1,000 members and reports the row counts", async () => {
-    const summary = await perfData();
-    const [count] = await rows(
-      sql`select count(*)::int as n from members where ${notBefore("id")}`,
-    );
-    expect(count?.n).toBe(1000);
-    expect(summary.members).toBe(1000);
-  }, 600_000);
+describe("BR-REC-170 seed:perf creates the member data set", () => {
+  test(
+    `BR-REC-170 creates ${COUNT} members and reports the row counts`,
+    async () => {
+      const summary = await perfData();
+      const [count] = await rows(
+        sql`select count(*)::int as n from members where ${notBefore("id")}`,
+      );
+      expect(count?.n).toBe(COUNT);
+      expect(summary.members).toBe(COUNT);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 half are male, half female", async () => {
-    await perfData();
-    const found = await rows(
-      sql`select sex, count(*)::int as n from members where ${notBefore("id")} group by sex`,
-    );
-    const bySex = Object.fromEntries(found.map((r) => [String(r.sex), r.n]));
-    expect(bySex).toEqual({ male: 500, female: 500 });
-  }, 600_000);
+  test(
+    "BR-REC-170 half are male, half female",
+    async () => {
+      await perfData();
+      const found = await rows(
+        sql`select sex, count(*)::int as n from members where ${notBefore("id")} group by sex`,
+      );
+      const bySex = Object.fromEntries(found.map((r) => [String(r.sex), r.n]));
+      expect(bySex).toEqual({ male: COUNT / 2, female: COUNT / 2 });
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 10% are archived", async () => {
-    const summary = await perfData();
-    const [row] = await rows(
-      sql`select count(*)::int as n from members where ${notBefore("id")} and archived_at is not null`,
-    );
-    expect(row?.n).toBe(100);
-    expect(summary.archivedMembers).toBe(100);
-  }, 600_000);
+  test(
+    "BR-REC-170 10% are archived",
+    async () => {
+      const summary = await perfData();
+      const [row] = await rows(
+        sql`select count(*)::int as n from members where ${notBefore("id")} and archived_at is not null`,
+      );
+      expect(row?.n).toBe(COUNT / 10);
+      expect(summary.archivedMembers).toBe(COUNT / 10);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 ages are 18 to 65", async () => {
-    await perfData();
-    const found = await rows(
-      sql`select date_of_birth::text as dob from members where ${notBefore("id")}`,
-    );
-    const ages = found.map((r) => ageOn(String(r.dob), TODAY));
-    expect(Math.min(...ages)).toBeGreaterThanOrEqual(18);
-    expect(Math.max(...ages)).toBeLessThanOrEqual(65);
-  }, 600_000);
+  test(
+    "BR-REC-170 ages are 18 to 65",
+    async () => {
+      await perfData();
+      const found = await rows(
+        sql`select date_of_birth::text as dob from members where ${notBefore("id")}`,
+      );
+      const ages = found.map((r) => ageOn(String(r.dob), TODAY));
+      expect(Math.min(...ages)).toBeGreaterThanOrEqual(18);
+      expect(Math.max(...ages)).toBeLessThanOrEqual(65);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 members joined over the last 3 years, not in the future", async () => {
-    await perfData();
-    const [row] = await rows(
-      sql`select min(joined_on)::text as first, max(joined_on)::text as last from members where ${notBefore("id")}`,
-    );
-    const first = String(row?.first);
-    const last = String(row?.last);
-    expect(first >= "2023-10-03").toBe(true);
-    expect(last <= TODAY).toBe(true);
-    const spanDays =
-      (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) /
-      86_400_000;
-    expect(spanDays).toBeGreaterThanOrEqual(900);
-  }, 600_000);
+  test(
+    "BR-REC-170 members joined over the last 3 years, not in the future",
+    async () => {
+      await perfData();
+      const [row] = await rows(
+        sql`select min(joined_on)::text as first, max(joined_on)::text as last from members where ${notBefore("id")}`,
+      );
+      const first = String(row?.first);
+      const last = String(row?.last);
+      expect(first >= "2023-10-03").toBe(true);
+      expect(last <= TODAY).toBe(true);
+      const spanDays =
+        (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) /
+        86_400_000;
+      expect(spanDays).toBeGreaterThanOrEqual(900);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 every member has continuous memberships: no overlap, no gap, end dates as BR-REC-51", async () => {
-    await perfData();
-    const periods = await rows(sql`
+  test(
+    "BR-REC-170 every member has continuous memberships: no overlap, no gap, end dates as BR-REC-51",
+    async () => {
+      await perfData();
+      const periods = await rows(sql`
       select p.member_id, p.plan, p.start_on::text as start_on, p.end_on::text as end_on
       from membership_periods p where ${notBefore("p.member_id")}
       order by p.member_id, p.start_on`);
-    const perMember = new Map<string, Row[]>();
-    for (const p of periods) {
-      const list = perMember.get(String(p.member_id)) ?? [];
-      list.push(p);
-      perMember.set(String(p.member_id), list);
-    }
-    expect(perMember.size).toBe(1000);
+      const perMember = new Map<string, Row[]>();
+      for (const p of periods) {
+        const list = perMember.get(String(p.member_id)) ?? [];
+        list.push(p);
+        perMember.set(String(p.member_id), list);
+      }
+      expect(perMember.size).toBe(COUNT);
 
-    const problems: string[] = [];
-    for (const [memberId, list] of perMember) {
-      for (const [i, p] of list.entries()) {
-        const expectedEnd = membershipEnd(p.plan as Plan, String(p.start_on));
-        if (expectedEnd !== p.end_on)
-          problems.push(`${memberId} end ${p.end_on} != ${expectedEnd}`);
-        const prev = list[i - 1];
-        if (prev) {
-          const next = new Date(`${String(prev.end_on)}T00:00:00Z`);
-          next.setUTCDate(next.getUTCDate() + 1);
-          if (next.toISOString().slice(0, 10) !== p.start_on) {
-            problems.push(`${memberId} gap or overlap after ${prev.end_on}`);
+      const problems: string[] = [];
+      for (const [memberId, list] of perMember) {
+        for (const [i, p] of list.entries()) {
+          const expectedEnd = membershipEnd(p.plan as Plan, String(p.start_on));
+          if (expectedEnd !== p.end_on)
+            problems.push(`${memberId} end ${p.end_on} != ${expectedEnd}`);
+          const prev = list[i - 1];
+          if (prev) {
+            const next = new Date(`${String(prev.end_on)}T00:00:00Z`);
+            next.setUTCDate(next.getUTCDate() + 1);
+            if (next.toISOString().slice(0, 10) !== p.start_on) {
+              problems.push(`${memberId} gap or overlap after ${prev.end_on}`);
+            }
           }
         }
       }
-    }
-    expect(problems.slice(0, 5)).toEqual([]);
-  }, 600_000);
+      expect(problems.slice(0, 5)).toEqual([]);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 body composition is about monthly, fitness tests about every two months", async () => {
-    await perfData();
-    const found = await rows(sql`
+  test(
+    "BR-REC-170 body composition is about monthly, fitness tests about every two months",
+    async () => {
+      await perfData();
+      const found = await rows(sql`
       select t.name as type, avg(a.gap)::float as avg_gap, count(*)::int as n from (
         select type_id, assessed_on - lag(assessed_on) over (partition by member_id, type_id order by assessed_on) as gap
         from assessments where ${notBefore("member_id")}
       ) a join assessment_types t on t.id = a.type_id
       where a.gap is not null group by t.name`);
-    const gap = Object.fromEntries(
-      found.map((r) => [String(r.type), Number(r.avg_gap)]),
-    );
-    expect(gap["Body composition"]).toBeGreaterThanOrEqual(27);
-    expect(gap["Body composition"]).toBeLessThanOrEqual(33);
-    expect(gap["Fitness test"]).toBeGreaterThanOrEqual(55);
-    expect(gap["Fitness test"]).toBeLessThanOrEqual(66);
-  }, 600_000);
+      const gap = Object.fromEntries(
+        found.map((r) => [String(r.type), Number(r.avg_gap)]),
+      );
+      expect(gap["Body composition"]).toBeGreaterThanOrEqual(27);
+      expect(gap["Body composition"]).toBeLessThanOrEqual(33);
+      expect(gap["Fitness test"]).toBeGreaterThanOrEqual(55);
+      expect(gap["Fitness test"]).toBeLessThanOrEqual(66);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 members who joined more than 70 days ago have both kinds of assessment", async () => {
-    await perfData();
-    const found = await rows(sql`
+  test(
+    "BR-REC-170 members who joined more than 70 days ago have both kinds of assessment",
+    async () => {
+      await perfData();
+      const found = await rows(sql`
       select count(*)::int as n from members m
       where ${notBefore("m.id")} and m.joined_on <= (${TODAY}::date - 70)
         and (select count(distinct a.type_id) from assessments a where a.member_id = m.id) < 2`);
-    expect(found[0]?.n).toBe(0);
-  }, 600_000);
+      expect(found[0]?.n).toBe(0);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 no assessment is in the future or before the member joined", async () => {
-    await perfData();
-    const found = await rows(sql`
+  test(
+    "BR-REC-170 no assessment is in the future or before the member joined",
+    async () => {
+      await perfData();
+      const found = await rows(sql`
       select count(*)::int as n from assessments a join members m on m.id = a.member_id
       where ${notBefore("a.member_id")} and (a.assessed_on > ${TODAY}::date or a.assessed_on < m.joined_on)`);
-    expect(found[0]?.n).toBe(0);
-  }, 600_000);
+      expect(found[0]?.n).toBe(0);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 values carry noise (not constant) and stay realistic (inside the check ranges)", async () => {
-    await perfData();
-    const spread = await rows(sql`
+  test(
+    "BR-REC-170 values carry noise (not constant) and stay realistic (inside the check ranges)",
+    async () => {
+      await perfData();
+      const spread = await rows(sql`
       select count(*)::int as members,
              count(*) filter (where distinct_values > 1)::int as varied
       from (
@@ -297,51 +340,65 @@ describe("BR-REC-170 seed:perf creates the 1,000-member data set", () => {
         where ${notBefore("x.member_id")} and m.name = 'Weight'
         group by x.member_id having count(*) >= 6
       ) s`);
-    const members = Number(spread[0]?.members);
-    expect(members).toBeGreaterThan(100);
-    expect(Number(spread[0]?.varied) / members).toBeGreaterThanOrEqual(0.9);
+      const members = Number(spread[0]?.members);
+      expect(members).toBeGreaterThan(COUNT * 0.3);
+      expect(Number(spread[0]?.varied) / members).toBeGreaterThanOrEqual(0.9);
 
-    const range = await rows(sql`
+      const range = await rows(sql`
       select count(*)::int as total,
              count(*) filter (
                where (m.plausible_min is null or x.value >= m.plausible_min)
                  and (m.plausible_max is null or x.value <= m.plausible_max))::int as inside
       from measurements x join metrics m on m.id = x.metric_id where ${notBefore("x.member_id")}`);
-    expect(Number(range[0]?.total)).toBeGreaterThan(0);
-    expect(
-      Number(range[0]?.inside) / Number(range[0]?.total),
-    ).toBeGreaterThanOrEqual(0.95);
-  }, 600_000);
+      expect(Number(range[0]?.total)).toBeGreaterThan(0);
+      expect(
+        Number(range[0]?.inside) / Number(range[0]?.total),
+      ).toBeGreaterThanOrEqual(0.95);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 times are whole seconds (BR-REC-164)", async () => {
-    await perfData();
-    const found = await rows(sql`
+  test(
+    "BR-REC-170 times are whole seconds (BR-REC-164)",
+    async () => {
+      await perfData();
+      const found = await rows(sql`
       select count(*)::int as n from measurements x join metrics m on m.id = x.metric_id
       where ${notBefore("x.member_id")} and m.datatype = 'duration' and x.value <> round(x.value)`);
-    expect(found[0]?.n).toBe(0);
-  }, 600_000);
+      expect(found[0]?.n).toBe(0);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 each value repeats its assessment's member and date (BR-REC-166)", async () => {
-    await perfData();
-    const found = await rows(sql`
+  test(
+    "BR-REC-170 each value repeats its assessment's member and date (BR-REC-166)",
+    async () => {
+      await perfData();
+      const found = await rows(sql`
       select count(*)::int as n from measurements x join assessments a on a.id = x.assessment_id
       where ${notBefore("x.member_id")} and (x.member_id <> a.member_id or x.measured_on <> a.assessed_on)`);
-    expect(found[0]?.n).toBe(0);
-  }, 600_000);
+      expect(found[0]?.n).toBe(0);
+    },
+    TIMEOUT,
+  );
 
-  test("BR-REC-170 the printed row counts equal what is in the database", async () => {
-    const summary = await perfData();
-    const [p] = await rows(
-      sql`select count(*)::int as n from membership_periods p where ${notBefore("p.member_id")}`,
-    );
-    const [a] = await rows(
-      sql`select count(*)::int as n from assessments where ${notBefore("member_id")}`,
-    );
-    const [x] = await rows(
-      sql`select count(*)::int as n from measurements where ${notBefore("member_id")}`,
-    );
-    expect(summary.periods).toBe(p?.n as number);
-    expect(summary.assessments).toBe(a?.n as number);
-    expect(summary.measurements).toBe(x?.n as number);
-  }, 600_000);
+  test(
+    "BR-REC-170 the printed row counts equal what is in the database",
+    async () => {
+      const summary = await perfData();
+      const [p] = await rows(
+        sql`select count(*)::int as n from membership_periods p where ${notBefore("p.member_id")}`,
+      );
+      const [a] = await rows(
+        sql`select count(*)::int as n from assessments where ${notBefore("member_id")}`,
+      );
+      const [x] = await rows(
+        sql`select count(*)::int as n from measurements where ${notBefore("member_id")}`,
+      );
+      expect(summary.periods).toBe(p?.n as number);
+      expect(summary.assessments).toBe(a?.n as number);
+      expect(summary.measurements).toBe(x?.n as number);
+    },
+    TIMEOUT,
+  );
 });

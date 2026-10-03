@@ -25,7 +25,9 @@
     { "text": "1:60:00", "seconds": null },
     { "text": "1:05:60", "seconds": null },
     { "text": "2:02:02:02", "seconds": null },
-    { "text": "12:3a", "seconds": null }
+    { "text": "12:3a", "seconds": null },
+    { "text": "95", "seconds": null },
+    { "text": "122", "seconds": null }
   ],
   "format": [
     { "seconds": 0, "text": "0:00" },
