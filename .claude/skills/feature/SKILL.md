@@ -73,7 +73,8 @@ a finding still open after 2 fixes → stop and summarise to the user.
    BR coverage table (BR | enforced at | test), what changed per surface, contract changes, review summary
    (fixed / issue / rejected), test results vs baseline, and the **manual checklist** written by test-writer
    (checklist mode; TV items name the `/tv/lab` scenario, member items the device/OS). `gh pr checks <n>`
-   must be green before handing over. Tell the user how to run it (`backend bun run dev`, `frontend bun run dev`,
+   must be green before handing over. After opening the PR, push nothing more to it until `get_status` says it is
+   still open (a PR merged meanwhile leaves later commits off `main`). Tell the user how to run it (`backend bun run dev`, `frontend bun run dev`,
    `member bun run start`).
 
 ## Resume from PR feedback (`--resume --from-pr <n>`)
