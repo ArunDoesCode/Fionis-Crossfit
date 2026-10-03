@@ -61,6 +61,10 @@ Uses `DATABASE_URL` of its own process (tests spawn it with the `*_test` URL). N
 | `--unlock` | clears the lock counter, writes `auth.unlock` (BR-REC-171) | 0 (also when not locked) |
 Modes are exclusive (2 if mixed or on unknown flags); `--username` with `--reset` is rejected (2). Prompts only when a value is missing; no TTY and a missing value → 2.
 
+Also written (build, 2026-10-03): audit actions `auth.account_created` and `auth.password_reset` (script; `session_id` null, device
+"bootstrap-admin"); script exit code 3 = unexpected failure. Refresh grace keeps one replaced token: a third concurrent refresh with the same
+old token gets 401 `SESSION_EXPIRED` without a revoke; a replaced token used after 60 s revokes the sign-in (`reuse`).
+
 ## Env (backend; both new ones have defaults, existing `.env` files keep working)
 `SESSION_SHORT_TTL_SECONDS` int > 0, default 43200 · `TRUST_PROXY_HOPS` int ≥ 0, default 0 (D-018 production value 1, see `.env.example`).
 Existing: `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_TTL_SECONDS`, `APP_ORIGIN`.
