@@ -289,7 +289,7 @@ export interface paths {
         put?: never;
         /**
          * E17 Add a member with the first membership period
-         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED.
+         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.
          */
         post: operations["postApiMembers"];
         delete?: never;
@@ -364,7 +364,7 @@ export interface paths {
         put?: never;
         /**
          * E22 Add a membership period (renew)
-         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED.
+         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.
          *     `memberRestored` is true when the period covers today and the member was archived (BR-REC-58).
          */
         post: operations["postApiMembersMemberIdPeriods"];
@@ -2267,6 +2267,24 @@ export interface operations {
                     };
                 };
             };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
         };
     };
     getApiMembersMemberId: {
@@ -2851,6 +2869,24 @@ export interface operations {
                         message: string;
                         /** @enum {string} */
                         code: "IDEMPOTENCY_KEY_REUSED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
                         details?: {
                             [key: string]: unknown;
                         };

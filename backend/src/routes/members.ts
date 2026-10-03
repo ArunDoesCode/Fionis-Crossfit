@@ -35,7 +35,7 @@ const EP = END_POINTS.members;
 const TAGS = ["members"];
 
 const IDEMPOTENCY_NOTE =
-  "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED.";
+  "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.";
 const MEMBER_FIELD_ERRORS = errorResponse([
   "VALIDATION_ERROR",
   "INVALID_JSON",
@@ -79,6 +79,7 @@ route(
       "400": MEMBER_FIELD_ERRORS,
       "401": unauthorizedResponse,
       "422": errorResponse(["IDEMPOTENCY_KEY_REUSED"]),
+      "429": errorResponse(["RATE_LIMITED"]),
     },
     notes: [IDEMPOTENCY_NOTE],
   },
@@ -179,6 +180,7 @@ route(
       "404": notFoundResponse,
       "409": errorResponse(["PERIOD_OVERLAP"]),
       "422": errorResponse(["IDEMPOTENCY_KEY_REUSED"]),
+      "429": errorResponse(["RATE_LIMITED"]),
     },
     notes: [
       IDEMPOTENCY_NOTE,

@@ -1,7 +1,20 @@
+import { QueryPromise } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import { env } from "../lib/env";
+import { measureDb } from "../lib/server-timing";
+
+// Server-Timing `db` (BR-REC-161): every Drizzle query is a `QueryPromise` that
+// runs when it is awaited, so timing that one `then` measures all of them
+// (select/insert/update/delete, `db.execute`, queries inside a transaction)
+// without each repository calling `measureDb`. Outside a request it just runs.
+// Raw `queryClient` calls and BEGIN/COMMIT are not counted.
+const drizzleThen = QueryPromise.prototype.then;
+// biome-ignore lint/suspicious/noThenProperty: replacing Drizzle's own `then` on purpose (see above)
+QueryPromise.prototype.then = function (onFulfilled, onRejected) {
+  return measureDb(() => drizzleThen.call(this)).then(onFulfilled, onRejected);
+};
 
 // Prepared statements off: the app must also work behind a transaction-mode
 // pooler (Supabase pooler URL in production).

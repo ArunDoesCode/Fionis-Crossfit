@@ -19,7 +19,9 @@ const IN_FLIGHT = 0;
 const CLAIM_STALE_SECONDS = 60;
 /** A duplicate that arrives while the first request runs waits this long for its answer. */
 const WAIT_FOR_FIRST_MS = 10_000;
-const WAIT_STEP_MS = 50;
+/** A waiting duplicate checks for the answer after 50 ms, then 100, 200, ... up to 500 ms apart. */
+const WAIT_FIRST_STEP_MS = 50;
+const WAIT_MAX_STEP_MS = 500;
 
 const KEY_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,7 +69,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * on the primary key before the handler runs, so two requests with the same key
  * at the same moment cannot both create: the second waits for the first answer
  * and replays it. Only a successful (2xx) answer is kept; a request that failed
- * releases the key, so the retry (maybe with the data fixed) runs normally.
+ * releases the key, so the retry (maybe with the data fixed) runs normally. A
+ * request that succeeded never releases its key, even if storing the answer fails.
  */
 export function idempotency(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
@@ -85,9 +88,10 @@ export function idempotency(): MiddlewareHandler<AppEnv> {
       eq(idempotencyKeys.key, key),
     );
 
-    const deadline = Date.now() + WAIT_FOR_FIRST_MS;
-    for (;;) {
-      // An expired answer or an abandoned claim is not a record any more.
+    // One claim attempt = delete an expired answer or abandoned claim, then
+    // insert. A request that finds the key held does not repeat it: it only
+    // reads the row (back-off between reads) until the row is answered or gone.
+    const tryClaim = async (): Promise<boolean> => {
       await db
         .delete(idempotencyKeys)
         .where(
@@ -108,7 +112,6 @@ export function idempotency(): MiddlewareHandler<AppEnv> {
             ),
           ),
         );
-
       const claimed = await db
         .insert(idempotencyKeys)
         .values({
@@ -121,38 +124,46 @@ export function idempotency(): MiddlewareHandler<AppEnv> {
         })
         .onConflictDoNothing()
         .returning({ key: idempotencyKeys.key });
-      if (claimed.length > 0) break;
+      return claimed.length > 0;
+    };
 
-      const [existing] = await db
-        .select({
-          requestHash: idempotencyKeys.requestHash,
-          statusCode: idempotencyKeys.statusCode,
-          response: idempotencyKeys.response,
-        })
-        .from(idempotencyKeys)
-        .where(mine);
-      // released or expired between our two statements: try to claim again
-      if (!existing) continue;
+    const deadline = Date.now() + WAIT_FOR_FIRST_MS;
+    let stepMs = WAIT_FIRST_STEP_MS;
+    while (!(await tryClaim())) {
+      for (;;) {
+        const [existing] = await db
+          .select({
+            requestHash: idempotencyKeys.requestHash,
+            statusCode: idempotencyKeys.statusCode,
+            response: idempotencyKeys.response,
+          })
+          .from(idempotencyKeys)
+          .where(mine);
+        // released or expired since our claim attempt: claim again
+        if (!existing) break;
 
-      if (existing.requestHash !== requestHash) {
-        throw new AppError(
-          "This Idempotency-Key was already used for a different request",
-          422,
-          "IDEMPOTENCY_KEY_REUSED",
-        );
+        if (existing.requestHash !== requestHash) {
+          throw new AppError(
+            "This Idempotency-Key was already used for a different request",
+            422,
+            "IDEMPOTENCY_KEY_REUSED",
+          );
+        }
+        if (existing.statusCode !== IN_FLIGHT) {
+          return c.json(
+            existing.response,
+            existing.statusCode as ContentfulStatusCode,
+          );
+        }
+        const remainingMs = deadline - Date.now();
+        if (remainingMs <= 0) {
+          throw new TooManyRequestsError(
+            "The first attempt is still being processed, try again in a moment",
+          );
+        }
+        await sleep(Math.min(stepMs, remainingMs));
+        stepMs = Math.min(stepMs * 2, WAIT_MAX_STEP_MS);
       }
-      if (existing.statusCode !== IN_FLIGHT) {
-        return c.json(
-          existing.response,
-          existing.statusCode as ContentfulStatusCode,
-        );
-      }
-      if (Date.now() >= deadline) {
-        throw new TooManyRequestsError(
-          "The first attempt is still being processed, try again in a moment",
-        );
-      }
-      await sleep(WAIT_STEP_MS);
     }
 
     const release = () => db.delete(idempotencyKeys).where(mine);
@@ -176,9 +187,10 @@ export function idempotency(): MiddlewareHandler<AppEnv> {
         .set({ statusCode: status, response: answer })
         .where(mine);
     } catch (error) {
-      // The write already happened and the client should still see its answer.
+      // The write already happened and the client still gets its answer. The
+      // claim stays: freeing it would let a retry with this key create the
+      // record a second time. (Left unanswered it counts as abandoned after 60 s.)
       console.error("Could not store the idempotent answer", error);
-      await release().catch(() => undefined);
     }
   };
 }

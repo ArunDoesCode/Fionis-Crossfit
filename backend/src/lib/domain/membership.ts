@@ -30,8 +30,9 @@ export function membershipEnd(plan: Plan, startOn: IsoDate): IsoDate {
  * the caller passes only that one, or `null` when there is none) on `today`
  * (BR-REC-52):
  *  - `expired`: its end is before today
- *  - `expiring`: it ends within `leadDays` days (ending today counts)
- *  - `active`: otherwise, including a period that has not started yet
+ *  - `active`: it has not started yet (renewed early), whatever the lead days
+ *  - `expiring`: it has started and ends within `leadDays` days (ending today counts)
+ *  - `active`: otherwise
  * `daysLeft` = days from today to the end date (0 = ends today, negative = ended).
  * Returns `null` for `latest = null`.
  */
@@ -43,5 +44,8 @@ export function membershipStatus(
   if (!latest) return null;
   const daysLeft = daysBetween(today, latest.endOn);
   if (daysLeft < 0) return { status: "expired", daysLeft };
+  if (daysBetween(today, latest.startOn) > 0) {
+    return { status: "active", daysLeft };
+  }
   return { status: daysLeft <= leadDays ? "expiring" : "active", daysLeft };
 }
