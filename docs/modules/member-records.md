@@ -50,6 +50,19 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 `bun run seed` (idempotent: settings + `login_attempts` row + catalog only when empty) · `bun run seed:perf`
 (local only, adds 1,000 members; run `db:reset` first) · `bun run db:reset` (push + seed) · `SEED_PERF_FULL=1 bun test tests/scripts/seed-perf.test.ts` (full 1,000 run; default tests use 100).
 
+## Starting a stream session (D-017)
+Remaining streams, in order: setup + members (M2) → assessments, due-list, progress (M3) → performance (M4). Each is
+one new desktop-app session on this repo with the worktree option on and Opus, started from fresh `main` once the
+previous merge point is merged (check `docs/specs/member-records/` exists in the new session).
+Before: Postgres is started once (`docker compose up -d` in `backend/`, never from a second worktree); create
+`backend/.env` and `frontend/.env.local` from the `.env.example` files (worktrees do not copy them); give the worktree
+its own `DATABASE_URL_TEST` database name and, for a dev server, its own `PORT`.
+First message (replace `<name>`: `setup`, `members`, `assessments`, `due-list`, `progress`, `performance`):
+```
+/feature member-records/<name> — per docs/specs/member-records.md → "Parallel build plan". D-017: this session's own branch and worktree are the working branch. Own only the files listed for your stream under "Shared files"; everything else is read-only — if you need a shared change, stop and tell me. Stop at hand-over; I will ask for the PR.
+```
+When it says ready, answer "open the PR". After each merge, the other open sessions sync with `main`.
+
 ## Invariants & gotchas
 - Every write needs a matching `Origin` (403 `CSRF_ORIGIN`), server-side calls too; a POST with no Origin to an unknown path is 403, not 404.
 - gzip only for JSON over 1 KB with a known body; CSV/streams pass through. Never `res.clone()` and return the original; `c.res = x` copies old headers onto the new response.

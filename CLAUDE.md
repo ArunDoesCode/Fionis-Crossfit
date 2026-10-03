@@ -62,6 +62,8 @@ hold the detailed conventions the dev/review agents read.
 - **One working branch, one worktree, few PRs.** Work on `work/<theme>` in `.claude/worktrees/work`
   (create once: `git worktree add .claude/worktrees/work -b work/m0 origin/main`). Never a new branch or
   worktree per bug/feature/spec. Never commit to `main`.
+  **Exception — member-records build streams (D-017):** one session + worktree + branch + PR per stream, from fresh
+  `main` (spec index → Parallel build plan).
 - Each item is its own commit (`fix(…)`, `test(…)`, `feat(…)`, `docs(…)`); STATUS/map updates are commits too.
 - **Don't push until a batch is ready.** One PR per batch, only when the user asks or a related group is done
   and checked. The user merges; then start the next batch from fresh `main`.
