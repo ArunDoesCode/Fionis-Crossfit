@@ -103,3 +103,10 @@ All green: backend typecheck, lint, `bun test` (12 tests), `contract:check` (1 r
   session pushed — `push --force` drops the other tables. Parallel `bun test` runs would share
   `gym_test`; auth tests mutate the single `app_account` / `login_attempts` rows → this stream uses its own test DB
   (user decision 2 = A, set by the user in `backend/.env`).
+
+## Cross-stream (sent to the foundation session with the user's OK, 2026-10-03)
+- Blocker in Stream 0 `lib/response-headers.ts:50-51`: responses ≤ 1 KB lose their body under Bun.serve when the client
+  accepts gzip → 54 `tests/auth/signin` fail (live-server harness). Fix proposed; waiting for Stream 0, then re-merge.
+- Stream 0 test `contract-conventions` BR-REC-159 mints a random `sid`; real E05 answers 401 without a session row →
+  user decision: Stream 0 changes the test.
+- Slice status: backend 1, 2, 3, 5 built (21e1325, 49df850); `tests/auth/session` 136/136 green; signin green once the fix lands.
