@@ -12,6 +12,7 @@ import {
 } from "bun:test";
 
 import {
+  adopt,
   ago,
   DAY,
   expiresAtOf,
@@ -24,6 +25,7 @@ import {
   patchSession,
   type Reply,
   refreshSession,
+  SECOND,
   type SignedIn,
   sessionRow,
   signIn,
@@ -107,6 +109,42 @@ describe("BR-REC-31 ticked: a phone unused for 6 days is still signed in, and ev
   test("BR-REC-31 ticked: the refresh cookie lifetime stays 7 days after the slide", () => {
     const cookie = refreshed.setCookies.find((c) => c.name === "refresh_token");
     expect(cookie?.attrs.get("max-age")).toBe(String(SEVEN_DAYS / 1000));
+  });
+});
+
+// Review R-14. BR-REC-31: "every use starts the 7 days again". BR-REC-32 (v2): a replaced token
+// used inside its 60 seconds gets an access token only — but it is still a use of the sign-in, so
+// the 7 days start again from it. The stored expiry is made stale (1 day left, last use 6 days
+// ago) while the replacement is still 30 s old, so a slide can only come from the in-grace use.
+describe("BR-REC-31 + 32 v2 ticked: a replaced token used inside the 60 seconds also starts the 7 days again", () => {
+  let inGrace: Reply;
+  let usedAt: number;
+  let sid: string;
+
+  beforeAll(async () => {
+    const device = await signIn({ remember: true });
+    sid = device.sid;
+    const replaced = device.refreshToken;
+    adopt(device, await refreshSession(replaced));
+    await patchSession(sid, {
+      createdAt: ago(20 * DAY),
+      lastUsedAt: ago(6 * DAY),
+      expiresAt: fromNow(1 * DAY),
+      rotatedAt: ago(30 * SECOND),
+    });
+    usedAt = Date.now();
+    inGrace = await refreshSession(replaced);
+  });
+
+  test("BR-REC-31 + 32 v2 ticked: the stored expires_at slides to 7 days after the in-grace use", async () => {
+    expect(inGrace.status).toBe(200);
+    const row = await sessionRow(sid);
+    expect(isNear(row?.expiresAt ?? 0, usedAt + SEVEN_DAYS)).toBe(true);
+  });
+
+  test("BR-REC-31 + 32 v2 ticked: the in-grace answer's expiresAt is 7 days after that use", () => {
+    expect(inGrace.status).toBe(200);
+    expect(isNear(expiresAtOf(inGrace), usedAt + SEVEN_DAYS)).toBe(true);
   });
 });
 
