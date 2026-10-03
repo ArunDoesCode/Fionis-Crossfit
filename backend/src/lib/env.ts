@@ -12,7 +12,7 @@ const envSchema = z
   .object({
     PORT: z.coerce.number().int().positive().default(4000),
     APP_ORIGIN: z.url(),
-    /** Extra allowed CORS origins, comma separated. */
+    /** Extra addresses a write request may come from (Origin check, BR-REC-37), comma separated. */
     APP_ORIGINS_EXTRA: z
       .string()
       .default("")

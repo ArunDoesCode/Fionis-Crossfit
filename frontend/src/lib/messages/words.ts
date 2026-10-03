@@ -39,6 +39,7 @@ export const UI_TEXT = {
   saving: 'Saving…',
   seeAll: 'See all',
   search: 'Search',
+  searchMembers: 'Search members',
   clearSearch: 'Clear search',
   minutes: 'min',
   seconds: 'sec',
