@@ -17,8 +17,8 @@ commits before the PR. One PR = Stream 0 + auth (shrinks to auth only if the Str
 Foundation's D-019 already adds the `sid` claim to `lib/token.ts`; auth builds on that version.
 
 ## Resume checklist (before slice 1)
-- [ ] `git merge claude/member-records-foundation-57e849` (local branch, after its S3 build commit); Stream 0 commits present.
-- [ ] `cd backend && bun run db:test:prepare` (schema now matches `main`, safe to push); `bun install` in both packages.
+- [x] `git merge claude/member-records-foundation-57e849` — merged its S1 contract (4969dee) early; re-merge S3 build before the backend goes green.
+- [x] `cd backend && bun run db:test:prepare` (own DB `gym_auth_test`); `bun install` in both packages.
 - [ ] Re-run the baseline (test-runner); replace the baseline table below.
 - [ ] Check Stream 0 delivered what auth builds on (else stop and tell the user):
       tables `app_account` / `auth_sessions` / `login_attempts` (one seeded row) · E01–E06 registered in
@@ -48,8 +48,13 @@ Generated (re-run, never hand-merge): `backend/.contracts/*`, `frontend/src/type
 Auth may edit these. If Stream 0 changed one of them, merge carefully and keep Stream 0's additions.
 
 ## Slices
-Each slice: contract check/fill (backend-dev, `types/auth.types.ts` only) → red tests (test-writer, own commit) →
-backend-dev ∥ frontend-dev → `feat(member-records/auth): …`.
+Build order changed (2026-10-03, coordinator): one contract step for E01–E06 (716501a); backend red tests for slices
+1, 2, 3, 5 written up front by two test-writers on disjoint folders (`backend/tests/auth/signin/**` = BR-REC-01, 02,
+25–29, 34, 35, 171; `backend/tests/auth/session/**` = BR-REC-30–33, 37, 38, 43, 44), because the backend cannot go green
+before Stream 0's S3 (`writeAudit`, Origin check) anyway. Backend-dev then builds slice by slice. Admin screens (slices
+1, 3, 4) wait for Stream 0's frontend S3 (shell, messages, `API_ROUTES`).
+Contract decisions accepted (contract.md): `expiresAt` = the sign-in's expiry (not the access token's); E05 checks the
+signature only (a revoked session's token still reads /me until it expires, BR-REC-33); `TRUST_PROXY_HOPS` default 0.
 
 - [ ] **1. Login + lock** — BR-REC-25, 27, 01, 28, 29, 171
   - backend: E01 (lock check → argon2id verify → global counter in `login_attempts`, one atomic update; 429 `LOGIN_LOCKED`
