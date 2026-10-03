@@ -20,7 +20,7 @@ no tables, no member-records routes, empty contract. User chose "plan now, pause
       (BR-REC-37) · `/api` rewrite in `next.config.ts` (BR-REC-36) · `API_ROUTES.auth.*` in `frontend/src/lib/api/routes.ts` ·
       error-code dictionary has `INVALID_CREDENTIALS`, `LOGIN_LOCKED`, `RATE_LIMITED`, `SESSION_EXPIRED`,
       `CURRENT_PASSWORD_WRONG`, `CSRF_ORIGIN` · shell "Sign out" slot (BR-REC-120) and how it calls auth.
-- [ ] Settle the unlisted-file question (below) with the user if still open.
+- [ ] Test DB: the user points `DATABASE_URL_TEST` in `backend/.env` at this stream's own `*_test` database (decision 2 = A; `.env` is not readable by agents); then `db:test:prepare` creates it.
 - [ ] Refresh `docs/modules/member-records.md` from the Stream 0 diff (`/map member-records`) — explorer reads the map only.
 
 ## File ownership (index → Shared files)
@@ -31,7 +31,7 @@ Read-only (Stream 0): `backend/src/db/**`, `routes/{end-points,index}.ts`, `lib/
 `frontend/src/{lib/api/routes.ts,lib/messages/**,components/common/**,components/shells/**}`, `next.config.ts`, layouts.
 Generated (re-run, never hand-merge): `backend/.contracts/*`, `frontend/src/types/api.generated.ts`.
 
-### Unlisted files auth may need (owner not named in the index → ask the user before editing)
+### Unlisted files auth owns too (user decision 2026-10-03: 1 = A)
 | File | Why | Rule |
 |---|---|---|
 | `backend/src/lib/env.ts`, `backend/.env.example` | new `SESSION_SHORT_TTL_SECONDS`, `TRUST_PROXY_HOPS` (APP_ORIGIN exists) | BR-REC-31, 38 |
@@ -39,7 +39,7 @@ Generated (re-run, never hand-merge): `backend/.contracts/*`, `frontend/src/type
 | `backend/src/lib/http.ts` | `setRefreshCookie` / `clearRefreshCookie` live here; no access-cookie setter (map gap 3) | BR-REC-30 |
 | `frontend/src/lib/api/client.ts` | has one-refresh-in-flight + retry once; missing: "Please sign in again" + Login with `next` | BR-REC-41 |
 | `frontend/src/lib/queryClient.ts` | one global 401 handler in the query cache | BR-REC-41 |
-Stream 0 may already cover some of these; re-check at resume.
+Auth may edit these. If Stream 0 changed one of them, merge carefully and keep Stream 0's additions.
 
 ## Slices
 Each slice: contract check/fill (backend-dev, `types/auth.types.ts` only) → red tests (test-writer, own commit) →
@@ -82,5 +82,6 @@ All green: backend typecheck, lint, `bun test` (12 tests), `contract:check` (1 r
 
 ## Notes
 - Shared Postgres (5433): never `db:push`/`db:test:prepare` while this branch's schema differs from what another
-  session pushed — `push --force` drops the other tables. Parallel `bun test` runs in several sessions share
-  `gym_test`; auth tests mutate the single `app_account` / `login_attempts` rows.
+  session pushed — `push --force` drops the other tables. Parallel `bun test` runs would share
+  `gym_test`; auth tests mutate the single `app_account` / `login_attempts` rows → this stream uses its own test DB
+  (user decision 2 = A, set by the user in `backend/.env`).
