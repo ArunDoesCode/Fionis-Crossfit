@@ -3,6 +3,7 @@
 Spec: `docs/specs/member-records/auth.md` v1 (BR-REC-01, 02, 25…44, 171) + `ux.md` v1 (rules that touch S1 Login and S17 Account).
 Written from the spec rules and `screens.md` (URLs and roles only). `[G]` = golden path, `[N]` = negative path, `[slow]` = needs real waiting,
 `[deploy]` = only on the real server (Stream G), `[pilot]` = watch during the gym pilot.
+Fix round 1 (review R-9, R-10) added the items tagged `[R-9]` / `[R-10]` in sections 2, 5, 8 and 13 (no DOM test library yet, #9, so these are manual).
 
 ## 0. Setup (once)
 
@@ -40,6 +41,8 @@ Written from the spec rules and `screens.md` (URLs and roles only). `[G]` = gold
 - [ ] [N] Empty username → "Enter your username" under the field and focus jumps to it; empty password → "Enter your password"; 129 characters in either field → "Use at most 128 characters". (S1)
 - [ ] [G] The error line's space is always reserved: fail a sign-in and watch the Sign in button — it does not jump. (S1)
 - [ ] [G] Throttle the network (DevTools Slow 3G) and tap Sign in → button reads "Signing in…" with a spinner and is off until the answer arrives; no full-page spinner. (S1, BR-REC-129)
+- [ ] [N] [R-9] One tap, one try: Network tab open, throttle Slow 3G, type the right details and press Enter twice quickly; repeat with Enter and then straight away a tap on Sign in → each time exactly one `POST /api/auth/login` in the Network tab, and the button stays off until the answer arrives. (BR-REC-01, S1)
+- [ ] [N] [R-9] A double Enter counts as one wrong try: run `bun run bootstrap-admin --unlock`, throttle Slow 3G, type a wrong password and press Enter twice quickly → `select failed_count from login_attempts;` shows 1 (not 2). Then 3 more wrong tries (4 in total) → `failed_count` is 4 and each still says "That username or password is not right."; the 5th wrong try says the same and starts the lock; the 6th says "Too many wrong tries, so sign-in is paused…". (BR-REC-01, 28)
 - [ ] [G] Cookies after sign in (DevTools → Application → Cookies): `access_token` and `refresh_token` both HttpOnly, SameSite Lax, Path `/`. `access_token` lives 15 minutes. `Secure` is NOT set on http://localhost (it is in production, see section 14). (BR-REC-30)
 - [ ] [G] Console on any page: `document.cookie` → shows neither cookie. (BR-REC-30)
 - [ ] [G] The raw refresh token is not in the DB: copy the `refresh_token` value, run `select count(*) from auth_sessions where token_hash = '<value>';` → 0. (BR-REC-30)
@@ -75,6 +78,8 @@ Written from the spec rules and `screens.md` (URLs and roles only). `[G]` = gold
 - [ ] [N] Wrong current password → "Current password is not right" next to Current password; nobody is signed out (Phone still works, this device still works). (BR-REC-34)
 - [ ] [N] Wrong current password via API → HTTP 400 `CURRENT_PASSWORD_WRONG` (not 401). 5 wrong current passwords count toward the lock: the next try, even with the right current password, gives the lock toast; the Login page is locked for everyone too. Unlock afterwards. (BR-REC-34, 28)
 - [ ] [G] Right current password + valid new password → button reads "Saving…" and is off while it runs, then toast "Password changed, and other devices are signed out." and both fields are empty. (S17)
+- [ ] [N] [R-9] One tap, one request on Change password: Network tab open, throttle Slow 3G, fill both fields with valid values and press Enter twice quickly in New password (repeat once with Enter and then a tap on the Change password button) → exactly one `POST /api/auth/password`; the button reads "Saving…" and is off until the answer arrives; after the success toast no stray "Current password is not right" appears (a second request would fail that way and count toward the lock). (BR-REC-02, 34)
+- [ ] [N] [R-9] A double Enter with a **wrong** current password counts once: note `select failed_count from login_attempts;`, press Enter twice quickly with a wrong current password and a valid new one → "Current password is not right" shows once and `failed_count` went up by exactly 1 (not 2). Unlock afterwards. (BR-REC-34, 28)
 - [ ] [G] This device stays signed in: reload the page, open Members → no Login. Its cookies are unchanged (same refresh value in DevTools). (BR-REC-34)
 - [ ] [G] The other device (Phone) is signed out: delete its `access_token` cookie (or wait 15 min) and tap a link → Login with "Please sign in again." `select revoke_reason, count(*) from auth_sessions group by 1;` → other sessions `password_change`, this device's row still active. (BR-REC-34, 33)
 - [ ] [G] Old password no longer signs in; the new one does. (BR-REC-34)
@@ -111,6 +116,8 @@ Written from the spec rules and `screens.md` (URLs and roles only). `[G]` = gold
 - [ ] [G] On a screen that loads several parts at once (Home, once built): delete `access_token`, reload client-side (tap Home in the tabs) → Network shows **one** `POST /api/auth/refresh`, not one per part, and every part loads. (BR-REC-41)
 - [ ] [N] Wrong sign-in details on Login (401 `INVALID_CREDENTIALS`) or wrong current password (400) do NOT trigger a refresh: no `/api/auth/refresh` request in the Network tab. (BR-REC-41, contract)
 - [ ] [G] Arrive at `/login?reason=expired` directly → "Please sign in again." in normal (not red) colour; after the first Sign in try it is replaced by the real result. (S1)
+- [ ] [G] [R-10] Announced: turn a screen reader on (VoiceOver on iPhone Safari, TalkBack on Android Chrome, NVDA or VoiceOver on Desktop) and open `/login?reason=expired` directly → "Please sign in again." is read out as the page opens, without you moving focus. Do it again by arriving the real way (first item of this section: password changed on Tablet, then a tap on Phone) → same, read out once. (BR-REC-41, 137)
+- [ ] [N] [R-10] On that same Login page make one Sign in try with a wrong password → the new line "That username or password is not right." is read out when it appears, "Please sign in again." is gone and is not read again. Then open plain `/login` (no `reason`) → no sign-in or error line is read out on arrival. (BR-REC-41, 137)
 
 ## 9. Page guard and `next` (BR-REC-39, 40, 42) — who: signed out, then signed in
 
@@ -166,6 +173,8 @@ Run `select action, session_id, ip, device, at from audit_log where action like 
 - [ ] [G] Errors are not shown by colour alone: the red error line has words (and icon if any); in a grey-scale view it is still obvious. (BR-REC-125)
 - [ ] [G] Keyboard only (Desktop): Tab reaches every control in a sensible order, the focus ring is always visible, Space ticks the box, Esc closes the confirm. (BR-REC-137)
 - [ ] [G] Screen reader (VoiceOver on iPhone and TalkBack on Android, Login + Account): every field has its label read out, Show/Hide is "Show password, button", the error line and the toasts are announced when they appear. (BR-REC-137)
+- [ ] [G] [R-10] Field errors are tied to their field (screen reader on): Login → tap Sign in with both fields empty → focus jumps to Username and the screen reader reads its label **and** "Enter your username"; move to Password → label and "Enter your password"; type 129 characters in either → label and "Use at most 128 characters". Account → Change password with `abc` in New password → label, the hint "At least 8 characters" and "Use at least 8 characters"; wrong current password → Current password reads "Current password is not right". After you fix a field its error is no longer read. (BR-REC-137, 134, 02)
+- [ ] [N] [R-10] A message that appears later is announced without moving focus: while locked, Account → Change password → the lock toast is read out when it shows; Sign out with DevTools → Offline → the failure toast is read out. (BR-REC-137, 29)
 - [ ] [G] Browser zoom 200% (and phone text size to the largest): Login and Account need no sideways scrolling. With "reduce motion" on in the system, there is no animation. (BR-REC-137)
 - [ ] [G] Phone at 360 px: no sideways scroll on either screen. Desktop at 1920 px: the Account form stays at most 720 px wide, centred; the Login card stays 400 px. (BR-REC-139)
 - [ ] [G] Theme: follows the device (light/dark); the toggle on the Login page changes it and keeps it after a reload. (BR-REC-136)
