@@ -3,8 +3,8 @@
 > Single entry point for "where are we and what's next". Updated by `/feature` (at phase changes and in
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
-**Updated:** 2026-10-01 · **Milestone:** M0 Foundations (not started)
-**Next action:** finish the setup checklist in `docs/WORKFLOW.md` §Setup (git repo, GitHub, branch protection), then scaffold the three packages per `docs/FOUNDATIONS.md`. After that: `/spec auth-members`.
+**Updated:** 2026-10-03 · **Milestone:** M0 Foundations (backend + frontend scaffolded; `member/` skipped for the member-records MVP)
+**Next action:** merge the `work/m0` scaffold PR, create `backend/.env` and `frontend/.env.local` from the `.env.example` files (`docker compose up -d` in `backend/`), then `/feature member-records` (spec is frozen v1).
 
 ## Modules
 | Module | Spec | Map | Code | Next step |

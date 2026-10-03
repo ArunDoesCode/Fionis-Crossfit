@@ -30,9 +30,9 @@ Keywords: **MUST / NEVER** = non-negotiable. **PREFER** = default unless the pro
 | UI state          | Zustand v5 — *only when state is shared across distant components* |
 | Forms             | React Hook Form + Zod v4 (`@hookform/resolvers`)                   |
 | Validation        | Zod — schemas shared between client and server                     |
-| Tables            | TanStack React Table (via shared `DataTable`)                      |
+| Tables            | TanStack Table v9 (via shared `DataTable`)                         |
 | Toasts            | Sonner                                                             |
-| Icons             | `lucide-react` only                                                |
+| Icons             | `<HugeiconsIcon icon={…} />` (Hugeicons) only                      |
 | Dates             | `date-fns` only                                                    |
 | HTTP              | Per project — see §6 (native `fetch` wrapper / axios / both)       |
 | Lint + format     | Biome (`biome check .`) — `next lint` no longer exists             |
@@ -1202,40 +1202,59 @@ export default function CreateClientForm({ onSuccess }: CreateClientFormProps) {
 
 ---
 
-## §15. Data Tables (TanStack React Table)
+## §15. Data Tables (TanStack Table v9)
+
+Pages never import `@tanstack/react-table`; they build columns with the wrapper's helper from `components/common/DataTable`.
 
 ```tsx
 // components/pages/jobs/columns.tsx
-import type { ColumnDef } from '@tanstack/react-table';
+import { createDataTableColumnHelper } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import type { Job } from '@/types';
 
-export const createColumns = (onView: (job: Job) => void): ColumnDef<Job>[] => [
-  {
-    accessorKey: 'reference_code',
-    header: 'Job',
-    cell: ({ row }) => <span className="font-mono text-sm">{row.getValue('reference_code')}</span>,
-  },
-  { accessorKey: 'status', header: 'Status', cell: ({ row }) => <JobStatusBadge status={row.original.status} /> },
-  {
-    id: 'actions',
-    header: '',
-    cell: ({ row }) => (
-      <Button variant="ghost" size="sm" onClick={() => onView(row.original)}>
-        View
-      </Button>
-    ),
-  },
-];
+const helper = createDataTableColumnHelper<Job>();
+
+// Don't annotate the result as DataTableColumnDef[] — that erases the typed accessor values.
+export const createColumns = (onView: (job: Job) => void) =>
+  helper.columns([
+    helper.accessor('reference_code', {
+      header: 'Job',
+      cell: ({ cell }) => <span className="font-mono text-sm">{cell.getValue()}</span>,
+    }),
+    helper.accessor('status', { header: 'Status', cell: ({ row }) => <JobStatusBadge status={row.original.status} /> }),
+    helper.display({
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <Button variant="ghost" size="sm" onClick={() => onView(row.original)}>
+          View
+        </Button>
+      ),
+    }),
+  ]);
+```
+
+```tsx
+// inside DataTable (components/common/DataTable.tsx) — v9 API
+import { createColumnHelper, tableFeatures, useTable, type ColumnDef, type RowData } from '@tanstack/react-table';
+
+const features = tableFeatures({}); // features are opt-in; core row model is automatic
+type F = typeof features; // ColumnDef<F, TData>, createColumnHelper<F, TData>()
+
+const table = useTable({ features, columns, data }); // features/columns module-scope or memoized; data stable
+// render: <table.FlexRender header={header} /> / <table.FlexRender cell={cell} />; cells via row.getAllCells()
 ```
 
 **Rules:**
 
-- Always the shared `components/common/DataTable` + `TablePagination`.
-- Column **factory** receiving action callbacks (pure column defs).
-- Columns stable across renders: `useMemo(() => createColumns(onView), [onView])` unless React Compiler is on.
-- Codes/ids `font-mono text-sm`; status → badge component; actions column `id: 'actions'`, empty header, ghost/sm buttons.
-- Server-side pagination/sort/filter for large sets (state in nuqs → query key); `manualPagination: true`.
+- Always the shared `components/common/DataTable` + `TablePagination` (`offset, limit, total, onPageChange, onLimitChange?`).
+- Column **factory** receiving action callbacks (pure column defs); build with `createDataTableColumnHelper<T>()`.
+- Columns stable across renders: `useMemo(() => createColumns(onView), [onView])` unless React Compiler is on. `data` must be stable too (module-level `EMPTY` fallback, not `?? []` inline).
+- Codes/ids `font-mono text-sm`; status → badge component; actions column `helper.display({ id: 'actions', header: '' })`, ghost/sm buttons.
+- Server-side pagination/sort/filter for large sets (state in nuqs `offset`/`limit` → query key). `DataTable` registers no client features and renders rows as the API returned them, so no `manual*` flags are needed. Only if a table owns paging itself: register `rowPaginationFeature`, set `manualPagination: true`, `rowCount: total`, state `{ pageIndex, pageSize }` + `onPaginationChange`, put server-owned slices in the query key, `placeholderData: keepPreviousData`.
+- Client features are opt-in in `tableFeatures` (e.g. `tableFeatures({ rowSortingFeature, sortedRowModel: createSortedRowModel() })`); row-model slots go inside it.
+- v9 renames: `useReactTable` → `useTable`; `flexRender` → `<table.FlexRender>`; `getCoreRowModel` gone; `table.getState()` → `table.state`; per-slice `onXChange` replaces `onStateChange`; `sortingFn` → `sortFn`; pinning `left/right` → `start/end`; `columnSizingInfo` → `columnResizing`. Call row/cell/header methods on the instance; never destructure them.
+- React Compiler: no `'use no memo'` for stateless tables. If you add state-driven row/cell reads (e.g. `row.getIsSelected()`), use `table.Subscribe` or a `useTable` selector.
 - > ~100 visible rows → virtualize (`@tanstack/react-virtual`).
 
 ---
@@ -1425,7 +1444,7 @@ VAPID keys (`web-push`), `NEXT_PUBLIC_VAPID_PUBLIC_KEY` public, private key serv
 | Semicolons       | Yes                                                                                         |
 | Indentation      | 2 spaces                                                                                    |
 | Path alias       | `@/*` → `./src/*`                                                                           |
-| Icons            | `lucide-react` only                                                                         |
+| Icons            | `<HugeiconsIcon icon={…} />` (Hugeicons) only                                               |
 | Dates            | `date-fns` only                                                                             |
 | Colors           | Theme tokens (`text-destructive`, `bg-muted`) — no raw palette colors for semantic UI       |
 | Class merging    | `cn()` from `lib/utils.ts`                                                                  |
@@ -1550,7 +1569,7 @@ Declared in the project profile; project `CLAUDE.md` adds domain specifics.
 | Generic spinner page loader                               | Shape-matching skeleton                                         |
 | `useQuery` per table row                                  | One list query with needed fields                               |
 | `any`                                                     | Proper type or `unknown` + narrowing                            |
-| Icons/dates from other libs                               | `lucide-react` / `date-fns`                                     |
+| Icons/dates from other libs                               | `HugeiconsIcon` / `date-fns`                                    |
 | Unpinned deps, install scripts allowed                    | Pinned + lockfile + scripts blocked                             |
 
 ---

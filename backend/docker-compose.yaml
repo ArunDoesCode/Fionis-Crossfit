@@ -1,0 +1,26 @@
+# Local Postgres 15 for dev (`gym`) and tests (`gym_test`).
+# Host port 5433 (not 5432) so it does not clash with other local databases.
+name: gym
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: gym-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gym
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/docker-init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gym"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
