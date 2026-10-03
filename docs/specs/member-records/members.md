@@ -143,3 +143,5 @@ Custom plans and prices, payments, freezes/pauses, bonus days or manual end date
   reached via the Archived chip (BR-REC-57); new BR-REC-172 ended/archived banner; new Q7; S6 wireframe as text
 - 2026-10-03 v0 — Q7 = B: renewing (or editing a period of) an archived member restores them when the period covers today (BR-REC-58)
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 "within the lead days" is inclusive (14 days left, lead 14 → Ends soon); no rule changed
+- 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 a latest period that has not started yet is Active whatever the lead days (example "Renewed early → Active, not Ends soon"); no rule changed

@@ -59,4 +59,12 @@ bun run e2e               # Playwright (TV lab scenes, admin flows) once added
 ```
 
 ## Env
-`NEXT_PUBLIC_API_URL` (browser → backend), `API_URL` (server → backend). Documented in `.env.example`.
+Same origin (D-018): `NEXT_PUBLIC_API_URL=/api` (a path, not a URL; the browser calls `/api/...` and `next.config.ts`
+rewrites it to `API_URL`, so no CORS and first-party cookies). `API_URL` (internal address, ends in `/api`) is used by
+server code (`lib/api/server.ts`) and by the rewrite, which is resolved at `next build`, so set it for the build too.
+`/` is rewritten to `/admin` (no redirect round trip). Documented in `.env.example`.
+
+## Overrides of the standard
+- **member-records mobile-first (D-016):** nextjs-standards §14 button placement does not apply here. The main action
+  sits in the bottom action bar on phones (`PageHeader action` / `ActionBar`) and at the right of the header on
+  desktop; forms have **no Reset button**. UI rules: `docs/specs/member-records/ux.md`.

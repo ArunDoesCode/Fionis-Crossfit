@@ -1,11 +1,14 @@
 import { jwtVerify, SignJWT } from "jose";
 
+import { uuidSchema } from "../types/common.types";
 import { env } from "./env";
 import { PERMISSION_KEYS, type PermissionKey } from "./permissions";
 
 export type TokenPayload = {
   userId: string;
   userName: string;
+  /** Sign-in session id (uuid); `idempotency_keys` and `audit_log` are keyed by it (D-019). */
+  sid: string;
   /** Permission keys granted to this actor. Skeleton: auth module decides the real source. */
   permissions: PermissionKey[];
 };
@@ -19,14 +22,16 @@ const isPermissionKeyList = (value: unknown): value is PermissionKey[] =>
 
 function toPayload(raw: Record<string, unknown>): TokenPayload {
   const { userId, userName, permissions } = raw;
+  const sid = uuidSchema.safeParse(raw.sid);
   if (
     typeof userId !== "string" ||
     typeof userName !== "string" ||
+    !sid.success ||
     !isPermissionKeyList(permissions)
   ) {
     throw new Error("Malformed token payload");
   }
-  return { userId, userName, permissions };
+  return { userId, userName, sid: sid.data, permissions };
 }
 
 export async function signAccessToken(payload: TokenPayload) {

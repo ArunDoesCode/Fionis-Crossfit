@@ -10,6 +10,8 @@ import type { AppEnv } from "./types";
 export type Actor = {
   id: string;
   name: string;
+  /** The sign-in session (`sid` claim); keys idempotency records and change-log rows. */
+  sessionId: string;
   permissions: ReadonlySet<PermissionKey>;
 };
 
@@ -44,6 +46,7 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
     c.set("actor", {
       id: payload.userId,
       name: payload.userName,
+      sessionId: payload.sid,
       permissions: new Set(payload.permissions),
     });
   }

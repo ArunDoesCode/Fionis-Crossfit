@@ -124,3 +124,4 @@ own results, two trainers editing the same assessment at once (last save wins), 
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-12, 19, 20, 21 from v1 unchanged (BR-REC-75 decides how mm:ss is typed)
 - 2026-10-03 v0 — answers folded: all as recommended; archived members can be recorded for (members Q6 = B)
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-12 `parseDuration` accepts only m:ss / h:mm:ss; a bare number ("95") is not a time → null; no rule changed

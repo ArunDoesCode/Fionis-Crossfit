@@ -1,12 +1,14 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 
 import { env } from "./lib/env";
 import { AppError } from "./lib/errors";
 import { failure } from "./lib/http";
+import { originCheck } from "./lib/origin-check";
+import { dataResponseHeaders } from "./lib/response-headers";
+import { serverTiming } from "./lib/server-timing";
 import { mainRouter } from "./routes";
 import { API_BASE_PATH } from "./routes/end-points";
 
@@ -29,15 +31,8 @@ export function createApp() {
     );
   });
 
-  app.use(
-    "*",
-    cors({
-      origin: [env.APP_ORIGIN, ...env.APP_ORIGINS_EXTRA],
-      credentials: true,
-      allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key"],
-      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    }),
-  );
+  app.use("*", serverTiming());
+  app.use("*", dataResponseHeaders());
 
   app.use(
     "*",
@@ -47,6 +42,9 @@ export function createApp() {
         failure(c, 413, "Request body too large", "PAYLOAD_TOO_LARGE"),
     }),
   );
+
+  // Same origin (D-018, BR-REC-36): no CORS. A write must come from the app's own address (BR-REC-37).
+  app.use("*", originCheck([env.APP_ORIGIN, ...env.APP_ORIGINS_EXTRA]));
 
   app.route(API_BASE_PATH, mainRouter);
 

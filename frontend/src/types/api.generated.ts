@@ -4,6 +4,255 @@
  */
 
 export interface paths {
+    "/api/members/{memberId}/entry-form": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E25 Entry form: measurements with previous values and any saved assessment
+         * @description `previous` is the latest value dated before `date` (BR-REC-81). Durations are seconds.
+         */
+        get: operations["getApiMembersMemberIdEntry-form"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E27 A member's assessments, newest first
+         * @description Sorted by date then id; only `sortDir` is selectable (default `desc`).
+         */
+        get: operations["getApiAssessments"];
+        put?: never;
+        /**
+         * E26 Save an assessment (creates, or edits the one for member + type + date)
+         * @description Upsert: always 200; `created` says whether a new assessment was made. `value: null` removes a saved value; at most 60 values.
+         */
+        post: operations["postApiAssessments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessments/{assessmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E28 One assessment with its values */
+        get: operations["getApiAssessmentsAssessmentId"];
+        put?: never;
+        post?: never;
+        /**
+         * E30 Delete an assessment with its values
+         * @description The one hard delete besides sign-ins and idempotency keys (BR-REC-165).
+         */
+        delete: operations["deleteApiAssessmentsAssessmentId"];
+        options?: never;
+        head?: never;
+        /**
+         * E29 Move an assessment's date or mark it estimated
+         * @description Unknown fields rejected; at least one field. Moving the date moves its values.
+         */
+        patch: operations["patchApiAssessmentsAssessmentId"];
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E01 Sign in with the shared login
+         * @description Sets the httpOnly cookies `access_token` (JWT, 15 min) and `refresh_token`.
+         *     429 LOGIN_LOCKED: one lock for the whole login; `details.retryAfterSeconds` and a `Retry-After` header.
+         */
+        post: operations["postApiAuthLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E02 Refresh the sign-in (rotates the refresh cookie)
+         * @description Reads the `refresh_token` cookie; no body. Works while the login is locked (BR-REC-171).
+         */
+        post: operations["postApiAuthRefresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E03 Sign out this device
+         * @description Clears the cookies. Public: it must work with an expired access token.
+         */
+        post: operations["postApiAuthLogout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E04 Sign out every device (this one too)
+         * @description Clears the cookies.
+         */
+        post: operations["postApiAuthLogout-all"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E05 The signed-in account */
+        get: operations["getApiAuthMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E06 Change the password (other devices are signed out)
+         * @description A wrong current password is 400, never 401: a 401 makes the app try a refresh and sign out.
+         *     A wrong current password counts toward the lock; while locked: 429 LOGIN_LOCKED as E01.
+         */
+        post: operations["postApiAuthPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E31 Who is overdue or due soon (Home and Due list)
+         * @description One row per member per assessment. Order: Assess soon first, then most days overdue, then soonest due, then name (BR-REC-97). Archived and expired members are excluded (BR-REC-17).
+         */
+        get: operations["getApiDue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E32 One member's due status per assessment
+         * @description A plain array, not paginated: one entry per turned-on assessment (bounded by the catalog).
+         */
+        get: operations["getApiMembersMemberIdDue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/due-actions/{typeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * E33 Assess soon (flag) or Remind me later (snooze)
+         * @description Body `{ action: 'flag' }` or `{ action: 'snooze', until: 'YYYY-MM-DD' }`. `until` is after today and at most 90 days ahead. The two replace each other.
+         */
+        put: operations["putApiMembersMemberIdDue-actionsTypeId"];
+        post?: never;
+        /** E34 Clear Assess soon or Remind me later */
+        delete: operations["deleteApiMembersMemberIdDue-actionsTypeId"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -24,6 +273,405 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E16 Find and list members
+         * @description `q` (2+ characters) matches name, phone or email; `phone` matches the last 10 digits.
+         *     Without `status`, archived members are left out; `status=any` includes them.
+         */
+        get: operations["getApiMembers"];
+        put?: never;
+        /**
+         * E17 Add a member with the first membership period
+         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.
+         */
+        post: operations["postApiMembers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E18 One member with membership and periods */
+        get: operations["getApiMembersMemberId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * E19 Edit a member (archived members too)
+         * @description Unknown fields rejected; at least one field.
+         */
+        patch: operations["patchApiMembersMemberId"];
+        trace?: never;
+    };
+    "/api/members/{memberId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** E20 Archive a member */
+        post: operations["postApiMembersMemberIdArchive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** E21 Restore an archived member */
+        post: operations["postApiMembersMemberIdRestore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E22 Add a membership period (renew)
+         * @description Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.
+         *     `memberRestored` is true when the period covers today and the member was archived (BR-REC-58).
+         */
+        post: operations["postApiMembersMemberIdPeriods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/periods/{periodId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * E23 Edit a membership period
+         * @description Unknown fields rejected; at least one field. Periods are never deleted.
+         */
+        patch: operations["patchApiMembersMemberIdPeriodsPeriodId"];
+        trace?: never;
+    };
+    "/api/memberships/ending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E24 Memberships ending soon or recently ended
+         * @description `status=expiring`: soonest end first. `status=expired`: ended in the last 30 days, most recent first. Archived members are never listed (BR-REC-53).
+         */
+        get: operations["getApiMembershipsEnding"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{memberId}/report-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E35 A member's report card */
+        get: operations["getApiMembersMemberIdReport-card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E36 Gym-wide progress for one measurement
+         * @description 404 when `metricId` does not exist. Only members with 2+ readings count; `notCounted` says how many were left out.
+         */
+        get: operations["getApiReportsProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E37 Leaderboard for one measurement and sex
+         * @description Ranked by latest value, best first by direction; equal values share a rank. 400 NO_DIRECTION for a measurement with no better direction.
+         */
+        get: operations["getApiReportsLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/active-by-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E38 Active members by plan */
+        get: operations["getApiReportsActive-by-plan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E39 CSV export (members, memberships or measurements)
+         * @description Not JSON: the 200 body is CSV text (`text/csv; charset=utf-8`, UTF-8 with BOM, streamed), a documented exception to the envelope. `file` is one of members.csv, memberships.csv, measurements.csv; anything else is 404 NOT_FOUND.
+         */
+        get: operations["getApiExportsFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E07 Gym settings
+         * @description Sends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160).
+         */
+        get: operations["getApiSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * E08 Change gym settings
+         * @description Any of the settings; unknown fields rejected; at least one field.
+         */
+        patch: operations["patchApiSettings"];
+        trace?: never;
+    };
+    "/api/assessment-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * E09 Assessment catalog (assessments with their measurements)
+         * @description Ordered by setup order (`sortOrder`). Inactive ones only with includeInactive=true.
+         *     Sends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160).
+         */
+        get: operations["getApiAssessment-types"];
+        put?: never;
+        /** E10 Add an assessment */
+        post: operations["postApiAssessment-types"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-types/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * E12 Set the order of the assessments
+         * @description `typeIds` lists every assessment once each, in the new order.
+         */
+        put: operations["putApiAssessment-typesOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-types/{typeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * E11 Change or turn off an assessment
+         * @description Unknown fields rejected; at least one field.
+         */
+        patch: operations["patchApiAssessment-typesTypeId"];
+        trace?: never;
+    };
+    "/api/assessment-types/{typeId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** E13 Add a measurement to an assessment */
+        post: operations["postApiAssessment-typesTypeIdMetrics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-types/{typeId}/metric-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * E15 Set the order of an assessment's measurements
+         * @description `metricIds` lists every measurement of the assessment once each, in the new order.
+         */
+        put: operations["putApiAssessment-typesTypeIdMetric-order"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics/{metricId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * E14 Change or turn off a measurement
+         * @description Unknown fields rejected; at least one field.
+         *     METRIC_LOCKED: datatype and unit cannot change once any value exists (BR-REC-11).
+         */
+        patch: operations["patchApiMetricsMetricId"];
+        trace?: never;
+    };
+    "/api/vitals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E40 Report one web-vitals measurement
+         * @description 204 with no body. The server only logs a `vitals` line (BR-REC-152).
+         */
+        post: operations["postApiVitals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -36,6 +684,1327 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "getApiMembersMemberIdEntry-form": {
+        parameters: {
+            query: {
+                typeId: string;
+                date: string;
+            };
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            member: {
+                                /** Format: uuid */
+                                id: string;
+                                fullName: string;
+                                joinedOn: string;
+                            };
+                            type: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                            };
+                            existing: {
+                                /** Format: uuid */
+                                assessmentId: string;
+                                isEstimated: boolean;
+                                values: {
+                                    [key: string]: number;
+                                };
+                            } | null;
+                            metrics: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                decimals: number;
+                                /** @enum {string} */
+                                better: "higher" | "lower" | "none";
+                                plausibleMin: number | null;
+                                plausibleMax: number | null;
+                                previous: {
+                                    value: number;
+                                    on: string;
+                                    isEstimated: boolean;
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiAssessments: {
+        parameters: {
+            query: {
+                page?: number;
+                pageSize?: number;
+                memberId: string;
+                typeId?: string;
+                sortDir?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            typeId: string;
+                            typeName: string;
+                            date: string;
+                            isEstimated: boolean;
+                            valueCount: number;
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiAssessments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    memberId: string;
+                    /** Format: uuid */
+                    typeId: string;
+                    date: string;
+                    isEstimated: boolean;
+                    values: {
+                        /** Format: uuid */
+                        metricId: string;
+                        value: number | null;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            assessmentId: string;
+                            created: boolean;
+                            saved: number;
+                            removed: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "DATE_IN_FUTURE" | "NO_VALUES" | "METRIC_NOT_IN_TYPE";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiAssessmentsAssessmentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assessmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            memberId: string;
+                            /** Format: uuid */
+                            typeId: string;
+                            typeName: string;
+                            date: string;
+                            isEstimated: boolean;
+                            values: {
+                                /** Format: uuid */
+                                metricId: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                value: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    deleteApiAssessmentsAssessmentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assessmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            removed: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    patchApiAssessmentsAssessmentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assessmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    date?: string;
+                    isEstimated?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            memberId: string;
+                            /** Format: uuid */
+                            typeId: string;
+                            typeName: string;
+                            date: string;
+                            isEstimated: boolean;
+                            values: {
+                                /** Format: uuid */
+                                metricId: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                value: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "DATE_IN_FUTURE";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "ASSESSMENT_DATE_TAKEN";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiAuthLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    username: string;
+                    password: string;
+                    remember: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            username: string;
+                            remember: boolean;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "INVALID_CREDENTIALS";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "LOGIN_LOCKED" | "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiAuthRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "SESSION_EXPIRED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiAuthLogout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: Record<string, never>;
+                    };
+                };
+            };
+        };
+    };
+    "postApiAuthLogout-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            signedOut: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiAuthMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            username: string;
+                            remember: boolean;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiAuthPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    currentPassword: string;
+                    newPassword: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: Record<string, never>;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "CURRENT_PASSWORD_WRONG";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "LOGIN_LOCKED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiDue: {
+        parameters: {
+            query: {
+                page?: number;
+                pageSize?: number;
+                status: "overdue" | "upcoming";
+                typeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            memberId: string;
+                            fullName: string;
+                            /** Format: uuid */
+                            typeId: string;
+                            typeName: string;
+                            dueOn: string;
+                            daysOverdue: number;
+                            flagged: boolean;
+                            items: {
+                                /** Format: uuid */
+                                metricId: string;
+                                name: string;
+                            }[];
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiMembersMemberIdDue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            typeId: string;
+                            typeName: string;
+                            /** @enum {string} */
+                            state: "overdue" | "upcoming" | "ok";
+                            neverRecorded: boolean;
+                            nextDueOn: string;
+                            daysOverdue: number;
+                            flagged: boolean;
+                            snoozedUntil: string | null;
+                            items: {
+                                /** Format: uuid */
+                                metricId: string;
+                                name: string;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "putApiMembersMemberIdDue-actionsTypeId": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+                typeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @constant */
+                    action: "flag";
+                } | {
+                    /** @constant */
+                    action: "snooze";
+                    until: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** @enum {string} */
+                            kind: "flag" | "snooze";
+                            setOn: string;
+                            untilOn: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "SNOOZE_TOO_FAR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "deleteApiMembersMemberIdDue-actionsTypeId": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+                typeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: Record<string, never>;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
     getApiHealth: {
         parameters: {
             query?: never;
@@ -77,6 +2046,2489 @@ export interface operations {
                             status: "ok" | "degraded";
                             /** @enum {string} */
                             db: "up" | "down";
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiMembers: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sortBy?: "name" | "joinedOn" | "lastAssessedOn";
+                sortDir?: "asc" | "desc";
+                q?: string;
+                phone?: string;
+                status?: "active" | "expiring" | "expired" | "archived" | "any";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            lastAssessedOn: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                            };
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fullName: string;
+                    phone: string;
+                    email?: string | null;
+                    dateOfBirth: string;
+                    /** @enum {string} */
+                    sex: "male" | "female";
+                    joinedOn: string;
+                    objective?: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                    notes?: string | null;
+                    firstPeriod: {
+                        /** @enum {string} */
+                        plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                        startOn: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            email: string | null;
+                            dateOfBirth: string;
+                            age: number;
+                            /** @enum {string} */
+                            sex: "male" | "female";
+                            joinedOn: string;
+                            objective: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                            notes: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                                startOn: string;
+                            };
+                            periods: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                startOn: string;
+                                endOn: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "DATE_IN_FUTURE" | "START_BEFORE_JOIN" | "IDEMPOTENCY_KEY_MISSING";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "IDEMPOTENCY_KEY_REUSED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiMembersMemberId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            email: string | null;
+                            dateOfBirth: string;
+                            age: number;
+                            /** @enum {string} */
+                            sex: "male" | "female";
+                            joinedOn: string;
+                            objective: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                            notes: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                                startOn: string;
+                            };
+                            periods: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                startOn: string;
+                                endOn: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    patchApiMembersMemberId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fullName?: string;
+                    phone?: string;
+                    email?: string | null;
+                    dateOfBirth?: string;
+                    /** @enum {string} */
+                    sex?: "male" | "female";
+                    joinedOn?: string;
+                    objective?: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            email: string | null;
+                            dateOfBirth: string;
+                            age: number;
+                            /** @enum {string} */
+                            sex: "male" | "female";
+                            joinedOn: string;
+                            objective: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                            notes: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                                startOn: string;
+                            };
+                            periods: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                startOn: string;
+                                endOn: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "DATE_IN_FUTURE";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiMembersMemberIdArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            email: string | null;
+                            dateOfBirth: string;
+                            age: number;
+                            /** @enum {string} */
+                            sex: "male" | "female";
+                            joinedOn: string;
+                            objective: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                            notes: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                                startOn: string;
+                            };
+                            periods: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                startOn: string;
+                                endOn: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiMembersMemberIdRestore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            fullName: string;
+                            phone: string;
+                            email: string | null;
+                            dateOfBirth: string;
+                            age: number;
+                            /** @enum {string} */
+                            sex: "male" | "female";
+                            joinedOn: string;
+                            objective: ("fat_loss" | "strength" | "general_fitness" | "other") | null;
+                            notes: string | null;
+                            archivedAt: string | null;
+                            membership: {
+                                /** @enum {string} */
+                                status: "active" | "expiring" | "expired";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                endOn: string;
+                                daysLeft: number;
+                                startOn: string;
+                            };
+                            periods: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                startOn: string;
+                                endOn: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiMembersMemberIdPeriods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                    startOn: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                            startOn: string;
+                            endOn: string;
+                            memberRestored: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "START_BEFORE_JOIN" | "IDEMPOTENCY_KEY_MISSING";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "PERIOD_OVERLAP";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "IDEMPOTENCY_KEY_REUSED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    patchApiMembersMemberIdPeriodsPeriodId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+                periodId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan?: "monthly" | "quarterly" | "half_annual" | "annual";
+                    startOn?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                            startOn: string;
+                            endOn: string;
+                            memberRestored: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON" | "START_BEFORE_JOIN";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "PERIOD_OVERLAP";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiMembershipsEnding: {
+        parameters: {
+            query: {
+                page?: number;
+                pageSize?: number;
+                status: "expiring" | "expired";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            memberId: string;
+                            fullName: string;
+                            phone: string;
+                            /** @enum {string} */
+                            plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                            endOn: string;
+                            daysLeft: number;
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiMembersMemberIdReport-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            gymName: string;
+                            printedOn: string;
+                            member: {
+                                fullName: string;
+                                age: number;
+                                /** @enum {string} */
+                                sex: "male" | "female";
+                                /** @enum {string} */
+                                plan: "monthly" | "quarterly" | "half_annual" | "annual";
+                                /** @enum {string} */
+                                membershipStatus: "active" | "expiring" | "expired";
+                                joinedOn: string;
+                            };
+                            types: {
+                                name: string;
+                                metrics: {
+                                    name: string;
+                                    unit: string;
+                                    /** @enum {string} */
+                                    datatype: "number" | "duration";
+                                    /** @enum {string} */
+                                    better: "higher" | "lower" | "none";
+                                    first: {
+                                        value: number;
+                                        on: string;
+                                        isEstimated: boolean;
+                                    };
+                                    latest: {
+                                        value: number;
+                                        on: string;
+                                        isEstimated: boolean;
+                                    };
+                                    best: {
+                                        value: number;
+                                        on: string;
+                                        isEstimated: boolean;
+                                    } | null;
+                                    change: number | null;
+                                    readings: number;
+                                    points: {
+                                        value: number;
+                                        on: string;
+                                        isEstimated: boolean;
+                                    }[];
+                                }[];
+                            }[];
+                            segmental: {
+                                on: string;
+                                isEstimated: boolean;
+                                groups: string[];
+                                rows: {
+                                    /** @enum {string} */
+                                    part: "whole_body" | "arms" | "trunk" | "legs";
+                                    values: {
+                                        [key: string]: number | null;
+                                    };
+                                }[];
+                            } | null;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiReportsProgress: {
+        parameters: {
+            query: {
+                metricId: string;
+                joinedFrom?: string;
+                joinedTo?: string;
+                plan?: "monthly" | "quarterly" | "half_annual" | "annual";
+                sex?: "male" | "female";
+                ageBand?: "under20" | "20to29" | "30to39" | "40to49" | "50to59" | "60plus";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            metric: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                decimals: number;
+                                /** @enum {string} */
+                                better: "higher" | "lower" | "none";
+                            };
+                            n: number;
+                            notCounted: number;
+                            avgChange: number | null;
+                            improved: number;
+                            noChange: number;
+                            worse: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiReportsLeaderboard: {
+        parameters: {
+            query: {
+                page?: number;
+                pageSize?: number;
+                metricId: string;
+                sex: "male" | "female";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            rank: number;
+                            /** Format: uuid */
+                            memberId: string;
+                            fullName: string;
+                            value: number;
+                            on: string;
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "NO_DIRECTION";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiReportsActive-by-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            monthly: number;
+                            quarterly: number;
+                            halfAnnual: number;
+                            annual: number;
+                            total: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiExportsFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            gymName: string;
+                            timezone: string;
+                            upcomingLeadDays: number;
+                            expiryLeadDays: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    patchApiSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    gymName?: string;
+                    timezone?: string;
+                    upcomingLeadDays?: number;
+                    expiryLeadDays?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            gymName: string;
+                            timezone: string;
+                            upcomingLeadDays: number;
+                            expiryLeadDays: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiAssessment-types": {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                includeInactive?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            intervalCount: number;
+                            /** @enum {string} */
+                            intervalUnit: "week" | "month";
+                            isActive: boolean;
+                            sortOrder: number;
+                            hasValues: boolean;
+                            metrics: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                decimals: number;
+                                /** @enum {string} */
+                                better: "higher" | "lower" | "none";
+                                plausibleMin: number | null;
+                                plausibleMax: number | null;
+                                intervalCount: number | null;
+                                intervalUnit: ("week" | "month") | null;
+                                tableGroup: string | null;
+                                tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                                isActive: boolean;
+                                sortOrder: number;
+                                hasValues: boolean;
+                            }[];
+                        }[];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "postApiAssessment-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    intervalCount: number;
+                    /** @enum {string} */
+                    intervalUnit: "week" | "month";
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            intervalCount: number;
+                            /** @enum {string} */
+                            intervalUnit: "week" | "month";
+                            isActive: boolean;
+                            sortOrder: number;
+                            hasValues: boolean;
+                            metrics: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                decimals: number;
+                                /** @enum {string} */
+                                better: "higher" | "lower" | "none";
+                                plausibleMin: number | null;
+                                plausibleMax: number | null;
+                                intervalCount: number | null;
+                                intervalUnit: ("week" | "month") | null;
+                                tableGroup: string | null;
+                                tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                                isActive: boolean;
+                                sortOrder: number;
+                                hasValues: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NAME_TAKEN";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "putApiAssessment-typesOrder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    typeIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: Record<string, never>;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "patchApiAssessment-typesTypeId": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                typeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    intervalCount?: number;
+                    /** @enum {string} */
+                    intervalUnit?: "week" | "month";
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            intervalCount: number;
+                            /** @enum {string} */
+                            intervalUnit: "week" | "month";
+                            isActive: boolean;
+                            sortOrder: number;
+                            hasValues: boolean;
+                            metrics: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                unit: string;
+                                /** @enum {string} */
+                                datatype: "number" | "duration";
+                                decimals: number;
+                                /** @enum {string} */
+                                better: "higher" | "lower" | "none";
+                                plausibleMin: number | null;
+                                plausibleMax: number | null;
+                                intervalCount: number | null;
+                                intervalUnit: ("week" | "month") | null;
+                                tableGroup: string | null;
+                                tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                                isActive: boolean;
+                                sortOrder: number;
+                                hasValues: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NAME_TAKEN";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "postApiAssessment-typesTypeIdMetrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                typeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    unit?: string;
+                    /** @enum {string} */
+                    datatype: "number" | "duration";
+                    decimals?: number;
+                    /** @enum {string} */
+                    better: "higher" | "lower" | "none";
+                    plausibleMin?: number | null;
+                    plausibleMax?: number | null;
+                    intervalCount?: number | null;
+                    intervalUnit?: ("week" | "month") | null;
+                    tableGroup?: string | null;
+                    tablePart?: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            unit: string;
+                            /** @enum {string} */
+                            datatype: "number" | "duration";
+                            decimals: number;
+                            /** @enum {string} */
+                            better: "higher" | "lower" | "none";
+                            plausibleMin: number | null;
+                            plausibleMax: number | null;
+                            intervalCount: number | null;
+                            intervalUnit: ("week" | "month") | null;
+                            tableGroup: string | null;
+                            tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                            isActive: boolean;
+                            sortOrder: number;
+                            hasValues: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NAME_TAKEN";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "putApiAssessment-typesTypeIdMetric-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                typeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    metricIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: Record<string, never>;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    patchApiMetricsMetricId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                metricId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    unit?: string;
+                    /** @enum {string} */
+                    datatype?: "number" | "duration";
+                    decimals?: number;
+                    /** @enum {string} */
+                    better?: "higher" | "lower" | "none";
+                    plausibleMin?: number | null;
+                    plausibleMax?: number | null;
+                    intervalCount?: number | null;
+                    intervalUnit?: ("week" | "month") | null;
+                    tableGroup?: string | null;
+                    tablePart?: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: true;
+                        data: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            unit: string;
+                            /** @enum {string} */
+                            datatype: "number" | "duration";
+                            decimals: number;
+                            /** @enum {string} */
+                            better: "higher" | "lower" | "none";
+                            plausibleMin: number | null;
+                            plausibleMax: number | null;
+                            intervalCount: number | null;
+                            intervalUnit: ("week" | "month") | null;
+                            tableGroup: string | null;
+                            tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
+                            isActive: boolean;
+                            sortOrder: number;
+                            hasValues: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NOT_FOUND";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "NAME_TAKEN" | "METRIC_LOCKED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postApiVitals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    name: "LCP" | "INP" | "CLS";
+                    value: number;
+                    /** @enum {string} */
+                    rating: "good" | "needs-improvement" | "poor";
+                    route: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_ERROR" | "INVALID_JSON";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED";
+                        details?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        success: false;
+                        message: string;
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        details?: {
+                            [key: string]: unknown;
                         };
                     };
                 };

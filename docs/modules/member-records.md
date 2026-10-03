@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: f6000ae
+last_verified_commit: 95bd081
 last_verified_on: 2026-10-03
 depends_on: []
 ---
@@ -11,53 +11,76 @@ depends_on: []
 > What the code **is** (the specs say what it **should be**). Read before touching any member-records stream.
 
 ## Summary
-No feature code yet. Only the M0 scaffold exists: Hono backend skeleton (health route, error envelope, route
-registry, JWT helpers, in-memory rate limiter) and the Next.js admin shell (light/dark, Hugeicons, Table v9,
-fetch wrapper with one-refresh-in-flight, cookie-presence `proxy.ts`). File ownership per stream: spec index →
-"Parallel build plan". Working copies per stream: D-017. Hosting (one server, same origin): D-018.
+Stream 0 (Foundation) is built (merge point M0): all 13 tables, all 40 endpoints registered with Zod +
+descriptors (handlers answer 501 `NOT_IMPLEMENTED` until their stream builds them), shared middleware, change
+log, domain maths in both packages, seeds, and the mobile-first admin shell with empty slots. Streams A–F fill
+their own files (ownership: spec index → "Shared files"). Working copies per stream: D-017. Hosting: D-018.
+Stream 0 choices: D-019. Run notes: `.pipeline/member-records-foundation/` (plan, contract, findings, screens, checklist).
 
-## Code locations (existing, useful to every stream)
+## Code locations
 | Layer | Path | Key symbols |
 |---|---|---|
-| app factory | `backend/src/app.ts` | `createApp` (CORS, 1 MB body limit, global `onError`) |
-| errors / envelope | `backend/src/lib/{errors,http,response-schemas}.ts` | `AppError` family, `ok`, `okPaginated`, `failure`, `paginatedResponse` |
-| auth skeleton | `backend/src/lib/{token,auth-middleware,permissions,rate-limiter}.ts` | `signAccessToken`, `requireAuth`, `PERMISSIONS = {}`, `rateLimiter` |
-| contract | `backend/src/lib/route-registry.ts`, `scripts/generate-api-manifest.ts` | `register`, `AuthRequirement` |
-| db | `backend/src/db/client.ts` | postgres.js, `prepare: false` |
-| frontend http | `frontend/src/lib/api/{client,server,routes,errors}.ts` | `createApi`, `refreshSession`, `serverApi`, `API_ROUTES` |
-| frontend shell | `frontend/src/{proxy.ts,app/layout.tsx,lib/queryClient.ts,components/common/*}` | `proxy`, `getQueryClient`, `DataTable` |
+| app factory | `backend/src/app.ts` | `createApp`: log → `serverTiming` → `dataResponseHeaders` → `bodyLimit` → `originCheck` → routers (no CORS) |
+| routes | `backend/src/routes/{auth,setup,members,assessments,due,progress,vitals}.ts`, `mount-route.ts`, `end-points.ts` | `routeMounter` registers the descriptor and derives guard + validation from it; replace `notImplemented` only |
+| types | `backend/src/types/<owner>.types.ts`, `common.types.ts` | schema names per endpoint: `.pipeline/member-records-foundation/contract.md` |
+| enums | `backend/src/lib/enums.ts` | one `as const` array + union per enum-like column (DB checks and Zod) |
+| schema | `backend/src/db/schemas/{infrastructure,auth,setup,members,assessments,due}.ts`, `helpers.ts` | `auditLog`, `idempotencyKeys`, `appAccount`, `authSessions`, `loginAttempts`, `gymSettings`, `assessmentTypes`, `metrics`, `members`, `membershipPeriods`, `assessments`, `measurements`, `dueOverrides` |
+| db client | `backend/src/db/client.ts` | `Db`, `Tx`; patches Drizzle `QueryPromise.then` so every query feeds Server-Timing `db` |
+| middleware | `backend/src/lib/{origin-check,idempotency,etag,server-timing,response-headers,validate}.ts` | `originCheck`, `idempotency` (+ `pruneIdempotencyKeys`), `etagMiddleware`, `serverTiming`/`measureDb`, `dataResponseHeaders` |
+| change log | `backend/src/lib/audit.ts` | `writeAudit(tx, entry)`, `diffChangedFields` (redacts /password|token|secret|hash/i) |
+| domain | `backend/src/lib/domain/{dates,duration,membership}.ts` = `frontend/src/lib/domain/*` | `addMonths`, `addInterval`, `daysBetween`, `gymToday`, `ageOn`, `parseDuration`, `formatDuration`, `durationFromParts/ToParts`, `membershipEnd`, `membershipStatus` |
+| seeds | `backend/scripts/{seed,seed-perf,db-reset}.ts` | `seed()` (`CATALOG` const), `seedPerf({ memberCount })`, `assertLocalDatabase` |
+| frontend http | `frontend/src/lib/api/{client,server,routes,errors}.ts` | `api` (ETag cache, refresh once), `serverApi`, `API_ROUTES` (all 41) + `apiPath` |
+| frontend shared | `frontend/src/lib/{format.ts,messages/errors.ts,messages/words.ts,hooks/*}` | `formatDay`, `formatRelativeDay`, `formatValue`, `formatPhone`, `messageForCode`, `UI_TEXT` |
+| shell | `frontend/src/components/shells/*`, `app/(app)/admin/layout.tsx` | `AppShell`, `BottomTabBar` (< 1024 px), `SideNav`, `SignOutButton` (slot for A) |
+| shared UI | `frontend/src/components/common/*` | PageHeader (+ActionBar), Section, ListRow, StatusBadge, ChipList, ResponsiveSheet, ConfirmSheet, NumberField, DurationField, DateField, ChoiceChips, Sparkline, OfflineBanner, Skeletons, EmptyState, ErrorState |
+| slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
-None built. Target: `docs/specs/member-records/data-model.md` and `api-contract.md`.
+Tables: data-model.md v2 (no hand SQL, no extensions, no exclusion constraint — overlap is the BR-REC-09 service
+check). Endpoints: api-contract.md + exact schema names in `.pipeline/member-records-foundation/contract.md`.
+Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stream G).
 
-## Gaps found (commit f6000ae)
-| # | Gap | Where | Closed by |
-|---|---|---|---|
-| 1 | No tables; infra tables `audit_log`, `idempotency_keys` (FOUNDATIONS) missing; no idempotency middleware | `backend/src/db/schemas/index.ts` | Stream 0 |
-| 2 | Refresh token is a stateless JWT (`signRefreshToken`): no rotation store, no revoke; payload has no `sid` | `backend/src/lib/token.ts` | auth |
-| 3 | Cookie names hard-coded in three places; no access-cookie setter. (Refresh `maxAge` default 7 days already matches auth Q2 = B.) | `lib/http.ts`, `lib/auth-middleware.ts`, `frontend/src/proxy.ts` | auth |
-| 4 | Rate limiter keys on the first `X-Forwarded-For` hop (browser-controlled), per process | `backend/src/lib/rate-limiter.ts` | auth (BR-REC-38; `TRUST_PROXY_HOPS` for the D-018 chain) |
-| 5 | No Origin check on writes, no gzip, ETag or `Server-Timing` | `backend/src/app.ts` | Stream 0 |
-| 6 | `PERMISSIONS` is empty: routes must register `{ type: 'any-authenticated' }` | `lib/permissions.ts` | api-contract BR-REC-159 |
-| 7 | `bootstrap-admin` (with `--reset`, `--unlock`) and `seed` scripts listed in `backend/CLAUDE.md` but absent from `package.json` | `backend/package.json` | auth / Stream 0 |
-| 8 | `drizzle()` has no `casing` option: give snake_case column names explicitly | `backend/src/db/client.ts` | Stream 0 |
-| 9 | Not yet same-origin (D-018 decided): `NEXT_PUBLIC_API_URL` must be a full URL (target `/api`); no `/api` rewrite in `next.config.ts`; `frontend/CLAUDE.md` Env text describes a cross-site API; backend CORS then unneeded | `frontend/src/lib/env.ts`, `next.config.ts`, `backend/src/app.ts` | Stream 0 |
-| 10 | `proxy.ts` checks cookie presence only; its matcher would also catch `/api/*` once same-origin; no server-side refresh; no redirect away from `/login` | `frontend/src/proxy.ts` | auth (BR-REC-39, 40, 42) |
-| 11 | All three fonts (Outfit, Raleway, Geist Mono) are preloaded on every page with full defaults; spec keeps all three but preloads only Outfit, Raleway 600 only | `frontend/src/app/layout.tsx` | Stream 0 (BR-REC-150, 174) |
-| 12 | `/` redirects to `/admin`: one extra round trip on cold open | `frontend/src/app/page.tsx` | Stream 0 (tactic 24) |
-| 13 | Profile says `pwa: false`; no manifest | `frontend/CLAUDE.md` | performance (profile change needed) |
-| 14 | Missing shadcn primitives: sheet, dialog, alert-dialog, badge, tabs, switch, checkbox, toggle-group; only a table list exists | `frontend/src/components/ui` | Stream 0 |
-| 15 | nextjs-standards §14 (right-aligned buttons, Reset button) conflicts with the mobile action bar and "no Reset" | `docs/standards/nextjs-standards.md` | record override in `frontend/CLAUDE.md` (D-016) |
-| 16 | ~~Root CLAUDE.md allows one branch + one worktree~~ — decided: D-017 is a scoped exception for this module; CLAUDE.md unchanged (the user may add a pointer) | `CLAUDE.md` | closed by D-017 |
-| 17 | Open GitHub issues for `mod:member-records` not checked (no shell in the spec session) | GitHub | coordinator |
+## Commands
+`bun run seed` (idempotent: settings + `login_attempts` row + catalog only when empty) · `bun run seed:perf`
+(local only, adds 1,000 members; run `db:reset` first) · `bun run db:reset` (push + seed) · `SEED_PERF_FULL=1 bun test tests/scripts/seed-perf.test.ts` (full 1,000 run; default tests use 100).
+
+## Invariants & gotchas
+- Every write needs a matching `Origin` (403 `CSRF_ORIGIN`), server-side calls too; a POST with no Origin to an unknown path is 403, not 404.
+- gzip only for JSON over 1 KB with a known body; CSV/streams pass through. Never `res.clone()` and return the original; `c.res = x` copies old headers onto the new response.
+- `app.request()` sends no `Accept-Encoding`: test compression on a real `Bun.serve` (`tests/lib/response-headers-server.test.ts`).
+- Idempotency: `tryClaim` (insert … on conflict do nothing) → SELECT-only polling (≤ 10 s, then 429) → handler; only 2xx stored; a failed request frees its key; a store failure keeps the claim. Answer is not stored in the handler's transaction (small crash window; #3).
+- ETag + `no-store`: the browser never revalidates by itself; `lib/api/client.ts` sends `If-None-Match` from its own cache. `etagMiddleware` tags 2xx GETs only; gzip weakens it to `W/`.
+- Server-Timing `db`: automatic for Drizzle queries; raw `queryClient` calls, BEGIN/COMMIT and `db.$count()` are not counted; it is a sum, so parallel queries can exceed `total` (#5). Repositories never call `measureDb`.
+- After `next()` a handler error does not throw (Hono sets `c.error`); route middleware checks status, not try/catch.
+- `z.guid()` for ids (well-formed unknown id → 404). `.partial()` keeps strictness; the "≥ 1 field" refine is invisible in OpenAPI. `date` columns `mode:"string"`, `numeric(12,3)` `mode:"number"`.
+- drizzle-kit push recreates indexes mixing columns and expressions unless the column goes through `asExpression()` (`db/schemas/helpers.ts`).
+- Shared Postgres on 5433: each parallel worktree needs its own `DATABASE_URL_TEST` database name.
+- `membershipStatus`: a not-yet-started latest period is Active; lead window inclusive; `daysLeft` 0 = ends today (+0).
+- `parseDuration` accepts `m:ss` / `h:mm:ss` only, ≤ 599:59; bare numbers → null. Timed metrics have unit "min:sec": never append it after `formatDuration`.
+- Use `messageForCode`, never `ERROR_MESSAGES[code]` (inherited keys like `constructor`). `LOGIN_LOCKED` text ends "Try again later." — Login (A) adds minutes from `details.retryAfterSeconds`.
+- `API_ROUTES` leaves are manifest paths with `:param`; `apiPath(template, params)` fills them. `next.config.ts` rewrites are baked at build time (`API_URL` needed for `next build`); run `bunx next typegen` after adding routes.
+- `PageHeader`'s `action` is drawn twice (desktop header / phone `ActionBar`); `ActionBar form` hides the tab bar. Sticky elements under the offline banner use `top-[var(--offline-h,0px)]`.
+- Dark `--primary` fails 4.5:1 as text: no `text-primary` / `variant="link"`. 48 px controls and 44 px hit areas are unlayered CSS in `globals.css` (shadcn files are never edited).
+- `src/proxy.ts` matcher still catches `/api/*` and `/` (auth stream A fixes, BR-REC-39).
+- Theme follows the device (`defaultTheme="system"`); Settings (C) must render `ThemeToggle` for the manual choice.
+
+## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list)
+| # | Gap | Owner |
+|---|---|---|
+| 2, 3, 4, 10 | refresh-token store/rotation, cookie names, rate-limiter key, proxy matcher + server refresh | auth (A) |
+| 7 | `bootstrap-admin` script | auth (A) |
+| 13 | manifest / installable app | performance (G) |
+| — | idempotency answer outside the handler transaction | [#3](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/3) (B) |
+| — | ResponsiveSheet ships Drawer + Dialog + AlertDialog together (RV-11) | [#4](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/4) (G) |
+| — | Server-Timing `db` accuracy + test (R2-2, R2-3) | [#5](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/5) (G) |
+| — | DurationField paste table test; offline banner under the notch (R2-5, R2-6) | [#6](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/6) (D, G) |
 
 ## Tech notes
-- Lighthouse 12 removed the PWA category, so "installable" (BR-REC-151) is checked by a manifest test plus an
-  offline reload test, not by a Lighthouse score.
-- next/font: `preload: false` fonts are fetched by the browser only when an element on screen uses them;
-  `adjustFontFallback` gives the size-adjusted fallback ([Next.js font docs](https://nextjs.org/docs/app/api-reference/components/font)).
-- Font file sizes (BR-REC-174, budget 150 KB total, Outfit ≤ 40 KB): not measured yet — Stream 0 writes them here.
-- Global sign-in lock (auth Q1 = B): one row in `login_attempts`; trade-off and limits in `auth.md` → Known trade-off.
+- Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
+- Lighthouse 12 removed the PWA category, so "installable" (BR-REC-151) is checked by a manifest test plus an offline reload test.
+- next/font: `preload: false` fonts are fetched only when an element on screen uses them; `adjustFontFallback` gives the size-adjusted fallback.
+- Global sign-in lock (auth Q1 = B): one row in `login_attempts` (created by `seed`); trade-off in `auth.md` → Known trade-off.
 
 ## Benchmark notes (2026-10-03)
 - Duplicate phone: warn with the matching client's name/phone and an "open existing" choice; never block
@@ -77,7 +100,7 @@ None built. Target: `docs/specs/member-records/data-model.md` and `api-contract.
   world leaderboards (BTWB).
 
 ## Perf run book (BR-REC-141)
-1. `cd backend && docker compose up -d && bun run db:reset && bun run seed:perf` (local only).
+1. `cd backend && docker compose up -d && bun run db:reset && bun run seed:perf` (local only; ~15 s for 1,000 members, ~343k values).
 2. Build and start API and frontend in production mode on one machine, Next forwarding `/api` (as D-018).
 3. `cd backend && bun run bench` → p95 and gzip size per endpoint vs BR-REC-147, 148.
 4. Lighthouse mobile (default throttling) on `/login`, `/admin`, `/admin/members`, a seeded member page and its
@@ -86,13 +109,20 @@ None built. Target: `docs/specs/member-records/data-model.md` and `api-contract.
 5. Write the numbers in History below.
 
 ## Tests
-None yet.
-
-## Known gaps / debt
-See "Gaps found".
+| Area | Files | BR |
+|---|---|---|
+| schema | `backend/tests/db/schema.test.ts` | 163, 164, 168, 169, 175 |
+| contract | `backend/tests/routes/{contract-conventions,route-drift}.test.ts`, `frontend/tests/lib/api/routes.test.ts` | 153, 155, 157, 159 |
+| middleware | `backend/tests/lib/{origin-check,idempotency,etag,response-headers,response-headers-server,server-timing}.test.ts`, `backend/tests/app.test.ts` | 36, 37, 147, 156, 160, 161 |
+| change log | `backend/tests/lib/audit.test.ts` | 43, 158 |
+| seeds | `backend/tests/scripts/{seed,seed-perf}.test.ts` | 10, 13, 65, 68, 168, 170 |
+| domain | `{backend,frontend}/tests/lib/domain/*.test.ts` + golden `duration-cases.json`, `membership-end-cases.json` | 03, 12, 51, 52, 75, 93, 94, 105 |
+| frontend libs | `frontend/tests/lib/{format,messages/errors}.test.ts` | 127, 128, 154 |
+| manual | `.pipeline/member-records-foundation/checklist.md` | shell / ux rules, fonts, same origin |
 
 ## History
 | Date | PR / commit | Change |
 |---|---|---|
 | 2026-10-03 | — | Map created with spec v2 (split into 10 sub-specs); no feature code |
-| 2026-10-03 | — | v2 answers folded (36 questions; D-017 own session+PR per stream, D-018 hosting); gaps 3, 9, 11, 16 updated; benchmark moved here from the index; tech notes added |
+| 2026-10-03 | — | v2 answers folded (36 questions; D-017, D-018); benchmark moved here; tech notes added |
+| 2026-10-03 | Stream 0 branch `claude/member-records-foundation-57e849` | Foundation built (M0): schema, 40 routes (501), middleware, change log, domain maths, seeds, shell + slots; data-model v2 (no hand SQL); D-019; 2 review rounds (round 2 READY), issues #3–#6; 551 backend + 506 frontend tests |

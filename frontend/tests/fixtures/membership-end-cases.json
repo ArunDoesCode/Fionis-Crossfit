@@ -1,0 +1,180 @@
+{
+  "end": [
+    { "plan": "monthly", "startOn": "2026-01-15", "endOn": "2026-02-14" },
+    { "plan": "quarterly", "startOn": "2026-03-01", "endOn": "2026-05-31" },
+    { "plan": "half_annual", "startOn": "2026-04-10", "endOn": "2026-10-09" },
+    { "plan": "annual", "startOn": "2025-06-01", "endOn": "2026-05-31" },
+    { "plan": "monthly", "startOn": "2026-01-31", "endOn": "2026-02-28" },
+    { "plan": "monthly", "startOn": "2026-02-28", "endOn": "2026-03-27" },
+    { "plan": "annual", "startOn": "2028-02-29", "endOn": "2029-02-28" },
+    { "plan": "monthly", "startOn": "2026-01-01", "endOn": "2026-01-31" },
+    { "plan": "monthly", "startOn": "2026-03-01", "endOn": "2026-03-31" },
+    { "plan": "monthly", "startOn": "2026-01-29", "endOn": "2026-02-28" },
+    { "plan": "monthly", "startOn": "2026-01-30", "endOn": "2026-02-28" },
+    { "plan": "monthly", "startOn": "2028-01-29", "endOn": "2028-02-28" },
+    { "plan": "monthly", "startOn": "2028-01-30", "endOn": "2028-02-29" },
+    { "plan": "monthly", "startOn": "2025-12-15", "endOn": "2026-01-14" },
+    { "plan": "monthly", "startOn": "2026-03-31", "endOn": "2026-04-30" },
+    { "plan": "monthly", "startOn": "2026-04-30", "endOn": "2026-05-29" },
+    { "plan": "quarterly", "startOn": "2025-12-31", "endOn": "2026-03-30" },
+    { "plan": "quarterly", "startOn": "2025-11-30", "endOn": "2026-02-28" },
+    { "plan": "quarterly", "startOn": "2025-08-31", "endOn": "2025-11-30" },
+    { "plan": "quarterly", "startOn": "2025-12-01", "endOn": "2026-02-28" },
+    { "plan": "quarterly", "startOn": "2026-01-01", "endOn": "2026-03-31" },
+    { "plan": "half_annual", "startOn": "2025-08-31", "endOn": "2026-02-28" },
+    { "plan": "half_annual", "startOn": "2026-07-01", "endOn": "2026-12-31" },
+    { "plan": "half_annual", "startOn": "2026-01-01", "endOn": "2026-06-30" },
+    { "plan": "half_annual", "startOn": "2025-12-31", "endOn": "2026-06-30" },
+    { "plan": "annual", "startOn": "2026-01-01", "endOn": "2026-12-31" },
+    { "plan": "annual", "startOn": "2026-12-31", "endOn": "2027-12-30" },
+    { "plan": "annual", "startOn": "2028-03-01", "endOn": "2029-02-28" },
+    { "plan": "annual", "startOn": "2027-03-01", "endOn": "2028-02-29" },
+    { "plan": "annual", "startOn": "2026-10-03", "endOn": "2027-10-02" }
+  ],
+  "status": [
+    {
+      "latest": { "startOn": "2026-01-01", "endOn": "2026-12-31" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "active", "daysLeft": 89 }
+    },
+    {
+      "latest": { "startOn": "2026-04-11", "endOn": "2026-10-10" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expiring", "daysLeft": 7 }
+    },
+    {
+      "latest": { "startOn": "2026-04-10", "endOn": "2026-10-09" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expiring", "daysLeft": 6 }
+    },
+    {
+      "latest": { "startOn": "2026-04-04", "endOn": "2026-10-03" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expiring", "daysLeft": 0 }
+    },
+    {
+      "latest": { "startOn": "2025-10-03", "endOn": "2026-10-02" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expired", "daysLeft": -1 }
+    },
+    {
+      "latest": { "startOn": "2025-06-01", "endOn": "2026-05-31" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expired", "daysLeft": -125 }
+    },
+    {
+      "latest": { "startOn": "2026-10-20", "endOn": "2026-11-19" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "active", "daysLeft": 47 }
+    },
+    {
+      "latest": { "startOn": "2026-03-04", "endOn": "2026-10-17" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "expiring", "daysLeft": 14 }
+    },
+    {
+      "latest": { "startOn": "2026-03-05", "endOn": "2026-10-18" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "active", "daysLeft": 15 }
+    },
+    {
+      "latest": { "startOn": "2026-09-04", "endOn": "2026-10-03" },
+      "today": "2026-10-03",
+      "leadDays": 0,
+      "expected": { "status": "expiring", "daysLeft": 0 }
+    },
+    {
+      "latest": { "startOn": "2026-09-05", "endOn": "2026-10-04" },
+      "today": "2026-10-03",
+      "leadDays": 0,
+      "expected": { "status": "active", "daysLeft": 1 }
+    },
+    {
+      "latest": { "startOn": "2026-09-05", "endOn": "2026-10-04" },
+      "today": "2026-10-03",
+      "leadDays": 7,
+      "expected": { "status": "expiring", "daysLeft": 1 }
+    },
+    {
+      "latest": { "startOn": "2026-04-11", "endOn": "2026-10-10" },
+      "today": "2026-10-03",
+      "leadDays": 6,
+      "expected": { "status": "active", "daysLeft": 7 }
+    },
+    {
+      "latest": { "startOn": "2026-04-11", "endOn": "2026-10-10" },
+      "today": "2026-10-03",
+      "leadDays": 7,
+      "expected": { "status": "expiring", "daysLeft": 7 }
+    },
+    {
+      "latest": { "startOn": "2025-10-02", "endOn": "2026-10-01" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expired", "daysLeft": -2 }
+    },
+    {
+      "latest": { "startOn": "2026-08-04", "endOn": "2026-09-03" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expired", "daysLeft": -30 }
+    },
+    {
+      "latest": { "startOn": "2026-10-04", "endOn": "2026-11-03" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 31 }
+    },
+    {
+      "latest": { "startOn": "2026-10-20", "endOn": "2026-11-19" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 47 }
+    },
+    {
+      "latest": { "startOn": "2026-10-11", "endOn": "2026-11-10" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 38 }
+    },
+    {
+      "latest": { "startOn": "2026-10-04", "endOn": "2026-10-10" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "active", "daysLeft": 7 }
+    },
+    {
+      "latest": { "startOn": "2026-10-04", "endOn": "2027-10-03" },
+      "today": "2026-10-03",
+      "leadDays": 365,
+      "expected": { "status": "active", "daysLeft": 365 }
+    },
+    {
+      "latest": { "startOn": "2026-10-03", "endOn": "2026-11-02" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expiring", "daysLeft": 30 }
+    },
+    {
+      "latest": { "startOn": "2026-10-02", "endOn": "2026-11-01" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expiring", "daysLeft": 29 }
+    },
+    {
+      "latest": null,
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": null
+    }
+  ]
+}

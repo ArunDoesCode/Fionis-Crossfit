@@ -1,8 +1,9 @@
 /**
  * `bun run db:reset [--allow-remote]`
  *
- * Wipes the `public` and `drizzle` schemas of the database in DATABASE_URL and
- * pushes the current Drizzle schema. (No seed data yet; add steps below as modules need them.)
+ * Wipes the `public` and `drizzle` schemas of the database in DATABASE_URL,
+ * pushes the current Drizzle schema, then runs `bun run seed` (settings, the
+ * login-lock row, the assessment catalog). `seed:perf` stays a separate command.
  *
  * Guard: refuses NODE_ENV=production and non-local hosts. A remote host needs
  * `--allow-remote` AND DB_RESET_CONFIRM=<database name>. A local host that is not the
@@ -115,6 +116,31 @@ const steps: Step[] = [
         console.error(scrub(`${out}\n${err}`).trim());
         throw new Error("drizzle-kit push failed");
       }
+    },
+  },
+  {
+    name: "seed",
+    run: async () => {
+      // The app env refuses DATABASE_URL_TEST === DATABASE_URL; that happens when the reset target is the test DB.
+      const seedEnv = { ...process.env } as Record<string, string | undefined>;
+      if (seedEnv.DATABASE_URL_TEST === rawUrl)
+        delete seedEnv.DATABASE_URL_TEST;
+      const proc = Bun.spawn(["bun", "scripts/seed.ts"], {
+        cwd: BACKEND_DIR,
+        env: seedEnv,
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const [out, err] = await Promise.all([
+        new Response(proc.stdout).text(),
+        new Response(proc.stderr).text(),
+      ]);
+      if ((await proc.exited) !== 0) {
+        console.error(scrub(`${out}\n${err}`).trim());
+        throw new Error("seed failed");
+      }
+      console.log(scrub(out).trim());
     },
   },
 ];
