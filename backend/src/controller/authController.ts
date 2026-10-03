@@ -49,7 +49,10 @@ export const authController = {
       new Date(),
     );
     setAccessCookie(c, result.accessToken);
-    setRefreshCookie(c, result.refreshToken, result.remember);
+    // No new refresh token in the 60 s grace of a replaced one: the cookie stays as it is (BR-REC-32).
+    if (result.refreshToken !== undefined) {
+      setRefreshCookie(c, result.refreshToken, result.remember);
+    }
     return ok(c, { expiresAt: result.expiresAt.toISOString() });
   },
 

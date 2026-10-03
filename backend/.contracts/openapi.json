@@ -1843,7 +1843,7 @@
           "auth"
         ],
         "summary": "E02 Refresh the sign-in (rotates the refresh cookie)",
-        "description": "Reads the `refresh_token` cookie; no body. Works while the login is locked (BR-REC-171).\n200 sets both cookies again, as E01 (a new access token and a new refresh token); `expiresAt` is when the sign-in ends if unused.\n401 SESSION_EXPIRED: no, unknown, expired or revoked token, or a replaced token used after its 60 s grace (the sign-in is then revoked).\n429 RATE_LIMITED: 30 requests a minute per network address.\nA write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).",
+        "description": "Reads the `refresh_token` cookie; no body. Works while the login is locked (BR-REC-171).\n200 sets both cookies again, as E01 (a new access token and a new refresh token); `expiresAt` is when the sign-in ends if unused.\nA replaced refresh token used within 60 s of its replacement (two tabs at once) gets 200 with a new `access_token` cookie only: no second rotation and no `refresh_token` cookie (BR-REC-32).\n401 SESSION_EXPIRED: no, unknown, expired or revoked token, or a replaced token used after its 60 s grace (the sign-in is then revoked).\n429 RATE_LIMITED: 30 requests a minute per network address.\nA write needs an `Origin` header equal to the app address, else 403 CSRF_ORIGIN (BR-REC-37).",
         "responses": {
           "200": {
             "description": "Success",

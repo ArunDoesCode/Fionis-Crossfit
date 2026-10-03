@@ -165,6 +165,15 @@ export const authRepository = {
     await tx.update(authSessions).set(values).where(eq(authSessions.id, id));
   },
 
+  /** A use of the sign-in that keeps its tokens: only the sliding times move (replaced token in its grace). */
+  async touchSession(
+    tx: Tx,
+    id: string,
+    values: { lastUsedAt: Date; expiresAt: Date },
+  ) {
+    await tx.update(authSessions).set(values).where(eq(authSessions.id, id));
+  },
+
   /** Ends one sign-in; one already ended keeps its first reason. Returns whether it changed. */
   async revokeSession(
     tx: Tx,

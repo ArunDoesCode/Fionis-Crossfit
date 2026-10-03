@@ -38,23 +38,27 @@ const REFRESH_GRACE_MS = 60 * 1000;
 /** One text for "no such user" and "wrong password": the answer never says which (BR-REC-01). */
 const INVALID_CREDENTIALS_MESSAGE = "That username or password is not right.";
 
-/** Cheapest sensible argon2id under test so suites stay fast; Bun's defaults otherwise (BR-REC-27). */
+/**
+ * argon2id cost (BR-REC-27), pinned so a Bun upgrade cannot change it silently: 64 MiB, 2 passes
+ * (OWASP-acceptable; the same as Bun's current defaults, so existing hashes stay valid). Under test
+ * the cheapest sensible cost keeps the suites fast.
+ */
 const ARGON2 =
   env.NODE_ENV === "test"
     ? ({ algorithm: "argon2id", memoryCost: 1024, timeCost: 1 } as const)
-    : ({ algorithm: "argon2id" } as const);
+    : ({ algorithm: "argon2id", memoryCost: 65536, timeCost: 2 } as const);
 
 const hashPassword = (plain: string) => Bun.password.hash(plain, ARGON2);
 
-// An unknown username still pays for one hash check, so response time does not reveal it.
-let decoyHash: Promise<string> | undefined;
+// An unknown username still pays for one hash check, so response time does not reveal it. The decoy
+// is made at module load, so even the first unknown-username try after a restart is not faster or slower.
+const decoyHash = hashPassword(crypto.randomUUID());
 
 async function passwordMatches(
   plain: string,
   storedHash: string | undefined,
 ): Promise<boolean> {
   if (storedHash !== undefined) return Bun.password.verify(plain, storedHash);
-  decoyHash ??= hashPassword(crypto.randomUUID());
   await Bun.password.verify(plain, await decoyHash);
   return false;
 }
@@ -196,9 +200,10 @@ export const authService = {
   },
 
   /**
-   * E02. Rotates the refresh token (BR-REC-32): the replaced one still works for 60 s, later use
-   * ends the sign-in (`reuse`) and is logged. Slides `expires_at` 7 days when `remember`; the
-   * 12 h cap of a sign-in without it never moves (BR-REC-31). Ignores the lock (BR-REC-171).
+   * E02. Rotates the refresh token (BR-REC-32): the replaced one still works for 60 s (it gets a
+   * new access token only, `refreshToken` is undefined and nothing is rotated), later use ends the
+   * sign-in (`reuse`) and is logged. Slides `expires_at` 7 days when `remember`; the 12 h cap of a
+   * sign-in without it never moves (BR-REC-31). Ignores the lock (BR-REC-171).
    */
   async refresh(
     refreshToken: string | undefined,
@@ -241,10 +246,27 @@ export const authService = {
       );
       if (!account) return null;
 
-      const nextToken = generateRefreshToken();
       const expiresAt = session.remember
         ? new Date(now.getTime() + env.REFRESH_TOKEN_TTL_SECONDS * 1000)
         : session.expiresAt;
+
+      if (!isCurrent) {
+        // A replaced token inside the grace: the other tab already got the new refresh token, so no
+        // second rotation (it would drop that token) and no new refresh cookie (BR-REC-32 v2, R-1).
+        await authRepository.touchSession(tx, session.id, {
+          lastUsedAt: now,
+          expiresAt,
+        });
+        return {
+          account,
+          session,
+          nextToken: undefined,
+          expiresAt,
+          reused: false,
+        } as const;
+      }
+
+      const nextToken = generateRefreshToken();
       await authRepository.rotateSession(tx, session.id, {
         tokenHash: hashRefreshToken(nextToken),
         prevTokenHash: session.tokenHash,
