@@ -19,15 +19,15 @@ Foundation's D-019 already adds the `sid` claim to `lib/token.ts`; auth builds o
 ## Resume checklist (before slice 1)
 - [x] `git merge claude/member-records-foundation-57e849` — merged its S1 contract (4969dee) early; re-merge S3 build before the backend goes green.
 - [x] `cd backend && bun run db:test:prepare` (own DB `gym_auth_test`); `bun install` in both packages.
-- [ ] Re-run the baseline (test-runner); replace the baseline table below.
-- [ ] Check Stream 0 delivered what auth builds on (else stop and tell the user):
+- [x] Baseline re-checked by backend-dev after merges (non-auth red = Stream 0's own open tests).
+- [x] Check Stream 0 delivered what auth builds on (else stop and tell the user):
       tables `app_account` / `auth_sessions` / `login_attempts` (one seeded row) · E01–E06 registered in
       `routes/end-points.ts` with `types/auth.types.ts` · `lib/audit.ts` (change-log writer) · `lib/origin-check.ts`
       (BR-REC-37) · `/api` rewrite in `next.config.ts` (BR-REC-36) · `API_ROUTES.auth.*` in `frontend/src/lib/api/routes.ts` ·
       error-code dictionary has `INVALID_CREDENTIALS`, `LOGIN_LOCKED`, `RATE_LIMITED`, `SESSION_EXPIRED`,
       `CURRENT_PASSWORD_WRONG`, `CSRF_ORIGIN` · shell "Sign out" slot (BR-REC-120) and how it calls auth.
-- [ ] Test DB: the user points `DATABASE_URL_TEST` in `backend/.env` at this stream's own `*_test` database (decision 2 = A; `.env` is not readable by agents); then `db:test:prepare` creates it.
-- [ ] Refresh `docs/modules/member-records.md` from the Stream 0 diff (`/map member-records`) — explorer reads the map only.
+- [x] Test DB: the user points `DATABASE_URL_TEST` in `backend/.env` at this stream's own `*_test` database (decision 2 = A; `.env` is not readable by agents); then `db:test:prepare` creates it.
+- [ ] (at hand-over) Refresh `docs/modules/member-records.md` from the Stream 0 diff (`/map member-records`) — explorer reads the map only.
 
 ## File ownership (index → Shared files)
 Auth owns: `backend/src/{types,routes,controller,service,repository}/auth*` · `backend/src/lib/{token,auth-middleware,rate-limiter}.ts` ·
@@ -63,7 +63,7 @@ Red runs: signin 94 (90 red, 4 pass), session 77 (64 red, 13 pass). Frontend par
 (Login copy, Account form, cache clear) go to a frontend test-writer brief with slices 1, 3, 4.
 Run the two folders on separate DBs when run in parallel (one-row tables); the normal `bun test` run is serial.
 
-- [ ] **1. Login + lock** — BR-REC-25, 27, 01, 28, 29, 171
+- [x] **1. Login + lock** — BR-REC-25, 27, 01, 28, 29, 171
   - backend: E01 (lock check → argon2id verify → global counter in `login_attempts`, one atomic update; 429 `LOGIN_LOCKED`
     + `Retry-After` + `details.retryAfterSeconds`; same 401 text for wrong user/password), `bootstrap-admin`
     (create, refuse if exists, `--username --password` non-interactive, `--unlock` + audit `auth.unlock`); injected `now`;
@@ -71,24 +71,24 @@ Run the two folders on separate DBs when run in parallel (one-row tables); the n
   - admin: S1 Login (`/login`, today `LoginView` → `LoginPlaceholder` stub): username, password with show, "Keep me signed in" ticked, reserved error line, locked text.
   - tests: auth service with injected clock (counter across addresses, 15-min window, clear on success, lock not
     extended), E01 route, bootstrap script, hash format.
-- [ ] **2. Sessions: cookies, refresh rotation, me** — BR-REC-30, 31, 32, 33, 44
+- [x] **2. Sessions: cookies, refresh rotation, me** — BR-REC-30, 31, 32, 33, 44
   - backend: E01 sets cookies; `auth_sessions` row (HMAC token hash, remember / 7-day slide / 12 h cap); E02 rotate
     with 60 s grace, reuse → revoke `reuse` + 401 `SESSION_EXPIRED`, works while locked; E05; `token.ts` claims
     `sid`, HS256 pinned; `auth-middleware` reads the access cookie by signature only.
   - admin: none (wired in slice 4).
   - tests: cookie attributes, no raw token in DB, sliding expiry and cap, rotation/grace/reuse, secret rotation.
-- [ ] **3. Sign out + password** — BR-REC-02, 34, 35, 26
+- [x] **3. Sign out + password** — BR-REC-02, 34, 35, 26
   - backend: E03, E04 (`{ signedOut }`), E06 (8–128 chars, wrong current → 400 `CURRENT_PASSWORD_WRONG` counts toward
     the lock, revoke others `password_change`, keep this one; 429 while locked); `bootstrap-admin --reset` revokes all `reset`.
   - admin: S17 Account (`/admin/settings/account`): "Signed in as", change password, Sign out, Sign out all devices
     (confirm, BR-REC-133); sign out clears the query cache.
   - tests: E03/E04/E06 services + routes, reset script.
-- [ ] **4. Page guard + app refresh** — BR-REC-39, 40, 41, 42
+- [x] **4. Page guard + app refresh** — BR-REC-39, 40, 41, 42
   - admin: `proxy.ts` (no cookies → `/login?next=`; safe `next`; access missing + refresh → server-side E02, copy
     `Set-Cookie` to response and forwarded request; signed in on `/login` → `/admin`; matcher excludes `/api`,
     static, manifest); client 401 → one refresh in flight → retry → Login with `next`, drafts kept.
   - tests: proxy unit tests, fetch-wrapper tests (frontend `bun test`).
-- [ ] **5. Edge + change log** — BR-REC-36, 37, 38, 43
+- [x] **5. Edge + change log** — BR-REC-36, 37, 38, 43
   - backend: rate limits (login 10/min, refresh 30/min per address, key from `TRUST_PROXY_HOPS`, spoofed XFF ignored);
     audit rows for every sign-in event (no password, ip + device ≤ 60 chars).
   - 36 / 37 are built by Stream 0 (rewrite, `origin-check.ts`): auth only adds tests; a gap → tell the user.
@@ -110,3 +110,4 @@ All green: backend typecheck, lint, `bun test` (12 tests), `contract:check` (1 r
 - Stream 0 test `contract-conventions` BR-REC-159 mints a random `sid`; real E05 answers 401 without a session row →
   user decision: Stream 0 changes the test.
 - Slice status: backend 1, 2, 3, 5 built (21e1325, 49df850); `tests/auth/session` 136/136 green; signin green once the fix lands.
+- Build done: backend 21e1325 + 49df850, admin 734cf32. Verify next (reviewer + test-runner); signin tests wait for Stream 0 R-1.
