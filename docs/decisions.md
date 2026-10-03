@@ -63,3 +63,12 @@ Standalone MVP slice (backend + admin only; no member app, TV or SSE). Single sh
 overrides `role_t` for this slice only; entries have no per-user attribution. Metrics live in a configurable
 catalog; assessment due dates are computed from per-type intervals (per-metric override), never stored.
 Why: digitise the paper binder first; historical data becomes the base for the full app.
+
+**D-013 · 2026-10-03 · Icon library is Hugeicons (`@hugeicons/react` `HugeiconsIcon` + `@hugeicons/core-free-icons`); replaces lucide.**
+Use `<HugeiconsIcon icon={SomeIcon} />`. `lucide-react` is removed. Why: the shadcn preset generates `ui/*` with Hugeicons
+(`components.json` `iconLibrary: hugeicons`); one icon library only.
+
+**D-014 · 2026-10-03 · TanStack Table v9 (`@tanstack/react-table` 9.2.x), not v8.**
+Owner chose v9. React Compiler needs no `'use no memo'` for stateless tables. Pages never import tanstack directly:
+they build columns with `createDataTableColumnHelper` from `components/common/DataTable`. Server-paginated tables register
+no features (nuqs `offset`/`limit` + `TablePagination`). Patterns: `docs/standards/nextjs-standards.md` §15.
