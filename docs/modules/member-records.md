@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: HEAD_SHA
+last_verified_commit: 95bd081
 last_verified_on: 2026-10-03
 depends_on: []
 ---
