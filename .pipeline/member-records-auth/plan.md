@@ -114,3 +114,4 @@ All green: backend typecheck, lint, `bun test` (12 tests), `contract:check` (1 r
 - Verify done 2026-10-03: review 1 (2 major, 11 minor) → fix round 1 → re-check all fixed; final checks green (backend 809,
   frontend 749, contract, types, fixtures). Synced with `main` after the M0 squash (c6fcdda, tree unchanged). Knowledge
   update f01d056. **Ready for PR** (user asks).
+- PR [#11](https://github.com/ArunDoesCode/Fionis-Crossfit/pull/11) opened 2026-10-03 (label `agent-pipeline`); waiting on CI + the user's review.
