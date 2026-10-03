@@ -10,22 +10,30 @@ const ACCESS_COOKIE = 'access_token';
 const REFRESH_COOKIE = 'refresh_token';
 const HOME = '/admin';
 const REFRESH_TIMEOUT_MS = 5_000;
+// Passed to the API unchanged so it rate-limits and logs the visitor, not the Next server (BR-REC-38, 43).
+const VISITOR_HEADERS = ['x-forwarded-for', 'user-agent'] as const;
 
 const hasCookie = (request: NextRequest, name: string) => Boolean(request.cookies.get(name)?.value);
 
 /**
  * Asks the API for a new sign-in (E02) on behalf of the page. A server fetch sends no `Origin`, and the
- * API refuses a write without it (BR-REC-37), so it is set to the app's own address. Returns every
+ * API refuses a write without it (BR-REC-37), so it is set to the app's own address. The visitor's
+ * `X-Forwarded-For` and `User-Agent` go along when present (review R-2). Returns every
  * `Set-Cookie` line of a good answer, or null for anything else (BR-REC-40).
  */
 async function refreshOnServer(request: NextRequest): Promise<string[] | null> {
   try {
+    const headers = new Headers({
+      Cookie: `${REFRESH_COOKIE}=${request.cookies.get(REFRESH_COOKIE)?.value ?? ''}`,
+      Origin: request.nextUrl.origin,
+    });
+    for (const name of VISITOR_HEADERS) {
+      const value = request.headers.get(name);
+      if (value) headers.set(name, value);
+    }
     const res = await fetch(`${getServerEnv().API_URL}${API_ROUTES.AUTH.REFRESH}`, {
       method: 'POST',
-      headers: {
-        Cookie: `${REFRESH_COOKIE}=${request.cookies.get(REFRESH_COOKIE)?.value ?? ''}`,
-        Origin: request.nextUrl.origin,
-      },
+      headers,
       cache: 'no-store',
       signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
     });
@@ -79,15 +87,18 @@ export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const isLogin = pathname === LOGIN_PATH;
 
-  // Signed in: no API call. Login while signed in goes straight to Home (BR-REC-42).
+  // The app sent this device to Login because its sign-in ended (BR-REC-41); BR-REC-42 does not apply then.
+  const justExpired = isLogin && searchParams.get('reason') === SESSION_ENDED_REASON;
+
+  // Signed in: no API call. Login while signed in goes straight to Home (BR-REC-42), unless the app just
+  // sent it there: a 401 that outlives the refresh would otherwise bounce between Login and Home.
   if (hasCookie(request, ACCESS_COOKIE)) {
-    return isLogin ? redirectTo(request, HOME) : NextResponse.next();
+    return isLogin && !justExpired ? redirectTo(request, HOME) : NextResponse.next();
   }
 
   // Access cookie gone, refresh cookie there: refresh before the page renders, so nobody sees Login
   // or a flash (BR-REC-40). A Login that follows a failed refresh does not try the same cookie again.
   const hasRefresh = hasCookie(request, REFRESH_COOKIE);
-  const justExpired = isLogin && searchParams.get('reason') === SESSION_ENDED_REASON;
   if (hasRefresh && !justExpired) {
     const setCookies = await refreshOnServer(request);
     if (setCookies) {

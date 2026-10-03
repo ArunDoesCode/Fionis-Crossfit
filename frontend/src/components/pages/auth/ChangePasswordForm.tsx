@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Section from '@/components/common/Section';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
@@ -24,13 +25,17 @@ interface ChangePasswordFormProps {
 // page header / action bar, so this form has none of its own.
 export default function ChangePasswordForm({ formId }: ChangePasswordFormProps) {
   const { mutate } = useChangePassword();
+  const inFlight = useRef(false);
   const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
     mode: 'onBlur',
     defaultValues: { currentPassword: '', newPassword: '' },
   });
 
-  const onSubmit = (values: ChangePasswordInput) =>
+  const onSubmit = (values: ChangePasswordInput) => {
+    // A second Enter can arrive before the header button turns off: one try, one request (BR-REC-28).
+    if (inFlight.current) return;
+    inFlight.current = true;
     mutate(values, {
       onSuccess: () => form.reset(),
       onError: (err) => {
@@ -42,7 +47,11 @@ export default function ChangePasswordForm({ formId }: ChangePasswordFormProps) 
           );
         }
       },
+      onSettled: () => {
+        inFlight.current = false;
+      },
     });
+  };
 
   return (
     <Section title="Change password">
@@ -64,9 +73,10 @@ export default function ChangePasswordForm({ formId }: ChangePasswordFormProps) 
                 type="password"
                 autoComplete="current-password"
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.error ? `${formId}-current-error` : undefined}
               />
               <div className="min-h-5">
-                <FieldError errors={[fieldState.error]} />
+                <FieldError id={`${formId}-current-error`} errors={[fieldState.error]} />
               </div>
             </Field>
           )}
@@ -83,13 +93,15 @@ export default function ChangePasswordForm({ formId }: ChangePasswordFormProps) 
                 type="password"
                 autoComplete="new-password"
                 aria-invalid={fieldState.invalid}
-                aria-describedby={`${formId}-new-hint`}
+                aria-describedby={
+                  fieldState.error ? `${formId}-new-hint ${formId}-new-error` : `${formId}-new-hint`
+                }
               />
               <FieldDescription id={`${formId}-new-hint`}>
                 {`At least ${PASSWORD_MIN_LENGTH} characters`}
               </FieldDescription>
               <div className="min-h-5">
-                <FieldError errors={[fieldState.error]} />
+                <FieldError id={`${formId}-new-error`} errors={[fieldState.error]} />
               </div>
             </Field>
           )}

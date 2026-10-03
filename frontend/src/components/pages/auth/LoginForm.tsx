@@ -5,7 +5,7 @@ import { Loading03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { useLogin } from '@/lib/api/auth/queries';
 import { loginErrorMessage, SIGN_IN_AGAIN_LINE } from '@/lib/auth/loginError';
 import { safeNextPath } from '@/lib/auth/safeNextPath';
-import { cn } from '@/lib/utils';
 import { type LoginInput, loginSchema } from '@/lib/validators/auth';
 
 interface LoginFormProps {
@@ -32,6 +31,8 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
   const id = useId();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const inFlight = useRef(false);
   const { mutate, isPending, isSuccess } = useLogin();
 
   const form = useForm<LoginInput>({
@@ -40,16 +41,28 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
     defaultValues: { username: '', password: '', remember: true },
   });
 
+  // "Please sign in again." is set after mount: text already in the server's HTML is not read out when
+  // the page opens, text added to a live region is (BR-REC-137). It stays until the first try (BR-REC-41).
+  useEffect(() => {
+    if (expired) setNotice(SIGN_IN_AGAIN_LINE);
+  }, [expired]);
+
   const onSubmit = (values: LoginInput) => {
+    // A second Enter can arrive before the button turns off: one try, one request (BR-REC-28, 38).
+    if (inFlight.current) return;
+    inFlight.current = true;
     setError(null);
+    setNotice(null);
     mutate(values, {
       onSuccess: () => router.replace(safeNextPath(next) as Route),
-      onError: (err) => setError(loginErrorMessage(err)),
+      onError: (err) => {
+        inFlight.current = false;
+        setError(loginErrorMessage(err));
+      },
     });
   };
 
   const busy = isPending || isSuccess; // stays off after success until the next page replaces this one
-  const line = error ?? (expired ? SIGN_IN_AGAIN_LINE : null);
 
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -67,9 +80,10 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
               autoCorrect="off"
               spellCheck={false}
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.error ? `${id}-username-error` : undefined}
             />
             <div className="min-h-5">
-              <FieldError errors={[fieldState.error]} />
+              <FieldError id={`${id}-username-error`} errors={[fieldState.error]} />
             </div>
           </Field>
         )}
@@ -91,6 +105,7 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
                 autoCorrect="off"
                 spellCheck={false}
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.error ? `${id}-password-error` : undefined}
                 className="pr-20"
               />
               <Button
@@ -106,7 +121,7 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
               </Button>
             </div>
             <div className="min-h-5">
-              <FieldError errors={[fieldState.error]} />
+              <FieldError id={`${id}-password-error`} errors={[fieldState.error]} />
             </div>
           </Field>
         )}
@@ -130,10 +145,14 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
         )}
       />
 
-      {/* One line for what the server said; its space is always kept so nothing jumps (two lines). */}
-      <p role="alert" className={cn('min-h-12 text-base', error && 'text-destructive')}>
-        {line}
-      </p>
+      {/* One line for what the server said; its space is always kept so nothing jumps (two lines). Both
+          regions are always in the page and only their text changes, so a screen reader announces it. */}
+      <div className="min-h-12 text-base">
+        <p role="alert" className="text-destructive">
+          {error}
+        </p>
+        <p role="status">{notice}</p>
+      </div>
 
       <Button type="submit" size="lg" disabled={busy} className="w-full">
         {busy && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
