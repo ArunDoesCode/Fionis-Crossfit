@@ -37,7 +37,7 @@ export default function PageHeader<T extends string>({
     <>
       <header
         className={cn(
-          'sticky top-0 z-20 flex min-h-[var(--header-height)] items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
+          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-[var(--header-height)] items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
           className,
         )}
       >

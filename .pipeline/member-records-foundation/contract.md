@@ -36,11 +36,11 @@ Auth: P = public (E01–E03 only), A = `{ type: 'any-authenticated' }`. Errors b
 | E14 | PATCH /api/metrics/:metricId | A | `metricIdParamsSchema` · `updateMetricBodySchema` | `metricSchema` | 404 · 409 NAME_TAKEN, METRIC_LOCKED |
 | E15 | PUT /api/assessment-types/:typeId/metric-order | A | `typeIdParamsSchema` · `metricOrderBodySchema` | `{}` | 404 |
 | E16 | GET /api/members | A | `memberListQuerySchema` (`MEMBER_SORT_FIELDS`) | list of `memberListItemSchema` | — |
-| E17 | POST /api/members | A | `createMemberBodySchema` + header `Idempotency-Key` | 201 `memberDetailSchema` | 400 DATE_IN_FUTURE, START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED |
+| E17 | POST /api/members | A | `createMemberBodySchema` + header `Idempotency-Key` | 201 `memberDetailSchema` | 400 DATE_IN_FUTURE, START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED · 429 RATE_LIMITED |
 | E18 | GET /api/members/:memberId | A | `memberIdParamsSchema` | `memberDetailSchema` | 404 |
 | E19 | PATCH /api/members/:memberId | A | `memberIdParamsSchema` · `updateMemberBodySchema` | `memberDetailSchema` | 404 · 400 DATE_IN_FUTURE |
 | E20 / E21 | POST /api/members/:memberId/archive · /restore | A | `memberIdParamsSchema` | `memberDetailSchema` | 404 |
-| E22 | POST /api/members/:memberId/periods | A | `memberIdParamsSchema` · `createPeriodBodySchema` + header `Idempotency-Key` | 201 `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED |
+| E22 | POST /api/members/:memberId/periods | A | `memberIdParamsSchema` · `createPeriodBodySchema` + header `Idempotency-Key` | 201 `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN, IDEMPOTENCY_KEY_MISSING · 422 IDEMPOTENCY_KEY_REUSED · 429 RATE_LIMITED |
 | E23 | PATCH /api/members/:memberId/periods/:periodId | A | `periodParamsSchema` · `updatePeriodBodySchema` | `periodResultSchema` | 404 · 409 PERIOD_OVERLAP · 400 START_BEFORE_JOIN |
 | E24 | GET /api/memberships/ending | A | `endingMembershipsQuerySchema` (`status` required) | list of `endingMembershipItemSchema` | — |
 | E25 | GET /api/members/:memberId/entry-form | A | `memberIdParamsSchema` · `entryFormQuerySchema` | `entryFormSchema` | 404 |
@@ -132,3 +132,9 @@ Tests run on `gym_test` (preload swaps `DATABASE_URL`); parallel worktrees must 
 | `lib/format.ts` | `formatDay(date, today)` "3 Oct 2026" (year left out in today's year) · `formatRelativeDay(date, today)` "today" / "tomorrow" / "yesterday" / "in 3 days" / "2 days ago" · `formatValue(value, decimals 0\|1\|2, unit)` "95.5 kg", "24.0 %" · `formatPhone(phone)` "98450 12345" | BR-REC-127 |
 | `lib/messages/errors.ts` | `ERROR_CODES` (the list above incl. `NOT_IMPLEMENTED`) · `ErrorCode` · `ERROR_MESSAGES: Partial<Record<ErrorCode, string>>` · `messageForCode(code: string \| undefined): string` (unknown/undefined → a generic plain sentence) | BR-REC-128, 154: one plain sentence per code |
 | `lib/api/routes.ts` | `API_ROUTES`: nested `as const` object whose leaves are path templates relative to `/api`, with `:param` placeholders spelled exactly as in `backend/.contracts/api-manifest.json` (e.g. `'/members/:memberId'`) | S3: one leaf per manifest route (E01–E40 + health) |
+
+## Notes for streams (from the Stream 0 review)
+- Writes need a matching `Origin` (BR-REC-37) — server-side calls too. `serverApi` sends none today, so a server-side
+  write (e.g. auth's page-guard refresh E02, BR-REC-40) gets 403 `CSRF_ORIGIN` until the auth stream decides how
+  (e.g. `serverApi` sends `Origin: <app origin>` on non-GET). Owner: Stream A.
+- Middleware stubs above are now built (S3); idempotency details: api-contract.md changelog (BR-REC-156 clarified).

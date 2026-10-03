@@ -42,6 +42,7 @@ backend/
 - **Idempotency (project addition):** every member-facing write endpoint requires `Idempotency-Key`
   (table `idempotency_keys`, scoped to actor + key + request hash; replay returns the stored response; key
   reuse with a different body → 422). The mobile app queues writes offline, so this is mandatory.
+- **Server-Timing `db` (BR-REC-161):** measured automatically — `db/client.ts` times every Drizzle query; don't wrap repository calls in `measureDb` (raw `queryClient` calls are not counted).
 - **Concurrency:** one transaction per business operation; result/session operations take
   `pg_advisory_xact_lock(hashtext(session_id::text))` first; re-check state after the lock.
 - **TV feed:** table `tv_events` is an outbox (bigint identity id). Events are inserted in the same

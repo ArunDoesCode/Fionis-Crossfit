@@ -38,5 +38,7 @@ export const membershipStatus = (
   if (!latest) return null;
   const daysLeft = daysBetween(today, latest.endOn);
   if (daysLeft < 0) return { status: 'expired', daysLeft };
+  // Renewed early: a period that starts after today is Active whatever the lead days.
+  if (latest.startOn > today) return { status: 'active', daysLeft };
   return { status: daysLeft <= leadDays ? 'expiring' : 'active', daysLeft };
 };

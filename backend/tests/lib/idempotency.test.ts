@@ -4,6 +4,7 @@ import { eq, inArray, like } from "drizzle-orm";
 
 import { db } from "../../src/db/client";
 import { idempotencyKeys } from "../../src/db/schemas";
+import { ConflictError } from "../../src/lib/errors";
 import {
   IDEMPOTENCY_TTL_HOURS,
   idempotency,
@@ -155,6 +156,244 @@ describe("idempotency middleware", () => {
     const other = await send(app, { session: newSession(), key });
     expect(other.status).toBe(201);
     expect(runs()).toBe(2);
+  });
+});
+
+/**
+ * A create route whose behaviour the test controls per run (`run` counts from 1):
+ * how often the handler really ran is what the key rules are about.
+ */
+function buildControlledApp(
+  step: (run: number, body: Record<string, unknown>) => Promise<Response>,
+) {
+  const app = miniApp();
+  let runs = 0;
+  app.post("/create", idempotency(), async (c) => {
+    runs++;
+    const body = (await c.req.json()) as Record<string, unknown>;
+    return step(runs, body);
+  });
+  return { app, runs: () => runs };
+}
+
+const created = (run: number, body: unknown) =>
+  Response.json({ success: true, data: { run, body } }, { status: 201 });
+
+const storedRows = (session: string) =>
+  db
+    .select()
+    .from(idempotencyKeys)
+    .where(eq(idempotencyKeys.sessionId, session));
+
+describe("idempotency middleware: concurrent duplicates (BR-REC-156, api-contract changelog)", () => {
+  test("BR-REC-156 duplicates sent at the same moment with one key run the handler once and all get the first answer", async () => {
+    const { app, runs } = buildControlledApp(async (run, body) => {
+      await Bun.sleep(300); // the first is still running when the duplicates arrive
+      return created(run, body);
+    });
+    const session = newSession();
+    const key = crypto.randomUUID();
+    const replies = await Promise.all(
+      Array.from({ length: 5 }, () => send(app, { session, key })),
+    );
+    expect(runs()).toBe(1);
+    for (const reply of replies) {
+      expect(reply.status).toBe(201);
+      expect(reply.body).toEqual({
+        success: true,
+        data: { run: 1, body: { fullName: "Surya Pratap" } },
+      });
+    }
+    const rows = await storedRows(session);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ key, statusCode: 201 });
+  });
+
+  test("BR-REC-156 two different keys sent at the same moment both run", async () => {
+    const { app, runs } = buildControlledApp(async (run, body) => {
+      await Bun.sleep(100);
+      return created(run, body);
+    });
+    const session = newSession();
+    const replies = await Promise.all([
+      send(app, { session, key: crypto.randomUUID() }),
+      send(app, { session, key: crypto.randomUUID() }),
+    ]);
+    expect(runs()).toBe(2);
+    expect(replies.map((r) => r.status)).toEqual([201, 201]);
+  });
+
+  test("BR-REC-156 a duplicate that arrives while the first is still running gets 429 RATE_LIMITED after the wait, runs nothing, and does not free the key", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: () => void = () => {};
+    const handlerStarted = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const { app, runs } = buildControlledApp(async (run, body) => {
+      started();
+      await gate; // the first request does not finish until the test says so
+      return created(run, body);
+    });
+    const session = newSession();
+    const key = crypto.randomUUID();
+
+    const first = send(app, { session, key });
+    try {
+      await handlerStarted;
+      const t0 = performance.now();
+      const duplicate = await send(app, { session, key });
+      const waitedMs = performance.now() - t0;
+
+      expect(duplicate.status).toBe(429);
+      expect(duplicate.body).toMatchObject({
+        success: false,
+        code: "RATE_LIMITED",
+      });
+      expect(waitedMs).toBeLessThan(12_000); // "waits up to 10 s"
+      expect(runs()).toBe(1);
+    } finally {
+      release();
+    }
+
+    const answer = await first;
+    expect(answer.status).toBe(201);
+    // the 429 did not free the claim: the key now replays the first answer, nothing runs again
+    const replay = await send(app, { session, key });
+    expect(replay.status).toBe(201);
+    expect(replay.body).toEqual(answer.body);
+    expect(runs()).toBe(1);
+  }, 20_000);
+});
+
+describe("idempotency middleware: a failed request frees its key (BR-REC-156, api-contract changelog)", () => {
+  const FAILURES: [string, () => Promise<Response>][] = [
+    [
+      "answers 400",
+      async () =>
+        Response.json(
+          { success: false, message: "bad", code: "VALIDATION_ERROR" },
+          { status: 400 },
+        ),
+    ],
+    [
+      "throws a 409 AppError",
+      async () => {
+        throw new ConflictError("overlap", "PERIOD_OVERLAP");
+      },
+    ],
+    [
+      "throws an unexpected error (500)",
+      async () => {
+        throw new Error("boom");
+      },
+    ],
+  ];
+
+  for (const [label, fail] of FAILURES) {
+    test(`BR-REC-156 when the handler ${label}, a retry with the same key and body runs again and is answered normally`, async () => {
+      const { app, runs } = buildControlledApp((run, body) =>
+        run === 1 ? fail() : Promise.resolve(created(run, body)),
+      );
+      const session = newSession();
+      const key = crypto.randomUUID();
+
+      const failed = await send(app, { session, key });
+      expect(failed.status).toBeGreaterThanOrEqual(400);
+
+      const retry = await send(app, { session, key });
+      expect(retry.status).toBe(201);
+      expect(retry.body).toMatchObject({ success: true, data: { run: 2 } });
+      expect(runs()).toBe(2);
+
+      const rows = await storedRows(session);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ key, statusCode: 201 });
+    });
+  }
+
+  test("BR-REC-156 a failed answer is never stored or replayed", async () => {
+    const { app, runs } = buildControlledApp(async () =>
+      Response.json(
+        { success: false, message: "bad", code: "VALIDATION_ERROR" },
+        { status: 400 },
+      ),
+    );
+    const session = newSession();
+    const key = crypto.randomUUID();
+    const first = await send(app, { session, key });
+    expect(first.status).toBe(400);
+    const rows = await storedRows(session);
+    expect(rows.filter((r) => r.statusCode >= 300)).toEqual([]);
+
+    const again = await send(app, { session, key });
+    expect(again.status).toBe(400);
+    expect(runs()).toBe(2); // run again, not replayed from a stored 400
+  });
+
+  test("BR-REC-156 a corrected retry (same key, fixed body) after a failure runs normally, not 422 IDEMPOTENCY_KEY_REUSED", async () => {
+    const { app, runs } = buildControlledApp(async (run, body) =>
+      body.fullName === ""
+        ? Response.json(
+            { success: false, message: "name", code: "VALIDATION_ERROR" },
+            { status: 400 },
+          )
+        : created(run, body),
+    );
+    const session = newSession();
+    const key = crypto.randomUUID();
+
+    const bad = await send(app, { session, key, body: { fullName: "" } });
+    expect(bad.status).toBe(400);
+
+    const fixed = await send(app, {
+      session,
+      key,
+      body: { fullName: "Surya Pratap" },
+    });
+    expect(fixed.status).toBe(201);
+    expect(fixed.body).toMatchObject({
+      success: true,
+      data: { run: 2, body: { fullName: "Surya Pratap" } },
+    });
+    expect(runs()).toBe(2);
+
+    // and once it succeeded, the key is taken by that body again
+    const reused = await send(app, {
+      session,
+      key,
+      body: { fullName: "Other" },
+    });
+    expect(reused.status).toBe(422);
+    expect(reused.body).toMatchObject({ code: "IDEMPOTENCY_KEY_REUSED" });
+  });
+
+  test("BR-REC-156 after a failure, retries sent at the same moment still create only once", async () => {
+    const { app, runs } = buildControlledApp(async (run, body) => {
+      if (run === 1) {
+        return Response.json(
+          { success: false, message: "bad", code: "VALIDATION_ERROR" },
+          { status: 400 },
+        );
+      }
+      await Bun.sleep(200);
+      return created(run, body);
+    });
+    const session = newSession();
+    const key = crypto.randomUUID();
+    const failed = await send(app, { session, key });
+    expect(failed.status).toBe(400);
+
+    const retries = await Promise.all(
+      Array.from({ length: 4 }, () => send(app, { session, key })),
+    );
+    expect(runs()).toBe(2); // the failed run + exactly one successful run
+    for (const reply of retries) {
+      expect(reply.status).toBe(201);
+      expect(reply.body).toMatchObject({ data: { run: 2 } });
+    }
   });
 });
 

@@ -910,10 +910,16 @@
           "message": "string.required",
           "code": "enum:IDEMPOTENCY_KEY_REUSED.required",
           "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
         }
       },
       "notes": [
-        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED."
+        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key."
       ]
     },
     {
@@ -1233,10 +1239,16 @@
           "message": "string.required",
           "code": "enum:IDEMPOTENCY_KEY_REUSED.required",
           "details": {}
+        },
+        "429": {
+          "success": "boolean.required",
+          "message": "string.required",
+          "code": "enum:RATE_LIMITED.required",
+          "details": {}
         }
       },
       "notes": [
-        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED.",
+        "Requires header `Idempotency-Key: <uuid>` (BR-REC-156): a repeat with the same key within 48 h returns the first answer; the same key with a different body is 422 IDEMPOTENCY_KEY_REUSED; a duplicate that arrives while the first is still running waits up to 10 s, then gets 429 RATE_LIMITED. Only a successful (2xx) answer is stored: a failed request frees its key.",
         "`memberRestored` is true when the period covers today and the member was archived (BR-REC-58)."
       ]
     },

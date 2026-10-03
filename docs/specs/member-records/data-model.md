@@ -32,7 +32,7 @@ Rules BR-REC-163…170, 175 · all 13 tables below · commands `db:reset`, `seed
 |---|---|---|---|
 | BR-REC-163 | Calendar days (birth, join, membership, assessment, due, snooze) are `date` with no time; moments (created, login, change log) are `timestamptz` in UTC. | Assessment typed at 23:30 IST on 3 Oct → `assessed_on` = 2026-10-03 | Schema review: no day column is `timestamptz` |
 | BR-REC-164 | Values are `numeric(12,3)`: durations in whole seconds, weights in kg, never a formatted text like "2:02". | Plank "2:02" → 122.000 | Repository test reads back 122 |
-| BR-REC-165 | Rows are never hard-deleted, except: an assessment with its values (Delete), sign-ins 30 days after they end, idempotency keys after 48 h. | Archive a member → row stays, `archived_at` set | Grep: no other `delete` in repositories |
+| BR-REC-165 | Rows are never hard-deleted, except: an assessment with its values (Delete), sign-ins 30 days after they end, idempotency keys after 48 h (and the unanswered claim of a request that failed, BR-REC-156). | Archive a member → row stays, `archived_at` set | Grep: no other `delete` in repositories |
 | BR-REC-166 | `measurements.member_id` and `measured_on` copy their assessment's member and date in the same transaction; moving an assessment's date moves its values. | Move 12 Mar → 15 Mar → all 9 values now 15 Mar | Repository test after PATCH date |
 | ~~BR-REC-167~~ | ~~The database itself blocks overlapping membership periods (exclusion constraint), behind the service check of BR-REC-09.~~ Struck in v2: overlap is checked by the service only (BR-REC-09). | — | — |
 | BR-REC-168 | Exactly one login account, one settings row and one lock-counter row can exist. | Second account insert → refused by the database | Constraint test for all three tables |
@@ -152,3 +152,4 @@ soft-delete of assessments.
   BR-REC-167 struck (no exclusion constraint; overlap stays the BR-REC-09 service check), BR-REC-169 rewritten
   (no `pg_trgm`/`btree_gist`, no trigram indexes; dev/test `db:push`, production generated migrations), the
   `login_attempts` row is created by `seed`.
+- 2026-10-03 v2 — clarified during build: BR-REC-165 also removes the unanswered idempotency claim of a failed request (api-contract changelog); no rule changed

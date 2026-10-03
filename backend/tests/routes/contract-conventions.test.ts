@@ -11,6 +11,7 @@ import {
   OTHER_UNKNOWN_ID,
   UNKNOWN_ID,
 } from "../helpers/http";
+import { createSignedInSession } from "../helpers/session";
 
 // Route-level conventions of the API contract (api-contract.md):
 // BR-REC-153 formats, BR-REC-155 lists, BR-REC-156 Idempotency-Key header,
@@ -180,19 +181,23 @@ describe("BR-REC-159 every route needs a sign-in except E01-E03 and health", () 
     expect(reply.body?.code).toBe("UNAUTHORIZED");
   });
 
-  test("BR-REC-159 a signed-in request (access_token cookie) passes the sign-in check on every protected route", async () => {
+  test("BR-REC-159 a signed-in request (access_token cookie of a real session) passes the sign-in check on every protected route", async () => {
     const app = createApp();
-    const token = await mintToken();
-    const wrong: string[] = [];
-    for (const [id, method, path] of ENDPOINTS) {
-      if (PUBLIC_IDS.has(id)) continue;
-      const reply = await call(app, method, concrete(path), {
-        token,
-        body: method === "GET" ? undefined : {},
-      });
-      if (reply.status === 401) wrong.push(`${id} ${method} ${path}`);
+    const session = await createSignedInSession();
+    try {
+      const wrong: string[] = [];
+      for (const [id, method, path] of ENDPOINTS) {
+        if (PUBLIC_IDS.has(id)) continue;
+        const reply = await call(app, method, concrete(path), {
+          token: session.token,
+          body: method === "GET" ? undefined : {},
+        });
+        if (reply.status === 401) wrong.push(`${id} ${method} ${path}`);
+      }
+      expect(wrong).toEqual([]);
+    } finally {
+      await session.cleanup();
     }
-    expect(wrong).toEqual([]);
   });
 
   test("BR-REC-159 a bearer token is accepted as well as the cookie", async () => {

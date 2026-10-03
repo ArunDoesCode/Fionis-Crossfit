@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { durationFromParts, durationToParts } from '@/lib/domain/duration';
+import { durationFromParts, durationToParts, parseDuration } from '@/lib/domain/duration';
 import { UI_TEXT } from '@/lib/messages/words';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +29,17 @@ function toTexts(seconds: number | null): { minText: string; secText: string } {
   if (seconds === null) return { minText: '', secText: '' };
   const { minutes, seconds: rest } = durationToParts(seconds);
   return { minText: String(minutes), secText: String(rest).padStart(2, '0') };
+}
+
+// A whole time arriving in one go ("2:02", "1:05:30"; pasted, autofilled or typed as one change) split
+// over both boxes (BR-REC-75). Out-of-range "m:ss" such as "2:75" still fills both so the screen shows
+// its seconds error; anything else with a ":" gives null and is ignored (never read as one long number).
+function splitWholeTime(raw: string): { minText: string; secText: string } | null {
+  const text = raw.trim();
+  const seconds = parseDuration(text);
+  if (seconds !== null) return toTexts(seconds);
+  const parts = /^(\d{1,3}):(\d{1,2})$/.exec(text);
+  return parts ? { minText: parts[1] ?? '', secText: parts[2] ?? '' } : null;
 }
 
 // "Time (min:sec)" typed in two boxes, minutes and seconds, each with the number keypad (BR-REC-75).
@@ -64,6 +75,29 @@ export default function DurationField({
     onChange(seconds);
   }
 
+  // True when `raw` held a whole time and both boxes were filled from it.
+  function fillBoth(raw: string): boolean {
+    const both = splitWholeTime(raw);
+    if (both) update(both);
+    return both !== null;
+  }
+
+  function handleChange(part: 'min' | 'sec', max: number, raw: string) {
+    if (raw.includes(':')) {
+      // A ":" typed right after the minutes means "now the seconds": keep the minutes, move on.
+      if (!fillBoth(raw) && part === 'min' && /^\d{0,3}:$/.test(raw)) {
+        update({ minText: digits(raw, max), secText: texts.secText });
+        document.getElementById(`${id}-sec`)?.focus();
+      }
+      return;
+    }
+    update(
+      part === 'min'
+        ? { minText: digits(raw, max), secText: texts.secText }
+        : { minText: texts.minText, secText: digits(raw, max) },
+    );
+  }
+
   const metaId = `${id}-meta`;
   const errorId = `${id}-error`;
   const hasMeta = previous !== undefined || change !== undefined;
@@ -95,13 +129,13 @@ export default function DurationField({
               aria-invalid={error ? true : undefined}
               aria-describedby={describedBy || undefined}
               className="pr-14"
-              onChange={(event) =>
-                update(
-                  part === 'min'
-                    ? { minText: digits(event.target.value, max), secText: texts.secText }
-                    : { minText: texts.minText, secText: digits(event.target.value, max) },
-                )
-              }
+              onChange={(event) => handleChange(part, max, event.target.value)}
+              onPaste={(event) => {
+                const pasted = event.clipboardData.getData('text');
+                if (!pasted.includes(':')) return; // plain digits go through onChange as usual
+                event.preventDefault();
+                fillBoth(pasted);
+              }}
               onBlur={onBlur}
             />
             <Label

@@ -96,9 +96,9 @@ Shared files (everyone else reads only; a needed change goes to the coordinator,
 | `backend/src/{types,routes,controller,service,repository}/<feature>*`, `lib/domain/due.ts` (E), `lib/domain/report.ts` (F) | that stream |
 | `backend/src/lib/{token,auth-middleware,rate-limiter}.ts`, `scripts/bootstrap-admin.ts`, `frontend/src/proxy.ts` | A auth |
 | `.contracts/*`, `frontend/src/types/api.generated.ts` | generated — re-run, never hand-merge |
-| `frontend/src/{lib/api/routes.ts,lib/messages/**,lib/searchParams.ts,components/common/**,components/shells/**}`, `next.config.ts`, `app/layout.tsx`, `app/(app)/admin/layout.tsx`, the Home and Member-page frames | Stream 0 |
+| `frontend/src/{lib/api/{routes,client}.ts,lib/messages/**,lib/format.ts,lib/domain/**,lib/hooks/**,lib/searchParams.ts,components/common/**,components/shells/**}`, `next.config.ts`, `app/layout.tsx`, `app/(app)/admin/layout.tsx`, the Home and Member-page frames | Stream 0 |
 | `frontend/src/components/pages/home/DueSections.tsx`, `pages/member/DueBlock.tsx` | E due-list |
-| `frontend/src/components/pages/home/MembershipSections.tsx`, `pages/member/{MemberHeader,MembershipBlock}.tsx` | B members |
+| `frontend/src/components/pages/home/{MembershipSections,HomeSearch}.tsx`, `pages/member/{MemberHeader,MembershipBlock}.tsx` | B members |
 | `frontend/src/components/pages/member/RecentBlock.tsx` | D assessments |
 | `frontend/src/{lib/api,lib/validators,components/views,components/pages}/<feature>/**` + the routes in the ux screen index | that stream |
 | `frontend/src/app/manifest.ts`, service worker, CI budget workflow, `backend/scripts/bench.ts`, deploy files | G performance |
@@ -152,3 +152,4 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
 - 2026-10-03 v2 — frozen: index + 10 sub-specs; the 9 v1 re-reads accepted by the owner. Build process only: D-017 amended (own PR per stream, no integration branch); no rule changed.
 - 2026-10-03 v2 — data-model v2 during the Stream 0 build (user: keep the MVP light): BR-REC-167 struck, BR-REC-169
   rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
+- 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.
