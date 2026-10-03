@@ -10,8 +10,14 @@ Rules: BR-REC-01, 02, 25…44, 171 (23) · Endpoints E01–E06 · Tables `app_ac
 no tables, no member-records routes, empty contract. User chose "plan now, pause". Resume with
 `/feature member-records/auth --resume` once Stream 0 is merged.
 
+**Stacked on Stream 0 (user decision 2026-10-03):** no waiting for a Stream 0 PR. When the foundation session
+(`claude/member-records-foundation-57e849`, local branch) has committed its build (its plan S3 ticked), merge that
+branch into this one and build auth on top; never edit Stream 0 files, never rebase theirs. Re-merge its later
+commits before the PR. One PR = Stream 0 + auth (shrinks to auth only if the Stream 0 PR merges first).
+Foundation's D-019 already adds the `sid` claim to `lib/token.ts`; auth builds on that version.
+
 ## Resume checklist (before slice 1)
-- [ ] `git fetch && git merge origin/main` (or the app's sync tool); Stream 0 commits present.
+- [ ] `git merge claude/member-records-foundation-57e849` (local branch, after its S3 build commit); Stream 0 commits present.
 - [ ] `cd backend && bun run db:test:prepare` (schema now matches `main`, safe to push); `bun install` in both packages.
 - [ ] Re-run the baseline (test-runner); replace the baseline table below.
 - [ ] Check Stream 0 delivered what auth builds on (else stop and tell the user):
