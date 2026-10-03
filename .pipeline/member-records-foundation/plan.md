@@ -15,7 +15,7 @@ Baseline (2026-10-03): backend typecheck/lint/test/contract:check, frontend type
 6. One union per enum-like column in `backend/src/lib/enums.ts`, used by Drizzle checks and Zod (BR-REC-175).
 
 ## Slices
-### S1 — Contract  (backend-dev)  [ ]
+### S1 — Contract  (backend-dev)  [x]
 BR-REC-153, 155, 157, 159, 162, 163, 164, 168, 169, 175   (167 struck, data-model v2)
 - `lib/enums.ts`; Drizzle schema for all 13 tables (`db/schemas/*`), every check/index in Drizzle; `db:push` +
   `db:test:prepare` build it on an empty DB.
@@ -26,7 +26,7 @@ BR-REC-153, 155, 157, 159, 162, 163, 164, 168, 169, 175   (167 struck, data-mode
 - `.pipeline/member-records-foundation/contract.md`: endpoints + error codes + **shared module signatures**
   (domain maths both packages, middleware exports, audit helper, seed guard, golden-fixture JSON formats).
 
-### S2 — Red tests  (test-writer ×2, zero-context)  [ ]
+### S2 — Red tests  (test-writer ×2, zero-context)  [x]
 - backend: schema constraints (163, 164, 168, 169, 175), contract/route drift (153, 155, 157, 159 + E01–E40 present),
   middleware (156 idempotency, 160 ETag, 161 headers/gzip/Server-Timing, 37 Origin), change-log helper (158),
   seed (10, 13, 65, 68) + seed:perf guard (170), domain maths (12, 51, 52, 94); golden fixtures
@@ -34,7 +34,7 @@ BR-REC-153, 155, 157, 159, 162, 163, 164, 168, 169, 175   (167 struck, data-mode
 - frontend: domain maths from the same fixtures, formatters (127), error dictionary covers every code (128, 154),
   `API_ROUTES` covers every manifest route.
 
-### S3 — Build  (backend-dev ∥ frontend-dev)  [ ]
+### S3 — Build  (backend-dev ∥ frontend-dev)  [x]
 - backend: middleware `lib/{idempotency,origin-check,etag,server-timing}.ts` + gzip + `Cache-Control`; `lib/audit.ts`;
   `lib/domain/{dates,duration,membership}.ts`; `sid` claim; CORS out; `scripts/seed.ts`, `scripts/seed-perf.ts`
   (`seed`, `seed:perf`), `db:reset` runs seed; make S2 backend tests green.
