@@ -84,3 +84,16 @@ Existing: `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `ACCESS_TOKEN_TTL_SECON
   in {ceil(details.retryAfterSeconds / 60)} minutes." (the error line is typed, `details.retryAfterSeconds`); the Sign in button stays tappable.
 - Every code needs a plain sentence in the error dictionary: `INVALID_CREDENTIALS`, `LOGIN_LOCKED`, `RATE_LIMITED`, `SESSION_EXPIRED`,
   `CURRENT_PASSWORD_WRONG`, `CSRF_ORIGIN`, `UNAUTHORIZED`.
+
+## Admin app interfaces (coordinator, 2026-10-03 — tests and frontend-dev both use these names)
+| Module (`frontend/src/…`) | Export | Behaviour |
+|---|---|---|
+| `lib/validators/auth.ts` | `loginSchema` (`username` 1–64, `password` 1–128, `remember` boolean) · `changePasswordSchema` (`currentPassword` 1–128, `newPassword` 8–128) · `PASSWORD_MIN_LENGTH = 8` · `PASSWORD_MAX_LENGTH = 128` | Zod; 129 characters → issue on `newPassword` with "Use at most 128 characters" (BR-REC-27); under 8 → issue on `newPassword` (BR-REC-02) |
+| `lib/auth/safeNextPath.ts` | `safeNextPath(raw: string \| null \| undefined): string` | returns `raw` when it is a path inside the app (starts with one `/`, not `//` or `/\`, no scheme); otherwise `/admin` (BR-REC-39) |
+| `lib/auth/loginError.ts` | `loginErrorMessage(err: unknown): string` | 401 → "That username or password is not right."; 429 `LOGIN_LOCKED` → the BR-REC-29 line with minutes = ceil(`details.retryAfterSeconds` / 60); anything else → the error dictionary's text for its code |
+| `lib/auth/signOut.ts` | `signOutDevice(queryClient)` · `signOutAllDevices(queryClient)` | POST E03 / E04; on success `queryClient.clear()` then browser navigation to `/login`; on failure no clear, the error is thrown (BR-REC-35) |
+- The global 401 handler opens Login by browser navigation (`window.location`), not the router.
+- The page guard's `Origin` for its server-side E02 call = the request's own origin (`request.nextUrl.origin`); no new frontend env var.
+  Deploy gotcha (Stream G): behind the HTTPS front, Next must see the public origin, or the backend refuses the refresh (403 `CSRF_ORIGIN`).
+- The refresh URL is `API_URL` (which already ends in `/api`) + `API_ROUTES` refresh path — no double `/api`.
+- "Please sign in again" appears on the Login page after a failed refresh; checked manually.
