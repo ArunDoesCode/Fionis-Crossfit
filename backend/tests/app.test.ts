@@ -31,13 +31,29 @@ describe("app smoke", () => {
     });
   });
 
-  test("CORS allows the configured APP_ORIGIN", async () => {
+  test("BR-REC-36 the API is same-origin: a request from the app's address gets no CORS headers", async () => {
     const origin = process.env.APP_ORIGIN ?? "";
     const res = await createApp().request("/api/health", {
       headers: { Origin: origin },
     });
 
-    expect(res.headers.get("access-control-allow-origin")).toBe(origin);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("access-control-allow-origin")).toBeNull();
+    expect(res.headers.get("access-control-allow-credentials")).toBeNull();
+  });
+
+  test("BR-REC-36 there is no CORS preflight handling (no OPTIONS answer with allow headers)", async () => {
+    const origin = process.env.APP_ORIGIN ?? "";
+    const res = await createApp().request("/api/members", {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": "POST",
+      },
+    });
+
+    expect(res.headers.get("access-control-allow-origin")).toBeNull();
+    expect(res.headers.get("access-control-allow-methods")).toBeNull();
   });
 
   test("request bodies over 1 MiB are rejected with 413 PAYLOAD_TOO_LARGE", async () => {

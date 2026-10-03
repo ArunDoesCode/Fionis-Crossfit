@@ -57,7 +57,7 @@ jobs:
       run:
         working-directory: frontend
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      NEXT_PUBLIC_API_URL: /api          # same origin (D-018); Next forwards /api to API_URL
       API_URL: http://localhost:4000/api
     steps:
       - uses: actions/checkout@v4
