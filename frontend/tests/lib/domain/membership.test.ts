@@ -48,7 +48,7 @@ describe('membershipStatus (golden fixture)', () => {
     for (let offset = -40; offset <= 10; offset++) {
       const today = new Date(end + offset * 86_400_000).toISOString().slice(0, 10);
       const result = membershipStatus(period, today, lead);
-      expect(result?.daysLeft).toBe(-offset);
+      expect(result?.daysLeft).toBe(0 - offset);
       const expected: Status = -offset < 0 ? 'expired' : -offset <= lead ? 'expiring' : 'active';
       expect(result?.status).toBe(expected);
       if (result && seen[seen.length - 1] !== result.status) seen.push(result.status);
