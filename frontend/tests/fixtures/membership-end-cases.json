@@ -129,6 +129,48 @@
       "expected": { "status": "expired", "daysLeft": -30 }
     },
     {
+      "latest": { "startOn": "2026-10-04", "endOn": "2026-11-03" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 31 }
+    },
+    {
+      "latest": { "startOn": "2026-10-20", "endOn": "2026-11-19" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 47 }
+    },
+    {
+      "latest": { "startOn": "2026-10-11", "endOn": "2026-11-10" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "active", "daysLeft": 38 }
+    },
+    {
+      "latest": { "startOn": "2026-10-04", "endOn": "2026-10-10" },
+      "today": "2026-10-03",
+      "leadDays": 14,
+      "expected": { "status": "active", "daysLeft": 7 }
+    },
+    {
+      "latest": { "startOn": "2026-10-04", "endOn": "2027-10-03" },
+      "today": "2026-10-03",
+      "leadDays": 365,
+      "expected": { "status": "active", "daysLeft": 365 }
+    },
+    {
+      "latest": { "startOn": "2026-10-03", "endOn": "2026-11-02" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expiring", "daysLeft": 30 }
+    },
+    {
+      "latest": { "startOn": "2026-10-02", "endOn": "2026-11-01" },
+      "today": "2026-10-03",
+      "leadDays": 60,
+      "expected": { "status": "expiring", "daysLeft": 29 }
+    },
+    {
       "latest": null,
       "today": "2026-10-03",
       "leadDays": 14,

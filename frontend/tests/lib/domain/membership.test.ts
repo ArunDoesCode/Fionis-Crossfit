@@ -56,3 +56,41 @@ describe('membershipStatus (golden fixture)', () => {
     expect(seen).toEqual(['active', 'expiring', 'expired']);
   });
 });
+
+describe('membershipStatus, a latest period that has not started yet', () => {
+  const today = '2026-10-03';
+  const leads = [0, 7, 14, 30, 60, 365];
+
+  for (const lead of leads) {
+    test(`BR-REC-52 a renewal starting tomorrow is Active, not Ends soon, with lead ${lead}`, () => {
+      // Renewed early: monthly from 4 Oct 2026 ends 3 Nov 2026, 31 days away.
+      expect(
+        membershipStatus(
+          { startOn: '2026-10-04', endOn: '2026-11-03' },
+          today,
+          lead,
+        ),
+      ).toEqual({ status: 'active', daysLeft: 31 });
+    });
+
+    test(`BR-REC-52 a period starting tomorrow and ending within the lead is still Active, with lead ${lead}`, () => {
+      expect(
+        membershipStatus(
+          { startOn: '2026-10-04', endOn: '2026-10-10' },
+          today,
+          lead,
+        ),
+      ).toEqual({ status: 'active', daysLeft: 7 });
+    });
+  }
+
+  test('BR-REC-52 a period that starts today has started, so it is Ends soon when its end is within the lead', () => {
+    expect(
+      membershipStatus(
+        { startOn: '2026-10-03', endOn: '2026-11-02' },
+        today,
+        60,
+      ),
+    ).toEqual({ status: 'expiring', daysLeft: 30 });
+  });
+});
