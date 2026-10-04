@@ -44,6 +44,9 @@ route(
       "401": unauthorizedResponse,
       "404": notFoundResponse,
     },
+    notes: [
+      "404 for an unknown member; an archived member still answers 200. Sections and measurements with no reading are left out; turned-off ones with readings stay.",
+    ],
   },
   notImplemented,
 );
@@ -63,7 +66,7 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      "404 when `metricId` does not exist. Only members with 2+ readings count; `notCounted` says how many were left out.",
+      "Computed from the database on every call (no cache): a value saved just before the call is counted. 404 when `metricId` does not exist; a turned-off measurement still answers. Only non-archived members with 2+ readings count; `notCounted` says how many had exactly one.",
     ],
   },
   notImplemented,
@@ -85,7 +88,7 @@ route(
     },
     pagination: { sortableFields: [], searchable: false },
     notes: [
-      "Ranked by latest value, best first by direction; equal values share a rank. 400 NO_DIRECTION for a measurement with no better direction.",
+      "Computed from the database on every call (no cache). Ranked by each member's latest value, best first by direction; equal values share a rank (1, 2, 2, 4) and ranks continue across pages. Errors in order: 404 unknown `metricId`, then 400 NO_DIRECTION for a measurement with no better direction.",
     ],
   },
   notImplemented,
@@ -102,6 +105,7 @@ route(
       "200": successResponse(activeByPlanSchema),
       "401": unauthorizedResponse,
     },
+    notes: ["Computed from the database on every call (no cache)."],
   },
   notImplemented,
 );
@@ -121,7 +125,7 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      `Not JSON: the 200 body is CSV text (\`text/csv; charset=utf-8\`, UTF-8 with BOM, streamed), a documented exception to the envelope. \`file\` is one of ${EXPORT_FILES.join(", ")}; anything else is 404 NOT_FOUND.`,
+      `Not JSON: the 200 body is CSV text (UTF-8 with BOM, lines end CRLF, streamed in batches), a documented exception to the envelope. \`file\` is one of ${EXPORT_FILES.join(", ")}; anything else is 404 NOT_FOUND. Headers are sent before the rows are read: \`Content-Type: text/csv; charset=utf-8\`, \`Content-Disposition: attachment; filename="<stem>-<gym today>.csv"\`, \`Cache-Control: private, no-store\`; never gzip-compressed.`,
     ],
   },
   notImplemented,

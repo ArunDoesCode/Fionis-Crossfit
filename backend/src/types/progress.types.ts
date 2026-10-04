@@ -49,16 +49,22 @@ export const readingSchema = z.object({
 });
 export type Reading = z.infer<typeof readingSchema>;
 
+/** Decimal places of a measurement (same range as the `metrics.decimals` column). */
+const decimalsSchema = z.number().int().min(0).max(2);
+
 /**
  * One measurement with at least one reading (never-recorded ones are left out,
- * BR-REC-106). `best` is null for "No direction" (BR-REC-107). `change` is
+ * BR-REC-106). `id` is the measurement id; `decimals` is how many decimals its
+ * values show. `best` is null for "No direction" (BR-REC-107). `change` is
  * latest - first, null with fewer than 2 readings (BR-REC-22). `points` are the
  * last 12 readings, oldest first.
  */
 export const reportMetricSchema = z.object({
+  id: uuidSchema,
   name: z.string(),
   unit: z.string(),
   datatype: z.enum(DATATYPES),
+  decimals: decimalsSchema,
   better: z.enum(BETTER_DIRECTIONS),
   first: readingSchema,
   latest: readingSchema,
@@ -68,13 +74,20 @@ export const reportMetricSchema = z.object({
   points: z.array(readingSchema).max(12),
 });
 
+/** One segmental column: the group's name with the unit and decimals of its first measurement (P3). */
+export const segmentalGroupSchema = z.object({
+  name: z.string(),
+  unit: z.string(),
+  decimals: decimalsSchema,
+});
+
 /** The latest body-composition assessment with any table value (BR-REC-108). */
 export const segmentalSchema = z.object({
   on: isoDateSchema,
   isEstimated: z.boolean(),
   /** column headers, e.g. "Skeletal muscle %", in setup order */
-  groups: z.array(z.string()),
-  /** one row per body part; `values` maps a group to its value, null renders "–" */
+  groups: z.array(segmentalGroupSchema),
+  /** always the four body parts; `values` is keyed by group `name`, null renders "–" */
   rows: z.array(
     z.object({
       part: z.enum(TABLE_PARTS),
@@ -95,9 +108,13 @@ export const reportCardSchema = z.object({
     membershipStatus: z.enum(MEMBERSHIP_STATUSES),
     joinedOn: isoDateSchema,
   }),
-  /** one section per assessment, in setup order */
+  /** one section per assessment with at least one reading, in setup order */
   types: z.array(
-    z.object({ name: z.string(), metrics: z.array(reportMetricSchema) }),
+    z.object({
+      id: uuidSchema,
+      name: z.string(),
+      metrics: z.array(reportMetricSchema),
+    }),
   ),
   segmental: segmentalSchema.nullable(),
 });

@@ -135,3 +135,23 @@ exportFileName(file: ExportFile, today: string): string        // ("measurements
 | | `notCountedText(n: number, notCounted: number)` | "n = 12 · 5 with one reading not counted"; `notCounted` 0 → "n = 12" |
 | `lib/api/progress/queries.ts` | `progressKeys` (`all`, `reportCard(memberId)`, `stats(query)`, `leaderboard(metricId, sex)`, `activeByPlan()`) · `reportCardQueryOptions(memberId)` · `progressStatsQueryOptions(query)` · `activeByPlanQueryOptions()` · `leaderboardInfiniteQueryOptions(metricId, sex)` | every option `staleTime: 0`; leaderboard pages of 10 |
 | `lib/api/progress/fetchers.ts` | one function per endpoint E35–E38 using `api` + `API_ROUTES` + `apiPath` · `exportHref(file: ExportFile): string` · `downloadExport(file: ExportFile): Promise<void>` | `exportHref('members.csv')` = `NEXT_PUBLIC_API_URL` + `/exports/members.csv` (e.g. `/api/exports/members.csv`); no hard-coded paths |
+
+## Schemas (backend-dev)
+All in `backend/src/types/progress.types.ts` (generated client types: `frontend/src/types/api.generated.ts`, `getApiMembersMemberIdReport-card` and siblings).
+- E35 `reportCardSchema` (`ReportCard`) · parts `readingSchema`, `reportMetricSchema`, `segmentalGroupSchema`, `segmentalSchema` · E36 `progressQuerySchema`,
+  `progressStatsSchema` · E37 `leaderboardQuerySchema`, `leaderboardItemSchema` (+ `paginatedResponse` meta) · E38 `activeByPlanSchema` · E39 `exportParamsSchema`
+  (`file` plain string → 404), `exportCsvSchema`; consts `AGE_BANDS`, `EXPORT_FILES`.
+- E35 `data` exact shape (`id`s are UUIDs; dates `YYYY-MM-DD`; `decimals` is an int 0–2, typed `number` in the generated TS):
+```
+{ gymName, printedOn,
+  member: { fullName, age, sex, plan, membershipStatus, joinedOn },
+  types: [ { id, name,                                              // assessment type; only those with ≥ 1 reading
+      metrics: [ { id, name, unit, datatype, decimals, better,
+                   first: Reading, latest: Reading, best: Reading | null,
+                   change: number | null, readings: int ≥ 1, points: Reading[] ≤ 12 } ] } ],
+  segmental: { on, isEstimated,
+               groups: [ { name, unit, decimals } ],                // setup order
+               rows: [ { part: "whole_body"|"arms"|"trunk"|"legs", values: { [groupName]: number | null } } ] } | null }
+Reading = { value: number, on, isEstimated: boolean }
+```
+- E36 `metric` block is unchanged: `{ id, name, unit, datatype, decimals: int, better }`. Descriptor notes now say E36–E38 are computed live (no cache), E37 errors 404 → 400 `NO_DIRECTION`, E39 headers as above.
