@@ -26,6 +26,7 @@ export const dueItemSchema = z.object({
   metricId: uuidSchema,
   name: z.string(),
 });
+export type DueItem = z.infer<typeof dueItemSchema>;
 
 // ─── E31 ────────────────────────────────────────────────────────────────────
 
