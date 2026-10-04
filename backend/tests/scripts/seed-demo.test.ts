@@ -310,30 +310,51 @@ function suryaOverdueRow(d: DemoData, today: IsoDate) {
   );
 }
 
-/** Two results that are equal: the same best value for two members, or one member's best reached on two dates. */
-function hasTiedResults(d: DemoData): boolean {
-  const byMetric = new Map<string, DemoMeasurement[]>();
-  for (const x of d.measurements) {
-    if (x.better === "none") continue; // no best without a direction
-    byMetric.set(x.metricId, [...(byMetric.get(x.metricId) ?? []), x]);
-  }
-  for (const readings of byMetric.values()) {
-    const byMember = new Map<string, DemoMeasurement[]>();
-    for (const x of readings) {
-      byMember.set(x.memberId, [...(byMember.get(x.memberId) ?? []), x]);
+/** The measurements whose leaderboards must show a tie; decimals or whole seconds, so a tie is never an accident. */
+const TIE_MEASUREMENTS = ["Fran", "Deadlift", "CrossFit total"] as const;
+
+type LeaderboardGroup = {
+  sex: string;
+  measurement: string;
+  /** each non-archived member's latest value, best first by the measurement's direction (BR-REC-115, P6) */
+  values: number[];
+};
+
+/** The leaderboard of BR-REC-115 per sex and measurement: latest value per non-archived member, best first. */
+function leaderboardGroups(d: DemoData): LeaderboardGroup[] {
+  const sexOf = new Map(d.members.map((m) => [m.id, m.sex]));
+  const archived = new Set(
+    d.members.filter((m) => m.archived).map((m) => m.id),
+  );
+  const groups: LeaderboardGroup[] = [];
+  for (const measurement of TIE_MEASUREMENTS) {
+    for (const sex of ["male", "female"]) {
+      const latest = new Map<string, DemoMeasurement>();
+      for (const x of d.measurements) {
+        if (x.metricName.toLowerCase() !== measurement.toLowerCase()) continue;
+        if (x.better === "none") continue; // no ranking without a direction
+        if (archived.has(x.memberId) || sexOf.get(x.memberId) !== sex) continue;
+        const known = latest.get(x.memberId);
+        if (!known || x.measuredOn > known.measuredOn)
+          latest.set(x.memberId, x);
+      }
+      const readings = [...latest.values()];
+      const higherIsBetter = readings[0]?.better === "higher";
+      groups.push({
+        sex,
+        measurement,
+        values: readings
+          .map((r) => r.value)
+          .sort((a, b) => (higherIsBetter ? b - a : a - b)),
+      });
     }
-    const bests: number[] = [];
-    for (const own of byMember.values()) {
-      const values = own.map((x) => x.value);
-      const best =
-        own[0]?.better === "higher" ? Math.max(...values) : Math.min(...values);
-      if (values.filter((v) => v === best).length >= 2) return true;
-      bests.push(best);
-    }
-    if (new Set(bests).size < bests.length) return true;
   }
-  return false;
+  return groups;
 }
+
+/** True when two neighbours in the ranked list have the same value: "equal values share a rank (1, 2, 2, 4)". */
+const hasSharedRank = (g: LeaderboardGroup): boolean =>
+  g.values.some((v, i) => i > 0 && v === g.values[i - 1]);
 
 describe("BR-REC-176 the demo data set seeded for 2026-10-04", () => {
   let d: DemoData;
@@ -543,8 +564,13 @@ describe("BR-REC-176 the demo data set seeded for 2026-10-04", () => {
       expect(single.length).toBeGreaterThanOrEqual(1);
     });
 
-    test("BR-REC-176 there are tied results (BR-REC-107: equal bests, the earliest date wins)", () => {
-      expect(hasTiedResults(d)).toBe(true);
+    test("BR-REC-176 tied results: in at least 2 leaderboards (sex x Fran / Deadlift / CrossFit total) two neighbours share a rank (BR-REC-115)", () => {
+      const groups = leaderboardGroups(d);
+      const tied = groups.filter(hasSharedRank);
+      expect(
+        tied.length,
+        `ranked values per group: ${JSON.stringify(groups.map((g) => [g.sex, g.measurement, g.values]))}`,
+      ).toBeGreaterThanOrEqual(2);
     });
 
     test("BR-REC-176 at least 1 assessment has an estimated date (BR-REC-79)", () => {
