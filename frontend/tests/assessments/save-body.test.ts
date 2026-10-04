@@ -35,6 +35,10 @@ type Result =
   | { ok: false; problems: { metricId: string; message: string }[] };
 interface SaveBody {
   buildSaveValues(fields: Field[]): Result;
+  leavesNoValue(
+    fields: Field[],
+    built: { values: { metricId: string; value: number | null }[]; removed: number },
+  ): boolean;
 }
 
 let saveBody: SaveBody;
@@ -466,4 +470,99 @@ describe('D2 buildSaveValues: an unchanged field is skipped entirely', () => {
       });
     },
   );
+});
+
+// BR-REC-78 / D2: the screen's "Enter at least one value" case is decided by `leavesNoValue(fields, built)`:
+// "A save that would leave the assessment with no stored value at all" (a new assessment with nothing filled,
+// or an edit that removes every remaining value). An edit that changes some fields, or only About, leaves
+// values and is allowed. `built` is what `buildSaveValues` answered for the same fields.
+describe('BR-REC-78 / D2 leavesNoValue: would the save leave the assessment with no value?', () => {
+  /** A box of an opened saved assessment that still holds what it held. */
+  const kept = (field: Field): Field => ({ ...field, hadValue: true, unchanged: true });
+  /** A blank box of an opened saved assessment that holds no value (nothing to keep or remove). */
+  const blank = (field: Field): Field => ({ ...field, unchanged: true });
+
+  const leaves = (fields: Field[]): boolean => {
+    const built = saveBody.buildSaveValues(fields);
+    expect(built.ok).toBe(true);
+    if (!built.ok) throw new Error('the fields should build');
+    return saveBody.leavesNoValue(fields, built);
+  };
+
+  test.each<[string, Field[]]>([
+    ['nothing filled', [num(WEIGHT, ''), num(FAT, ''), dur(PLANK, null)]],
+    ['only spaces typed', [num(WEIGHT, '   '), num(FAT, ' ')]],
+    ['no field at all that holds a value', [dur(PLANK, null)]],
+  ])('BR-REC-78 a NEW assessment, %s -> leaves no value (true)', (_name, fields) => {
+    expect(leaves(fields)).toBe(true);
+  });
+
+  test.each<[string, Field[]]>([
+    ['one Number', [num(WEIGHT, '94'), num(FAT, ''), dur(PLANK, null)]],
+    ['one Time', [num(WEIGHT, ''), dur(PLANK, 122)]],
+    ['a Time of 0 seconds (a value, not blank)', [dur(PLANK, 0)]],
+    ['a typed 0', [num(WEIGHT, '0')]],
+    ['several values', [num(WEIGHT, '94'), num(FAT, '17.5'), dur(PLANK, 122)]],
+  ])('BR-REC-78 a NEW assessment, %s -> keeps a value (false)', (_name, fields) => {
+    expect(leaves(fields)).toBe(false);
+  });
+
+  test('D2 a saved assessment, a one-field edit -> false', () => {
+    expect(leaves([num(WEIGHT, '90', true), blank(num(FAT, '')), kept(dur(PLANK, 122))])).toBe(
+      false,
+    );
+  });
+
+  test('D2 a saved assessment, the only stored value overwritten -> false', () => {
+    expect(leaves([num(WEIGHT, '90', true), num(FAT, '')])).toBe(false);
+  });
+
+  test('BR-REC-77 a saved assessment, one of several values cleared -> false', () => {
+    expect(leaves([num(WEIGHT, '', true), kept(dur(PLANK, 122)), blank(num(FAT, ''))])).toBe(false);
+  });
+
+  test('BR-REC-77 a saved assessment, two of three values cleared and one kept -> false', () => {
+    expect(leaves([num(WEIGHT, '', true), dur(PLANK, null, true), kept(num(FAT, '17.5'))])).toBe(
+      false,
+    );
+  });
+
+  test('D2 a saved assessment, every stored value cleared and nothing filled -> true', () => {
+    expect(leaves([num(WEIGHT, '', true), dur(PLANK, null, true), blank(num(FAT, ''))])).toBe(true);
+  });
+
+  test('D2 a saved assessment with one value, that value cleared -> true', () => {
+    expect(leaves([num(WEIGHT, '', true), num(FAT, '')])).toBe(true);
+  });
+
+  test('D2 a stored Time of 0 seconds, cleared -> true (0 was a value)', () => {
+    expect(leaves([dur(PLANK, null, true)])).toBe(true);
+  });
+
+  test('D2 every stored value cleared, spaces left in the boxes -> true', () => {
+    expect(leaves([num(WEIGHT, '   ', true), dur(PLANK, null, true)])).toBe(true);
+  });
+
+  test('D2 About only (no field changed, nothing sent) -> false', () => {
+    const fields = [kept(num(WEIGHT, '94.0')), kept(dur(PLANK, 122)), blank(num(FAT, ''))];
+    const built = saveBody.buildSaveValues(fields);
+    expect(built).toEqual({ ok: true, values: [], filled: 0, removed: 0 });
+    expect(leaves(fields)).toBe(false);
+  });
+
+  test('D2 a saved assessment whose fields are all unchanged -> false', () => {
+    expect(leaves([kept(num(WEIGHT, '94.0')), kept(dur(PLANK, 122))])).toBe(false);
+  });
+
+  test('D2 every stored value cleared but another box filled -> false', () => {
+    expect(leaves([num(WEIGHT, '', true), dur(PLANK, null, true), num(FAT, '9')])).toBe(false);
+  });
+
+  test('D2 the only stored value cleared and a Time filled in the same save -> false', () => {
+    expect(leaves([num(WEIGHT, '', true), dur(PLANK, 95)])).toBe(false);
+  });
+
+  test('D2 a saved assessment sent whole, with no unchanged flags (every value re-sent) -> false', () => {
+    expect(leaves([num(WEIGHT, '94.0', true), dur(PLANK, 122, true)])).toBe(false);
+  });
 });

@@ -24,7 +24,9 @@ import {
   hasTypedValues,
   isBlank,
   isChanged,
+  isUnchangedField,
 } from '@/lib/assessments/entryState';
+import { buildSaveValues, leavesNoValue } from '@/lib/assessments/saveBody';
 import type { EntryMetric, ExistingAssessment } from '@/lib/assessments/types';
 
 const WEIGHT_ID = '11111111-1111-4111-8111-111111111111';
@@ -576,5 +578,159 @@ describe('D12 "Save & next date"', () => {
     );
     expect(state.date).toBe('2025-06-30');
     expect(state.inputs[WEIGHT_ID]).toBe('97');
+  });
+});
+
+// D2: a saved assessment is edited by sending only the fields the trainer changed, so an untouched value is
+// never re-rounded (setup C9). `isUnchangedField(state, metricId)`: the box of an OPENED saved assessment still
+// holds what it held; a form that is not an opened saved assessment has no unchanged fields.
+describe('D2 isUnchangedField: an opened saved assessment, box by box', () => {
+  const time = (metricId: string, seconds: number | null): EntryAction => ({
+    type: 'time',
+    metricId,
+    seconds,
+    status: seconds === null ? 'empty' : 'valid',
+  });
+
+  test('D2 nothing touched: every box is unchanged (stored ones and empty ones)', () => {
+    const state = openedSaved();
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(true);
+    expect(isUnchangedField(state, PLANK_ID)).toBe(true);
+    expect(isUnchangedField(state, FAT_ID)).toBe(true);
+  });
+
+  test('D2 a looked-at box (touched, not changed) is still unchanged', () => {
+    const state = run(openedSaved(), { type: 'touch', metricId: WEIGHT_ID });
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(true);
+  });
+
+  test('D2 a changed Number is not unchanged; only that box', () => {
+    const state = run(openedSaved(), typeText(WEIGHT_ID, '90'));
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+    expect(isUnchangedField(state, PLANK_ID)).toBe(true);
+    expect(isUnchangedField(state, FAT_ID)).toBe(true);
+  });
+
+  test('D2 typed, then put back to what it held: unchanged again', () => {
+    const state = run(openedSaved(), typeText(WEIGHT_ID, '90'), typeText(WEIGHT_ID, '94.0'));
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(true);
+  });
+
+  test('BR-REC-77 a cleared box is not unchanged (it removes the value); typing it back is', () => {
+    const cleared = run(openedSaved(), typeText(WEIGHT_ID, ''));
+    expect(isUnchangedField(cleared, WEIGHT_ID)).toBe(false);
+    expect(isUnchangedField(run(cleared, typeText(WEIGHT_ID, '94.0')), WEIGHT_ID)).toBe(true);
+  });
+
+  test('D2 a box that was empty and is filled is not unchanged', () => {
+    const state = run(openedSaved(), typeText(FAT_ID, '9'));
+    expect(isUnchangedField(state, FAT_ID)).toBe(false);
+  });
+
+  test('D2 a Time box changed, then reverted to the same seconds: unchanged again', () => {
+    const changed = run(openedSaved(), time(PLANK_ID, 130));
+    expect(isUnchangedField(changed, PLANK_ID)).toBe(false);
+    expect(isUnchangedField(run(changed, time(PLANK_ID, 122)), PLANK_ID)).toBe(true);
+  });
+
+  test('BR-REC-75 a stored Time of 0 seconds is a value, not blank: untouched is unchanged, cleared is not', () => {
+    const state = openedSaved({ ...SAVED, values: { [WEIGHT_ID]: 94, [PLANK_ID]: 0 } });
+    expect(isUnchangedField(state, PLANK_ID)).toBe(true);
+    expect(isUnchangedField(run(state, time(PLANK_ID, null)), PLANK_ID)).toBe(false);
+  });
+
+  test('BR-REC-75 typing 0 seconds into an empty Time box is a change (0 is not blank)', () => {
+    const state = openedSaved({ ...SAVED, values: { [WEIGHT_ID]: 94 } });
+    expect(isUnchangedField(state, PLANK_ID)).toBe(true);
+    expect(isUnchangedField(run(state, time(PLANK_ID, 0)), PLANK_ID)).toBe(false);
+  });
+});
+
+describe('D2 isUnchangedField: a form that is not an opened saved assessment has none', () => {
+  test('D2 a new form: no box is unchanged, typed or not', () => {
+    const state = emptyEntry(NEW_DATE);
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+    expect(isUnchangedField(run(state, typeText(WEIGHT_ID, '94')), WEIGHT_ID)).toBe(false);
+  });
+
+  test('D2 a date with no saved assessment (loaded, nothing found): no box is unchanged', () => {
+    const state = run(emptyEntry(NEW_DATE), loaded(NEW_DATE, null, null));
+    for (const id of [WEIGHT_ID, FAT_ID, PLANK_ID]) expect(isUnchangedField(state, id)).toBe(false);
+  });
+
+  test('D2 a restored draft on a new date: no box is unchanged', () => {
+    const state = run(emptyEntry(NEW_DATE), loaded(NEW_DATE, null, DRAFT), answer('restore'));
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+  });
+
+  test('D2 after moving off an opened saved assessment: no box is unchanged', () => {
+    const state = run(openedSaved(), { type: 'date', date: '2025-03-15' });
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+    expect(isUnchangedField(state, PLANK_ID)).toBe(false);
+  });
+
+  test('D2 after "Save & next date": no box is unchanged', () => {
+    const state = run(openedSaved(), { type: 'next' });
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+  });
+});
+
+describe('D2 / R-1 a stored value is never re-rounded: the same value typed another way is still unchanged', () => {
+  // 95.55 was stored when the measurement had 2 decimals; today it has 1. The box must show every stored digit.
+  const PRECISE: ExistingAssessment = { ...SAVED, values: { [WEIGHT_ID]: 95.55, [PLANK_ID]: 122 } };
+  const precise = (): EntryState => openedSaved(PRECISE);
+
+  test('R-1 the box shows "95.55", not "95.6" (never fewer digits than stored)', () => {
+    expect(precise().inputs[WEIGHT_ID]).toBe('95.55');
+  });
+
+  test('R-1 a stored whole value still shows its decimals ("94.0")', () => {
+    expect(openedSaved().inputs[WEIGHT_ID]).toBe('94.0');
+  });
+
+  test('D2 untouched, the precise box is unchanged', () => {
+    expect(isUnchangedField(precise(), WEIGHT_ID)).toBe(true);
+  });
+
+  test.each([
+    ['a comma for the point', '95,55'],
+    ['a trailing space', '95.55 '],
+    ['a leading space', ' 95.55'],
+    ['a comma and a trailing space', '95,55 '],
+  ])('D2 re-entered with %s ("%s") is still unchanged', (_name, text) => {
+    const state = run(precise(), typeText(WEIGHT_ID, text));
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(true);
+  });
+
+  test('D2 re-entered the same value another way is not an unsaved change either', () => {
+    expect(isChanged(run(precise(), typeText(WEIGHT_ID, '95,55')))).toBe(false);
+    expect(isChanged(run(precise(), typeText(WEIGHT_ID, '95.55 ')))).toBe(false);
+  });
+
+  test.each([
+    ['one hundredth more (95.56 would round to the same 95.6)', '95.56'],
+    ['the rounded value (95.6)', '95.6'],
+    ['one tenth less (95.5)', '95.5'],
+    ['a whole number', '95'],
+    ['a different number', '90'],
+  ])('D2 a different value (%s, "%s") is a change', (_name, text) => {
+    const state = run(precise(), typeText(WEIGHT_ID, text));
+    expect(isUnchangedField(state, WEIGHT_ID)).toBe(false);
+    expect(isChanged(state)).toBe(true);
+  });
+
+  test('D2 saving a re-typed identical value sends nothing and is allowed (About-only style save)', () => {
+    const state = run(precise(), typeText(WEIGHT_ID, '95,55'));
+    const fields = [WEIGHT, FAT, PLANK].map((metric) => ({
+      metricId: metric.id,
+      datatype: metric.datatype,
+      decimals: (metric.decimals === 0 ? 0 : metric.decimals === 2 ? 2 : 1) as 0 | 1 | 2,
+      input: state.inputs[metric.id] ?? (metric.datatype === 'duration' ? null : ''),
+      hadValue: state.baseline[metric.id] !== undefined,
+      unchanged: isUnchangedField(state, metric.id),
+    }));
+    const built = buildSaveValues(fields);
+    expect(built).toEqual({ ok: true, values: [], filled: 0, removed: 0 });
+    if (built.ok) expect(leavesNoValue(fields, built)).toBe(false);
   });
 });

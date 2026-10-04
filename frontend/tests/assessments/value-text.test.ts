@@ -8,7 +8,7 @@
 //   decimals | undefined)` -> string; `decimals` is the measurement's current setting, when known. A Time is
 //   never followed by its "min:sec" unit.
 import { describe, expect, test } from 'bun:test';
-import { storedValueText } from '@/lib/assessments/valueText';
+import { storedNumberText, storedValueText } from '@/lib/assessments/valueText';
 
 type Result = Parameters<typeof storedValueText>[0];
 const number = (value: number, unit: string): Result => ({ datatype: 'number', value, unit });
@@ -79,5 +79,46 @@ describe('BR-REC-80 / setup C9 a stored value keeps every digit it was stored wi
       }
     }
     expect(tooShort).toEqual([]);
+  });
+});
+
+// `storedNumberText(value, unit, decimals | undefined)`: a stored Number with its unit (the unit may be empty);
+// the edit form's boxes use it too, so an untouched value is never shown (or sent) rounder than it is stored.
+describe('BR-REC-80 / R-1 storedNumberText: never fewer digits than stored', () => {
+  test.each<[string, number, string, number | undefined, string]>([
+    ['2 digits stored, setting 1 (spec example 95.55)', 95.55, 'kg', 1, '95.55 kg'],
+    ['2 digits stored, setting 0', 7.25, 'cm', 0, '7.25 cm'],
+    ['1 digit stored, setting 0', 7.5, 'cm', 0, '7.5 cm'],
+    ['100.05 at one decimal', 100.05, 'kg', 1, '100.05 kg'],
+    ['2 digits stored, setting not known', 95.55, 'kg', undefined, '95.55 kg'],
+    ['1 digit stored, setting not known', 95.5, 'kg', undefined, '95.5 kg'],
+  ])('R-1 %s', (_name, value, unit, decimals, expected) => {
+    expect(storedNumberText(value, unit, decimals)).toBe(expected);
+  });
+
+  test.each<[string, number, string, number, string]>([
+    ['94 at one decimal is "94.0"', 94, 'kg', 1, '94.0 kg'],
+    ['a whole value at two decimals', 12, 'cm', 2, '12.00 cm'],
+    ['95.5 at two decimals is filled up', 95.5, 'kg', 2, '95.50 kg'],
+    ['81.2 at two decimals', 81.2, 'kg', 2, '81.20 kg'],
+    ['a whole value at no decimals', 12, 'reps', 0, '12 reps'],
+    ['a percentage', 24, '%', 1, '24.0 %'],
+  ])('BR-REC-127 %s', (_name, value, unit, decimals, expected) => {
+    expect(storedNumberText(value, unit, decimals)).toBe(expected);
+  });
+
+  test('BR-REC-127 an empty unit gives just the number, with no trailing space', () => {
+    expect(storedNumberText(95.55, '', 1)).toBe('95.55');
+    expect(storedNumberText(94, '', 1)).toBe('94.0');
+    expect(storedNumberText(12, '', 0)).toBe('12');
+  });
+
+  test('R-1 a Number on a saved assessment reads the same through storedValueText', () => {
+    expect(storedValueText({ datatype: 'number', value: 95.55, unit: 'kg' }, 1)).toBe(
+      storedNumberText(95.55, 'kg', 1),
+    );
+    expect(storedValueText({ datatype: 'number', value: 94, unit: 'kg' }, 1)).toBe(
+      storedNumberText(94, 'kg', 1),
+    );
   });
 });
