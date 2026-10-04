@@ -56,3 +56,4 @@ See `docs/decisions.md` D-022 and the spec's Build clarifications D1–D21.
 
 ## Status
 **Built and verified 2026-10-04; ready for hand-over** (user asks for the PR). Commits: contract bbac837 · tests 44f13bd, c4a0f2c, 7bd07f0 · backend 840e3dc · admin c91ff22, 06bed7b · fix round 1 8c02e41 (+tests 96e3a57, 5421a08), de5762d · fix round 2 f639041 (+tests 2bb2281, 6013bde). Review: 2 rounds, majors R-1 (untouched values re-rounded), R-3 (tests), R-4 (bundle split) fixed, R-2 decided (E29 API-only, #32); see `findings.md`. Tests: backend 2185 (baseline 1855), admin 2430 (baseline 1407). Manual checklist: `checklist.md`.
+- 2026-10-04: the checklist writer was resumed after an API error with a message that summarised behaviour (not pointers only); it re-read the spec and screens itself and flagged it. Checklist steps tagged [note] are open questions for the owner (D19 draft date, clear-only toast wording, year shown for this year's dates).
