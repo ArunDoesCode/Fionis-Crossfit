@@ -2,7 +2,7 @@
 module: member-records/setup
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 1
+version: 2
 frozen_on: 2026-10-03
 owner: Arun
 depends_on: [member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -120,6 +120,21 @@ Measurement sheet (bottom sheet on phones, dialog on desktop):
 
 S16 Reminders & gym (`/admin/settings/general`): gym name, time zone, "Due soon" days, "Ends soon" days, [Save].
 
+## Build clarifications (v2, Stream C coordinator, 2026-10-04 — owner to confirm at merge; no change of intent)
+
+| # | Rule | Clarification |
+|---|---|---|
+| C1 | 60 | Gym name is trimmed, 2–60 characters. Time zone must be an IANA name the server knows (e.g. `Asia/Kolkata`); anything else → 400 `VALIDATION_ERROR`. Lead days are whole numbers. |
+| C2 | 61, 62 | Assessment, measurement and report-group names are trimmed before checking and saving; "unique ignoring case" compares the trimmed names. Report group: 2–40 characters. |
+| C3 | 10, 64 | A Time measurement always has unit `min:sec` and 0 decimals (the server sets them, whatever the request sends; the sheet hides both for Time). Switching Time → Number without sending a unit leaves the unit empty. Check ranges of Time measurements are in seconds (BR-REC-153). |
+| C4 | 11 | `METRIC_LOCKED` only when datatype or unit would really change; sending the stored value again is fine. |
+| C5 | 66 | Turning an assessment off does not change its measurements' own On/Off; it hides them while it is off. E09 without `includeInactive` leaves out off assessments and off measurements; with `includeInactive=true` it returns all, each with its own `isActive`. |
+| C6 | 11 | `hasValues`: a measurement has at least one stored value; an assessment has at least one stored value in any of its measurements. |
+| C7 | 67 | E12 lists every assessment (on and off) once; E15 lists every measurement of that assessment (on and off) once; anything else → 400 `VALIDATION_ERROR`. New assessments and measurements are added last and On. |
+| C8 | 62 | On E14 the "please check" pair and the two both-or-neither pairs (own repeat; report group + part) are checked against the stored values when only one side is sent → 400 `VALIDATION_ERROR`. |
+| C9 | 64 | Setup ships the pure rounding function (`backend/src/lib/domain/metric-value.ts`): numbers round half away from zero to the measurement's decimals (95.56 → 95.6, −2.25 → −2.3), Time to whole seconds. The assessments stream calls it when saving (BR-REC-76). Changing decimals (E14) never rewrites stored values. |
+| C10 | 158 | Change-log actions: `settings.update`, `assessment_type.create`, `assessment_type.update`, `assessment_type.reorder`, `metric.create`, `metric.update`, `metric.reorder`. |
+
 ## Not now
 
 Custom membership plans, editable warning % (30%) and "no change" % (1%) — fixed for now (v1 Q4), unit conversion, calculated measurements.
@@ -139,3 +154,7 @@ Custom membership plans, editable warning % (30%) and "no change" % (1%) — fix
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-10, 11, 13, 14 and the Metric list from v1 unchanged
 - 2026-10-03 v0 — answers folded: all as recommended, no rule changes
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
+- 2026-10-04 v2 — clarified during build (Stream C; owner to confirm at merge; no change of intent): section
+  "Build clarifications" C1–C10 (gym name 2–60, IANA time zone, trimmed names, Time = `min:sec` + 0 decimals,
+  lock only on a real change, off assessment hides without cascading, `hasValues`, full order lists, pair checks on
+  edit, rounding function for the assessments stream, change-log action names)
