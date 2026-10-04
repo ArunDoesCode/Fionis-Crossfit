@@ -112,7 +112,7 @@ rows, 25 per page, "Show more". Row sheet: Record assessment · Assess soon · R
 | C3 | 17 | Left out of E31: archived members and members whose latest membership has Ended (Expired, `membershipStatus`). A member with no membership at all is not "Ended" and is listed. E32 answers for every member, archived too. |
 | C4 | 18, 97, 98 | An "Assess soon" row is only in `overdue` (never `upcoming`), whatever its dates; `flagged: true`; chips = every turned-on measurement of the assessment in setup order; `dueOn` = the earliest due date among them (`daysOverdue` may be ≤ 0). It replaces that member + assessment's normal row. |
 | C5 | 97 | Order in both lists: Assess soon first, then `dueOn` ascending ("most days overdue", then "soonest due" — one key), then name A–Z ignoring case, then assessment setup order. |
-| C6 | 98, 99 | (Q4) "Assess soon" and "Remind me later" both end when an assessment of that type for that member is saved or edited after it was set (`assessments.updated_at` ≥ the override's `created_at`) **and** is dated on or after the day it was set (`assessed_on` ≥ `set_on`). Back-filling an older date ends neither. Worked out when reading: the `due_overrides` row stays and the assessments stream's save code does not touch it. Setting either again replaces the row (new `set_on` = today, new `created_at`). |
+| C6 | 98, 99 | (Q4) "Assess soon" and "Remind me later" both end when an assessment of that type for that member is saved or edited after it was set (`assessments.updated_at` ≥ the override's `created_at`) **and** is dated on or after the day it was set (`assessed_on` ≥ `set_on`). Back-filling an older date ends neither. Worked out when reading: the `due_overrides` row stays and the assessments stream's save code does not touch it. Setting either again replaces the row (new `set_on` = today, new `created_at`). **Stream D must write `assessments.updated_at` on every save and edit** (E26 new and existing, E29): a save that only writes `measurements` would never end an override (issue #24). |
 | C7 | 18, 99 | A reminder hides the row in E31 while today < `until_on`; on `until_on` the row is back (Case 13; "Remind 1 month on 3 Oct → back on 3 Nov"). |
 | C8 | 18, 99 | E33 `until` must be after today (else 400 `VALIDATION_ERROR`, `details.field` = `until`) and at most today + 90 days (else 400 `SNOOZE_TOO_FAR`); "today" is the gym day (BR-REC-93). "1 month" = same day next month (BR-REC-94); 1 week / 2 weeks = + 7 / 14 days. |
 | C9 | 100, 158 | E33 / E34: 404 when the member or the assessment does not exist. Archived members and turned-off assessments are accepted (a turned-off one shows nothing until turned on again). E34 with nothing set → 200 `{}`. Every successful E33 / E34 writes one change-log row in the same transaction: actions `due_override.set` and `due_override.clear`. |
@@ -133,6 +133,25 @@ WhatsApp/SMS reminders to members, per-member intervals, a calendar view, sendin
 | Q2 | "Remind me later" choices | **A** 1 week, 2 weeks, 1 month or pick a date / B pick a date only | **A** → BR-REC-99 |
 | Q3 | Someone due today is listed under… | **A** Due soon, "Due today" (matches v1) / B Overdue | **A** → BR-REC-96 |
 
+## Implementation status (2026-10-04, branch `claude/due-date-engine-overdue-871ad4`)
+
+All 17 rules built. Backend tests: `backend/tests/due/`; admin tests: `frontend/tests/due/`; manual: `.pipeline/member-records-due-list/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 15, 94, 95, 105 | `compute-due`, `e31-due-list`, `e32-member-due`; `frontend/{remind,status}`; Stream 0 `dates` domain tests |
+| 16, 96 | `compute-due`, `due-list-rows`, `e31-due-list`, `settings-and-today` |
+| 17 | `due-list-rows` (`isListedInDueList`), `e31-due-list` |
+| 18, 98, 99, 100 | `e33-e34-actions`, `override-ending`, `compute-due`; `frontend/{optimistic,mutation-hooks,remind}` |
+| 93 | `settings-and-today`, `e33-e34-actions` |
+| 97 | `due-list-rows`, `e31-due-list`; `frontend/optimistic` (`sortDueRows`) |
+| 101, 102 | `frontend/{status,links,query-hooks,text}`; UI wiring is manual |
+| 103 | `e32-member-due`, `due-list-rows` (`memberDueItems`); `frontend/status` |
+| 104 | `e31-due-list` (`typeId`); `frontend/{list-paging,search-params,queries}` |
+Also BR-REC-158 for E33/E34 (`e33-e34-actions`), gates for 401 / 403 / validation (`http-gates`). Backend files are under `backend/tests/due/*.test.ts`.
+Home sections, S3, the row sheet and the member "Assessments" block have no automated UI test (no DOM test library, #9); manual checklist.
+Review: 1 round (0 blockers; R-1 major for Stream D → #24; R-4, R-5 fixed; R-2, R-5, R-6 → #25; R-7 rejected, D-021 admin "today" = device zone).
+E31 measured on the 1,000-member perf seed: p95 ≈ 157 ms service time (budget 300 ms, BR-REC-147).
+
 ## Changelog
 
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-15…18 from v1 unchanged
@@ -144,3 +163,5 @@ WhatsApp/SMS reminders to members, per-member intervals, a calendar view, sendin
   the day set; worked out when reading), Q5 → C10 ("Never recorded" wins over Overdue on the member page). Others: per-measurement
   due dates, row date and `daysOverdue`, who is left out, flagged row shape, one sort key, reminder end day, `until` checks, 404s and
   change-log actions, member-page line order, Home page size, row menu, freshness.
+- 2026-10-04 v2 — review R-1 (Stream E): C6 now says Stream D must write `assessments.updated_at` on every save and edit
+  (E26 new and existing, E29); filed as #24. No rule changed.

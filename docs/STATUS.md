@@ -3,13 +3,13 @@
 > Single entry point for "where are we and what's next". Updated by `/feature` (at phase changes and in
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
-**Updated:** 2026-10-04 · **Milestone:** member-records M1 done (Stream 0 #10 and auth #11 merged); M2 in progress: members (B) built and verified on its branch, setup (C) in its own session (`member/` skipped for the member-records MVP)
-**Next action:** open the members PR (`claude/member-records-feature-8fca5b`; checklist `.pipeline/member-records-members/checklist.md`), then after M2 start D assessments, E due-list, F progress as three sessions from fresh `main` (D-017; steps in the map → "Starting a stream session").
+**Updated:** 2026-10-04 · **Milestone:** member-records M2 merged (members #22, setup #23); M3 in progress: due-list (E) built and verified on its branch, assessments (D) and progress (F) in their own sessions (`member/` skipped for the member-records MVP)
+**Next action:** open the due-list PR (`claude/due-date-engine-overdue-871ad4`; checklist `.pipeline/member-records-due-list/checklist.md`), then Stream D must fix #24 before it merges (every save writes `assessments.updated_at`); F progress in its own session (D-017).
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
 |---|---|---|---|---|
-| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v2: index + 10 sub-specs (data-model v2, auth v2, members v1 + build clarifications) | current (Stream 0 + auth + members) | partial: Stream 0 (M0) + auth (M1) on `main`; members (B) on its branch, PR next | C (M2, own session) → D, E, F (M3) → G (M4) |
+| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v2: index + 10 sub-specs (due-list v2 with build clarifications C1–C13) | current (Stream 0 + auth + members + setup + due-list) | partial: Stream 0, auth, members, setup on `main` (M2); due-list (E) on its branch, PR next | D, F (M3, own sessions) → G (M4) |
 | auth-members (login, invites, roles, permissions) | none | — | none | M1 — `/spec auth-members` |
 | workouts (library, benchmarks, versions, timer config) | none | — | none | M1 |
 | sessions (templates, schedule, lifecycle state machine, jobs) | none | — | none | M1 |
@@ -28,18 +28,19 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
-| member-records/members (Stream B) | `claude/member-records-feature-8fca5b` | verified, ready for PR (review 3 rounds, 2 fix rounds, all checks green) | — | you: "open the PR" |
-| member-records/setup (Stream C) | `claude/member-records-setup-8ce4cb` | own session (not this one) | — | — |
+| member-records/due-list (Stream E) | `claude/due-date-engine-overdue-871ad4` | verified, ready for PR (1 review round, 0 blockers, all checks green) | — | you: "open the PR" |
 
 ## Waiting on you
-- [ ] Members: say "open the PR"; then run `.pipeline/member-records-members/checklist.md` on a phone (start: `cd backend && bun run db:reset && bun run bootstrap-admin`, API on 4002, web on 3002).
-- [ ] Members: confirm two build choices (D-021): E19 join-date rule only when the join date changes; E16 name order word-by-word without the name index (bench in G).
+- [ ] Due list: say "open the PR"; then run `.pipeline/member-records-due-list/checklist.md` on a phone (start: `cd backend && bun run db:reset && bun run bootstrap-admin`, API on 4005, web on 3005; the entry form needs Stream D).
+- [ ] Due list: confirm the build clarifications C1–C13 in `docs/specs/member-records/due-list.md` (D-022); Stream D must fix #24 (every save writes `assessments.updated_at`).
 - [ ] Run the auth manual checklist `.pipeline/member-records-auth/checklist.md` (start with `cd backend && bun run bootstrap-admin`).
 - [ ] Setup checklist (`docs/WORKFLOW.md` §Setup): create the GitHub repo, protect `main`, install `gh`.
 - [ ] Confirm decisions D-002 (single repo, no shared packages) and D-004 (own auth + SSE, Supabase only as Postgres).
 - [ ] Decide: member login by email OTP or password — settled in the `auth-members` interview.
 
 ## Recently done
+- 2026-10-04 — member-records due-list (Stream E) built and verified on its branch: E31–E34, `computeDue`, Home due sections, S3, row sheet, member block; 2218 backend + 1706 admin tests; 1 review round; E31 p95 ≈ 157 ms (D-022; issues #24, #25).
+- 2026-10-04 — member-records members (B, #22) and setup (C, #23) merged to `main` (M2).
 - 2026-10-04 — member-records members (Stream B) built and verified on its branch: E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds (D-021; issues #16, #17, #20).
 - 2026-10-03 — member-records spec PR #2, Stream 0 #10, auth #11 (M1) and the CI fix #12 merged to `main`.
 - 2026-10-03 — member-records auth (Stream A) built and verified: E01–E06, lock, sessions, rate limits, `bootstrap-admin`, page guard, Login, Account (D-020; auth spec v2; issues #7–#9).

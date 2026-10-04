@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: 1dd728c
+last_verified_commit: 16dd568
 last_verified_on: 2026-10-04
 depends_on: []
 ---
@@ -22,6 +22,8 @@ Stream B (members) is built: E16–E24, S4–S9, Home search + membership sectio
 banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 Assessment setup, S16 Reminders & gym; run notes
 `.pipeline/member-records-setup/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec setup.md v2 (C1–C13).
+Stream E (due-list) is built: E31–E34, pure engine `computeDue`, Home Overdue / Due soon sections, S3 `/admin/due`, row sheet, member "Assessments" block; choices D-022;
+run notes `.pipeline/member-records-due-list/` (plan, contract incl. admin interfaces, screens, checklist); spec due-list.md v2 (C1–C13).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -49,7 +51,10 @@ Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 
 | setup (C) backend | `backend/src/{routes/setup,controller/setupController,service/setupService,service/setupRules,repository/setupRepository}.ts` | `setupService.{getSettings,updateSettings,listCatalog,createType,updateType,reorderTypes,createMetric,updateMetric,reorderMetrics}`; pure rules `setupRules.ts`: `newMetricFields`, `editedMetricFields` (C3), `metricIssues` (C8), `changesKindOrUnit` (C4), `listsEveryIdOnce` (C7) |
 | domain (C) | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)` — half away from zero on the decimal digits; the assessments stream (D) calls it when saving (BR-REC-76) |
 | setup (C) admin | `frontend/src/{lib/validators/setup.ts,lib/setup/{describe,text,form,timezones}.ts,lib/api/setup/{fetchers,queries}.ts,components/{views,pages}/setup/*}`, `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `setupKeys`, `settingsQueryOptions`/`assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`), `SetupSheet` (edit sheet + confirm step), `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
-| slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
+| due (E) backend | `backend/src/{routes/due,controller/dueController,service/dueService,repository/dueRepository}.ts` | `dueService.{list,memberItems,setAction,clearAction}`; `dueRepository.{listMembers,listCatalog,listLastMeasured,listOverrides,typeExists,findOverride,upsertOverride,deleteOverride}` |
+| due (E) domain | `backend/src/lib/domain/due.ts` (pure, no I/O; `today` and lead days are arguments) | `computeDue`, `dueListRows` (sorted, not paged), `memberDueItems`, `isListedInDueList` (C3: archived / Ended left out) |
+| due (E) admin | `frontend/src/lib/due/{status,remind,links,searchParams,optimistic,target,text,types,useDueSheet}.ts`, `lib/api/due/{fetchers,queries}.ts`, `components/pages/due/*`, `components/views/due/DueListView.tsx`, `app/(app)/admin/due/page.tsx` | pure: `dueRowStatus`, `memberDueStatus`, `remindChoices`, `remindDateIssue`, `recordHref`, `dueListHref`, `sortDueRows`, `applyDueChange`, `applyMemberDueChange`; `dueKeys` (`['due']`), hooks `useDuePreview` (5 rows), `useDueList` (25/page, infinite), `useMemberDue`, `useSetDueAction`, `useClearDueAction` (one mutation key `['due-write']`); `DueSheetLazy` (one `import()`), `DueSection` (Home), `DueList`/`DueListPanel` (S3), `MemberDueRow` |
+| slots | Home `components/pages/home/{HomeSearch,MembershipSections,DueSections}` (B, E: filled); Member `pages/member/{MemberHeader,MembershipBlock,DueBlock}` (B, E: filled), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
 Tables: data-model.md v2 (no hand SQL, no extensions, no exclusion constraint — overlap is the BR-REC-09 service
@@ -116,6 +121,12 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Members (B) admin: sheets not needed at first paint (`PeriodSheet`, `ConfirmSheet` in Archive) load through `lib/members/useLazySheet.ts`: `sheetLoader(() => import(…))` = ONE `import()` site per sheet (a second site makes Turbopack emit a second chunk copy) with a cache that resets on failure (`React.lazy`/`next/dynamic` keep a rejected load forever); the sheet mounts CLOSED and opens one frame later (Base UI skips the open animation for a sheet that mounts open), stays mounted (unmounting calls `history.back()` via `useBackToClose` and loses the exit animation); a failed load toasts "Couldn't load this. Try again." and the next tap retries. Keep `useForm` inside the sheet children. Renew pointer-down/focus preloads the chunk and `prefetchMember`s the detail. Biome rejects `onPointerDown` on a div: native listeners via ref (`MembershipHistory`).
 - Members (B) admin: list/search requests forward the abort signal; idempotency key reused only while the JSON body is identical (a changed body with the same key is 422); `crypto.randomUUID` needs a secure page, so `newIdempotencyKey` falls back to `getRandomValues`.
 
+- Due (E): an override ends when read, not when written: `due_overrides` row stays; ended = a save of that member + type with `assessments.updated_at >= override.created_at` AND `assessed_on >= set_on` (`dueRepository.listOverrides` = LEFT JOIN + `max(assessed_on)` grouped by the key; a correlated sub-select in the select list loses the table name, as with `hasValues`). Stream D must write `assessments.updated_at` on every save and edit ([#24](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/24)); `created_at` is the API clock, `updated_at` is DB `now()` on insert: the comparison assumes close clocks ([#25](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/25)).
+- Due (E): one due date per measurement (latest `measured_on` + effective interval, never recorded → `joined_on`); a row = member + assessment with the measurements due within Due soon days; `daysOverdue` 0 = today, negative = later; "Assess soon" rows are only in `overdue` with every turned-on measurement as chips. E31 loads every member (archived too) and `isListedInDueList` is the only place that leaves them out; paging is in memory over the sorted list (1,000 members: p95 ≈ 157 ms). The E31 query value is `upcoming`, the S3 URL tab is `soon`.
+- Due (E): tests have no clock: dates come from `gymToday(new Date(), tz)`; a run straddling midnight in the gym zone can flake once. `backend/tests/due/support.ts` refuses a test DB that holds active members it did not create (every new assessment is due for every active member): run `bun run db:test:prepare`.
+- Due (E) admin: write hooks cancel + snapshot all due queries, apply the change to every cached list (infinite lists are flattened, changed and re-cut to the old page sizes), roll back with `messageForCode` (a failure with no code toasts "Couldn't save this. Try again."; a 401 gets none), and invalidate `dueKeys.all` only when no other due write is still running. `meta.total` is not touched (Home count stale for one round trip, [#25](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/25)). A tab switch unmounts the other tab (Base UI `Tabs.Panel`), only a chip change keeps old rows (`keepPreviousData`).
+- Due (E) admin: the row sheet is one `ResponsiveSheet` with a second step for "Remind me later" (never a second sheet, #18); "Record assessment" / "Open member" are `<Link replace>` so Back does not land on a ghost entry; `links.ts` returns `as const` template literals so typed routes pass without casts (`bunx next typegen` once after adding `/admin/due`). Admin "today" = the device zone (D-021 7): the server answers 400 `VALIDATION_ERROR` / `SNOOZE_TOO_FAR` for an edge day and the change is undone.
+
 ## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
 |---|---|---|
@@ -134,6 +145,8 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | — | ResponsiveSheet desktop dialog does not scroll; `useBackToClose` not stack-aware | [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18) (shared) |
 | — | DurationField reads an out-of-range box as empty | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) (shared) |
 | — | NumberField cannot type a minus on iOS (needed by setup ranges and Stream D results) | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (shared, before D) |
+| — | assessments must write `assessments.updated_at` on every save/edit, or Assess soon / Remind me later never end (C6) | [#24](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/24) (D, before it merges) |
+| — | due-list polish: clock source, infinite-list refetch, Home count after an optimistic change | [#25](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/25) (E) |
 
 ## Tech notes
 - Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
@@ -184,7 +197,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-members/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, S4–S9, Home search/sections, real-server items |
 | setup backend | `backend/tests/setup/{metric-value,settings,assessment-types,metrics,change-log,gates}.test.ts` (+ `settings-empty` for C13) | 10, 11, 13, 14, 60–67, 69, 72, 158, 159, 160 |
 | setup admin | `frontend/tests/setup/{validators,describe,text,queries}.test.ts` | 10, 13, 14, 60–67, 69–72, 126 (UI wiring of 70, 71 is manual: no DOM test library, #9) |
-| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
+| due backend | `backend/tests/due/{compute-due,due-list-rows,e31-due-list,e32-member-due,e33-e34-actions,override-ending,settings-and-today,http-gates}.test.ts` (+ `support.ts`) | 15–18, 93–100, 103–105, 158 |
+| due admin | `frontend/tests/due/{status,remind,links,search-params,text,optimistic,fetchers,queries,query-hooks,list-paging,mutation-hooks}.test.ts` (+ `helpers.ts`, `hookHarness.ts`) | 16, 18, 94, 96–105, 125–127 (UI wiring of 101, 102, 138, 140 is manual: no DOM test library, #9) |
+| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md`, `.pipeline/member-records-due-list/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items; Home due sections, S3, row sheet, member block |
 
 ## History
 | Date | PR / commit | Change |
@@ -195,3 +210,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
 | 2026-10-04 | members branch `claude/member-records-feature-8fca5b` | Stream B built (from `main` 9244b2c): E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds, 2 fix rounds (2 major fixed: lazy sheets −58…−68 KB gz, history from one period; 9 minor fixed, 1 → #20); D-021; issues #16, #17, #20 |
 | 2026-10-04 | setup branch `claude/member-records-setup-8ce4cb` | Stream C built (from `main` after M1): E07–E15, `roundMetricValue`, S14–S16; setup spec v2 (C1–C13); 2 review rounds (1 major fixed, minors fixed or filed), issues #18, #19, #21; 541 backend + 334 admin tests |
+| 2026-10-04 | due-list branch `claude/due-date-engine-overdue-871ad4` | Stream E built (from `main` 8e3d569, M2): E31–E34, `computeDue`, Home due sections, S3, row sheet, member block; due-list spec v2 (C1–C13); 1 review round (0 blockers; R-1 major → #24 for Stream D, R-4/R-5 fixed, minors → #25); E31 p95 ≈ 157 ms on the perf seed; D-022; 2218 backend + 1706 admin tests (baseline 1855 / 1407) |

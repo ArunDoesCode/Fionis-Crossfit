@@ -80,7 +80,7 @@ Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths fro
 
 Implementation status: **Stream 0 built** (branch `claude/member-records-foundation-57e849`): data-model, api-contract,
 ux shell rules + BR-REC-12, 51, 52, 75, 94, 150, 174 — BR → test file in the map's Tests table; merged to `main` (M0).
-Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Streams B, D–G: see their sub-specs.
+Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Stream E (due-list) built on `claude/due-date-engine-overdue-871ad4` (due-list.md v2 → Implementation status). Streams B, D, F, G: see their sub-specs.
 
 Merge points: **M0** Stream 0 → **M1** A (needed to click through anything) → **M2** C, B → **M3** D, E, F
 → **M4** G + scenario test (3 real binder members typed in end to end) + owner/coach check → done. A–F may
