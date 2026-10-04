@@ -7,7 +7,7 @@
 //   C8         `until` must be after today (else VALIDATION_ERROR) and at most today + 90 days (else SNOOZE_TOO_FAR);
 //              "1 month" = same day next month; 1 week / 2 weeks = + 7 / 14 days.
 //   BR-REC-126 / 128 plain words: the messages never show a code.
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/remind`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/remind`:
 //   `remindChoices(today)` -> [{ label: "1 week" | "2 weeks" | "1 month", until }],
 //   `remindDateIssue(until | '', today)` -> "Pick a date." | "Pick a date after today." | the SNOOZE_TOO_FAR text from
 //   `messageForCode` | null.

@@ -4,7 +4,7 @@
 //   BR-REC-113 "says how many were left out: 'n = 12 · 5 with one reading not counted'".
 //   BR-REC-23  "Only members with 2+ readings count, and n is shown."
 //   S13 sketch: "n = 12 · 5 not counted", "Improved 8 · No change 3 · Worse 1".
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/text`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/text`:
 //   `outcomeShares(counts)`: whole percents with the same keys, summing to 100 (largest remainder; ties go
 //   improved, noChange, worse); all 0 when the total is 0. `notCountedText(n, notCounted)`:
 //   "n = 12 · 5 with one reading not counted"; `notCounted` 0 -> "n = 12".

@@ -6,7 +6,7 @@
 //   BR-REC-19 — earlier than the join date shows a warning.
 //   BR-REC-84 — after Save: "Saved 9 results for Surya".
 //   BR-REC-89 — the list row shows the number of results ("15 results").
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/labels`:
 //   `assessmentDateLabel(date, isEstimated, today)`: estimated -> "≈ Dec 2025" (month + year, always the year);
 //     else `formatDay(date, today)`.

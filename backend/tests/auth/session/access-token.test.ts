@@ -1,7 +1,7 @@
 // BR-REC-33 — access tokens are checked by signature only (no database read), so a signed-out
 // device loses access within 15 minutes at most; BR-REC-30 (HS256 pinned); BR-REC-44 — rotating the
 // access secret is seamless (devices refresh), rotating the refresh secret signs every device out.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

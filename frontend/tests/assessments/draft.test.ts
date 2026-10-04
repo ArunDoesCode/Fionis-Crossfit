@@ -6,7 +6,7 @@
 //               `assess-draft:v1:<memberId>:<typeId>:<date>` with the save moment; values only (the typed text
 //               of Number fields, seconds of Time fields) and the About flag. A draft with every value empty is
 //               not kept. Drafts older than 7 days are dropped whenever a form opens.
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/draft`: `DRAFT_PREFIX` = "assess-draft:v1:", `DRAFT_MAX_AGE_MS` = 7 days,
 //   `draftKey(memberId, typeId, date)`, type `Draft` = `{ savedAt (ms), isEstimated, values:
 //   Record<string, string | number | null> }`, `DraftStorage` = `Pick<Storage, getItem | setItem | removeItem |

@@ -1,13 +1,13 @@
 // Spec: docs/specs/member-records/ux.md BR-REC-128 and docs/specs/member-records/api-contract.md BR-REC-154:
 // every server error code maps to friendly text, one plain sentence saying what happened and what to do.
-// Interface: .pipeline/member-records-foundation/contract.md, "Frontend shared modules" (lib/messages/errors.ts).
+// Interface: docs/specs/member-records/api-contract.md "Error codes" (lib/messages/errors.ts).
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ERROR_CODES, ERROR_MESSAGES, type ErrorCode, messageForCode } from '@/lib/messages/errors';
 
 // The code list of api-contract.md ("Error codes"), written out here on purpose so the test stays
-// tied to the spec; contract.md adds the 501 placeholder NOT_IMPLEMENTED (D-019).
+// tied to the spec; api-contract.md adds the 501 placeholder NOT_IMPLEMENTED (D-019).
 const SPEC_CODES = [
   'VALIDATION_ERROR',
   'INVALID_JSON',

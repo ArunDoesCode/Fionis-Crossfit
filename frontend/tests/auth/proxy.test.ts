@@ -2,7 +2,7 @@
 // BR-REC-39 (Login, then back to the page asked for; `next` stays inside the app; the guard never runs
 // on /api), BR-REC-40 (expired access cookie + valid refresh cookie: refresh on the server before the
 // page renders), BR-REC-42 (Login while signed in goes to Home).
-// Interface: .pipeline/member-records-auth/contract.md "Admin app (frontend)" — the page guard is
+// Interface: docs/specs/member-records/auth.md — the page guard is
 // `src/proxy.ts` (`proxy`, `config.matcher`, the Next.js proxy contract). The forwarded request's
 // cookies are read from Next's own `x-middleware-request-*` / `x-middleware-override-headers`
 // response headers, which is how a proxy hands changed request headers to the page.
@@ -520,8 +520,8 @@ describe('BR-REC-43 the page guard refresh carries the visitor’s device type',
 // ---------------------------------------------------------------------------------------------
 // Spec v2 (review R-4), BR-REC-42: "Opening Login while signed in goes straight to Home, except when the
 // app just sent the device there because its sign-in ended (BR-REC-41)." The app marks that hand-over with
-// `reason=expired` on the Login address (contract: "Signed in on /login -> /admin, except
-// /login?reason=expired, which renders Login"). Without the exception an access cookie that the API keeps
+// `reason=expired` on the Login address (auth.md BR-REC-42 v2: signed in on /login -> /admin, except
+// /login?reason=expired, which renders Login). Without the exception an access cookie that the API keeps
 // refusing bounces Login <-> /admin forever.
 
 describe('BR-REC-42 v2 Login right after the app ended the sign-in is shown, not bounced to Home', () => {

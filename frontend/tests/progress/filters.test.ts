@@ -4,7 +4,7 @@
 //   P11        S13 URL keys: `metric`, `joinedFrom`, `joinedTo` (YYYY-MM), `plan`, `sex`, `age` (an age-band code);
 //              unknown values are ignored.
 //   BR-REC-114 age bands: under20, 20to29, 30to39, 40to49, 50to59, 60plus (E36 `ageBand` values).
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/filters`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/filters`:
 //   `parseProgressFilters(params)`, `progressFiltersSearch(filters)`, `toProgressQuery(metricId, filters)`.
 //   Plan codes as the spec writes them (`half_annual`); sex `male` / `female`.
 import { beforeAll, describe, expect, test } from 'bun:test';

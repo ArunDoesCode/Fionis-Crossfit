@@ -7,7 +7,7 @@
 //       archived and ended -> "Archived 2 Jun 2026 · Membership ended 31 May 2026"
 //     Nothing to say (not archived, still running) -> no banner.
 //   BR-REC-52 — a period ending today is "Ends soon", not "Ended", so it still "ends".
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/banner`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/banner`:
 //   `memberBannerText(member, today, timeZone)`: dates always with the year; `archivedAt` (ISO UTC) turned
 //   into a day in `timeZone`.
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';

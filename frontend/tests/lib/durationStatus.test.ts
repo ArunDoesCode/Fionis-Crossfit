@@ -5,7 +5,7 @@
 //   D17       — `DurationField` reports an out-of-range box (seconds above 59, minutes above 599) as invalid
 //               instead of empty (#19).
 //   BR-REC-12 — durations are stored in seconds (the golden fixture `duration-cases.json`).
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" — `@/lib/durationStatus`:
+// Interface: docs/specs/member-records/assessments.md — `@/lib/durationStatus`:
 //   `durationStatus(minText, secText)` -> `'empty' | 'valid' | 'invalid'`: both blank -> `empty`; a blank box
 //   counts as 0 when the other has digits; seconds above 59 or minutes above 599 -> `invalid`; else `valid`.
 import { describe, expect, test } from 'bun:test';

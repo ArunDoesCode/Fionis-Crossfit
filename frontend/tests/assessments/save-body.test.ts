@@ -7,7 +7,7 @@
 //   BR-REC-78 — saving with nothing filled is refused ("Enter at least one value").
 //   D2        — E26 `values`: a measurement left out is not touched; `{ value: n }` sets it; `{ value: null }`
 //               removes the stored value.
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/saveBody`: `buildSaveValues(fields)` with `fields` = `{ metricId, datatype, decimals,
 //   input, hadValue, unchanged? }[]` in screen order (`input` = typed text for `number`, seconds or `null` for `duration`;
 //   `hadValue` = a value is stored on this date) -> `{ ok: true, values: { metricId, value }[], filled, removed }

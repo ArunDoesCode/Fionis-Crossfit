@@ -1,10 +1,10 @@
 // Spec: docs/specs/member-records/auth.md BR-REC-39 — opening any page without a sign-in goes to Login, then
 // back to the page asked for; `next` must be a path inside the app, otherwise Home.
 //   `/admin/members/42` -> Login -> `/admin/members/42`;  `next=https://evil.com` -> Home.
-// Interface: .pipeline/member-records-auth/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/auth.md —
 //   `safeNextPath(raw: string | null | undefined): string` in `@/lib/auth/safeNextPath`: returns `raw` when it
 //   is a path inside the app (starts with one `/`, not `//` or `/\`, no scheme); otherwise `/admin`.
-// Home for the admin app is `/admin` (contract: "Signed in on /login -> /admin").
+// Home for the admin app is `/admin` (auth.md BR-REC-42: signed in on /login -> /admin).
 import { beforeAll, describe, expect, test } from 'bun:test';
 
 type SafeNextPath = typeof import('@/lib/auth/safeNextPath').safeNextPath;

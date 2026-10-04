@@ -1,7 +1,7 @@
 // Spec: docs/specs/member-records.md, index "Parallel build plan" row 0 ("full `API_ROUTES`") and
 // "Contract files that must exist before streams A–F start" (`frontend/src/lib/api/routes.ts`);
 // endpoint list E01–E40: docs/specs/member-records/api-contract.md.
-// Interface: .pipeline/member-records-foundation/contract.md, "Frontend shared modules" (lib/api/routes.ts):
+// Interface: docs/specs/member-records/api-contract.md, endpoint table (lib/api/routes.ts):
 // a nested `as const` object whose leaves are path templates relative to `/api`, `:param` placeholders
 // spelled exactly as in `backend/.contracts/api-manifest.json`, one leaf per manifest route (E01–E40 + health).
 import { describe, expect, test } from 'bun:test';

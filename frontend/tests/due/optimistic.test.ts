@@ -4,7 +4,7 @@
 //   BR-REC-100 "Assess soon" and "Remind me later" replace each other; either can be cleared.
 //   BR-REC-18  Assess soon puts a member + assessment in Overdue; a reminder hides the row.
 //   C13 / perf tactic 8: Assess soon, Remind me later and remove change the lists at once.
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/optimistic`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/optimistic`:
 //   `sortDueRows(rows)`: flagged first -> `dueOn` ascending -> `fullName.toLowerCase()` ascending (code-unit
 //     order) -> keep the given order for ties (stable).
 //   `applyDueChange(list, change, tab)`: `snooze` -> the row is removed; `flag` -> in `overdue` the row gets

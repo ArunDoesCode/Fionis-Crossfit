@@ -5,7 +5,7 @@
 //   P10        E39 sends the attachment headers before reading the rows; "S18 first makes sure the sign-in is fresh
 //              (one E05 call), then starts a plain browser download".
 //   S18        three rows Members / Memberships / Measurements, each [Download CSV].
-// Interface: .pipeline/member-records-progress/contract.md "Admin app" (S18) and "Admin app interfaces" —
+// Interface: docs/specs/member-records/progress.md (S18) —
 //   `@/lib/api/progress/fetchers`: `exportHref(file)` = `NEXT_PUBLIC_API_URL` + `/exports/<file>`
 //   (`/api/exports/members.csv`); `downloadExport(file)`: one E05 call (GET /api/auth/me) through `api`
 //   (refreshes the sign-in when needed), then a plain browser download of the E39 URL (hidden

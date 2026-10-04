@@ -5,7 +5,7 @@
 //   BR-REC-58 — saving a membership period that covers today restores an archived member; the S9 sheet then says
 //               "Renewing brings Surya back to the list."; a period that does not cover today (an old binder
 //               entry, or one that starts later) never does.
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/renew`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/renew`:
 //   `renewDefaults(periods)` -> { plan, startOn } from the latest period by `startOn`;
 //   `renewRestoresMember(archived, period, today)`.
 import { beforeAll, describe, expect, test } from 'bun:test';

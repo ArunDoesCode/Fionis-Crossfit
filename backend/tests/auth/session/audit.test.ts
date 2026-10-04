@@ -2,7 +2,7 @@
 // sign out all, password change, stolen-token signal) with time, network address and device type,
 // never the password. Action names: `auth.login`, `auth.login_failed`, `auth.locked`, `auth.unlock`,
 // `auth.logout`, `auth.logout_all`, `auth.password_changed`, `auth.token_reuse`.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

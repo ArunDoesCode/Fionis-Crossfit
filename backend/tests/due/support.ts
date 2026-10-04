@@ -69,7 +69,7 @@ export function todayIn(timeZone: string): IsoDate {
   }).format(new Date());
 }
 
-// ─── response shapes (contract.md "Response shapes") ────────────────────────
+// ─── response shapes (docs/specs/member-records/due-list.md) ────────────────
 
 export type DueItemOut = { metricId: string; name: string };
 

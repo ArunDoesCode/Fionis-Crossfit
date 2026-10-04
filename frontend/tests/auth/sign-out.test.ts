@@ -1,7 +1,7 @@
 // Spec: docs/specs/member-records/auth.md BR-REC-35 — "Sign out" ends this device's sign-in and clears the
 // app's cached data; "Sign out all devices" ends every sign-in, this one too.
 //   Sign out -> back button shows Login, not member data. Check: `queryClient.clear()` called.
-// Interface: .pipeline/member-records-auth/contract.md "Admin app interfaces" — `@/lib/auth/signOut`:
+// Interface: docs/specs/member-records/auth.md — `@/lib/auth/signOut`:
 //   `signOutDevice(queryClient)` POST E03 `/api/auth/logout`; `signOutAllDevices(queryClient)` POST E04
 //   `/api/auth/logout-all`; on success `queryClient.clear()` and then browser navigation to `/login`
 //   (`window.location`, not the router); on failure no clear, the error is thrown.

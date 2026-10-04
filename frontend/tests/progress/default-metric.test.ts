@@ -2,7 +2,7 @@
 //   BR-REC-111 "pick a measurement (default Body fat)".
 //   P11        Default measurement: the first measurement that is on whose name starts with "Body fat" (any case),
 //              else the first one that is on. The measurement list shows measurements that are on.
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/filters`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/filters`:
 //   `pickDefaultMetricId(catalog)`; `catalog` = E09 items (assessments with `metrics[]`, as returned, already in
 //   setup order). Among measurements with `isActive` whose assessment `isActive`: the first whose name starts with
 //   "body fat" (case-insensitive, after trimming), else the first; `null` when none.

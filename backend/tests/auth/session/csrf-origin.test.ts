@@ -1,7 +1,7 @@
 // BR-REC-37 — a write request (POST, PUT, PATCH, DELETE) whose `Origin` header is not the app's
 // address is refused 403 CSRF_ORIGIN; GET requests never change data and are never refused for it.
 // Order of checks (contract): Origin first, then auth, validation, rate limit, handler.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

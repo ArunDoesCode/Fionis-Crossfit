@@ -3,8 +3,8 @@
 //              `/admin/members/[memberId]/assess?type=<typeId>`); "Open member" is `/admin/members/[memberId]`.
 //   BR-REC-101 / C11 "See all" opens S3 `/admin/due?tab=overdue` or `?tab=soon`.
 //   BR-REC-104 S3 `/admin/due?tab=overdue|soon&type=` — the assessment filter is the `type` param.
-//   Naming (contract "Conventions"): the E31 query value is `upcoming`; the S3 URL tab is `soon`.
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/links`:
+//   Naming (due-list.md, C11): the E31 query value is `upcoming`; the S3 URL tab is `soon`.
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/links`:
 //   `recordHref(memberId, typeId)`, `dueListHref(tab, typeId?)`, `tabToStatus(tab)`.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { MEMBER_SURYA, TYPE_BODY, TYPE_FITNESS } from './helpers';

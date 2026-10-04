@@ -2,7 +2,7 @@
 //   BR-REC-48 — an age under 10 or over 100 shows "Please check the date" but can be saved (a warning, never an
 //               error); DOB 1920 -> warning.
 //   BR-REC-03 — age is computed from the date of birth (1982-05-10 -> 44 on 2026-10-03).
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/dateWarning`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/dateWarning`:
 //   `birthDateWarning(dateOfBirth, today)`: age (`ageOn`) under 10 or over 100 -> "Please check the date", else null.
 import { beforeAll, describe, expect, test } from 'bun:test';
 

@@ -3,7 +3,7 @@
 //   BR-REC-46 — a phone is 10-15 digits after removing spaces, dashes and brackets (a leading + is
 //               allowed); two phones are "the same" when their last 10 digits match
 //               ("+91 98450-12345" = "9845012345").
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/validators/members`:
+// Interface: docs/specs/member-records/members.md — `@/lib/validators/members`:
 //   `normalizeName(raw)`, `cleanPhone(raw)` (cleaned string or null), `samePhone(a, b)`.
 import { beforeAll, describe, expect, test } from 'bun:test';
 

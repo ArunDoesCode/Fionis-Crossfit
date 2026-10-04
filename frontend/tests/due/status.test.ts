@@ -9,7 +9,7 @@
 //   BR-REC-125 status is never colour alone: every badge has words (+ a tone that picks colour and icon).
 //   BR-REC-126 no technical words on screen ("flag", "snooze", "metric", "upcoming", "interval").
 //   BR-REC-127 formats: "3 Oct 2026" with the year left out when it is this year; "Due tomorrow".
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/status`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/status`:
 //   `dueRowStatus({ flagged, daysOverdue })`, `memberDueStatus(item, today)`, `emptyDueLine(tab)`.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import {

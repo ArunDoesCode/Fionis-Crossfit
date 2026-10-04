@@ -4,7 +4,7 @@
 //   C13 / perf tactic 8  Assess soon, Remind me later and remove change the lists at once, and are undone with a toast
 //              if the call fails; success toasts: "Marked Assess soon." / "Reminder set for 3 Nov." / "Removed.".
 //   BR-REC-128 a failed call shows one plain sentence for the server code (`messageForCode`).
-// Interface: contract "Admin app interfaces" -> `@/lib/api/due/queries` (write hooks):
+// Interface: docs/specs/member-records/due-list.md -> `@/lib/api/due/queries` (write hooks):
 //   `useSetDueAction().mutate({ memberId, typeId, action: 'flag' } | { memberId, typeId, action: 'snooze', until })`
 //   calls `putDueAction`; `useClearDueAction().mutate({ memberId, typeId })` calls `deleteDueAction`.
 //   Cached E31 data keeps the envelope `{ data: DueListItem[], meta }` (the infinite query holds `pages` of it);

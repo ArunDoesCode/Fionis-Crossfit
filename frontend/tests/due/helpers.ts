@@ -1,6 +1,6 @@
 // Shared fixtures for the due-list admin tests (docs/specs/member-records/due-list.md v2).
-// Shapes are the contract's: .pipeline/member-records-due-list/contract.md "Response shapes" (E31 `DueListItem`,
-// E32 `MemberDueItem`) and "Admin app interfaces" (`DueChange`). They are written out here so the tests do not
+// Shapes are the spec's: docs/specs/member-records/due-list.md (E31 `DueListItem`,
+// E32 `MemberDueItem`, `DueChange`). They are written out here so the tests do not
 // depend on where the app keeps its own copies of the types.
 
 /** The spec's worked-example day: "today 2026-10-03" (due-list.md, Due examples). */
@@ -41,7 +41,7 @@ export interface MemberDueItem {
   items: DueItem[];
 }
 
-/** "Admin app interfaces" -> `lib/due/optimistic.ts`. */
+/** docs/specs/member-records/due-list.md -> `lib/due/optimistic.ts`. */
 export interface DueChange {
   memberId: string;
   typeId: string;

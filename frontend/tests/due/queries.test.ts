@@ -4,10 +4,10 @@
 //   BR-REC-101 / C11  Home asks E31 with `pageSize=5` per section and shows `meta.total` as the count.
 //   BR-REC-104 / C11  S3 loads 25 per page; the filter sets `typeId`; E31 `status` is `overdue` | `upcoming`.
 //   BR-REC-131 a part that fails to load fails on its own (the query rejects; nothing half-valid is returned).
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/api/due/queries`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/api/due/queries`:
 //   `dueKeys` (`all: ['due']`, `list(status, typeId, pageSize)`, `infinite(status, typeId)`, `member(memberId)`),
 //   `dueListQueryOptions(status, typeId, pageSize)`, `memberDueQueryOptions(memberId)`; all due queries `staleTime: 0`.
-//   E31 = GET /api/due?status=&typeId=&page=&pageSize=; E32 = GET /api/members/:memberId/due (contract "Endpoints").
+//   E31 = GET /api/due?status=&typeId=&page=&pageSize=; E32 = GET /api/members/:memberId/due (due-list.md).
 //   The tests drive the options through a real `QueryClient` and a stubbed `fetch`; the fetchers' own names and
 //   signatures are not used.
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';

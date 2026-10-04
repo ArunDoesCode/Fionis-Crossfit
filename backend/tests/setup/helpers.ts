@@ -81,7 +81,7 @@ export const PATH = {
 };
 
 // ---------------------------------------------------------------------------
-// Response shapes (contract.md "Response shapes")
+// Response shapes (docs/specs/member-records/setup.md)
 
 export type MetricOut = {
   id: string;

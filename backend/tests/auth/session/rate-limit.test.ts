@@ -3,7 +3,7 @@
 // the right), never from what the browser sent.
 // Each scenario runs in a fresh server process (empty limiter, chosen TRUST_PROXY_HOPS), so it is
 // neither affected by nor affecting the other tests' requests.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

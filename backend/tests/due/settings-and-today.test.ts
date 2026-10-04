@@ -11,8 +11,8 @@ import {
   useDueSuite,
 } from "./support";
 
-// "Today" and "Due soon days" come from Setup, read per request (BR-REC-93, 96; contract "All four
-// endpoints"): the gym's time zone decides today, `upcomingLeadDays` the window, and with no
+// "Today" and "Due soon days" come from Setup, read per request (BR-REC-93, 96;
+// docs/specs/member-records/due-list.md): the gym's time zone decides today, `upcomingLeadDays` the window, and with no
 // settings row the Setup defaults (Asia/Kolkata, 7 days) apply.
 
 const s = useDueSuite();

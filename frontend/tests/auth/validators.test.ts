@@ -5,7 +5,7 @@
 //               129 characters -> "Use at most 128 characters".
 //   BR-REC-01 — the login form takes username 1-64, password 1-128 (a short or wrong password is a normal
 //               sign-in try, answered by the server, never a form error).
-// Interface: .pipeline/member-records-auth/contract.md "Admin app interfaces" — `@/lib/validators/auth`:
+// Interface: docs/specs/member-records/auth.md — `@/lib/validators/auth`:
 //   `loginSchema` (username 1-64, password 1-128, remember boolean), `changePasswordSchema`
 //   (currentPassword 1-128, newPassword 8-128), `PASSWORD_MIN_LENGTH = 8`, `PASSWORD_MAX_LENGTH = 128`.
 //   Zod schemas: tested only through `safeParse` and the issues it reports.

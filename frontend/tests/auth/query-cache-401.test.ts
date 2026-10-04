@@ -1,6 +1,6 @@
 // Spec: docs/specs/member-records/auth.md BR-REC-41 — when the refresh has failed (the 401 reaches the
 // app), the app "opens Login with the current page as `next`"; one global 401 handler in the query cache
-// ("How it is built → App"; contract "Admin app → Fetch wrapper").
+// ("How it is built → App").
 // Interface: `getQueryClient()` from `@/lib/queryClient` (existing export) and `ApiError`.
 // ASSUMPTION (not fixed by the spec): the handler opens Login by browser navigation, i.e. through
 // `window.location` (assign, replace or href). The test records all three. A handler that navigates in
@@ -141,8 +141,8 @@ describe('BR-REC-41 only a 401 opens Login', () => {
 
 // Spec v2 (review R-4), BR-REC-42: Login is shown even though an access cookie is still present when
 // "the app just sent the device there because its sign-in ended (BR-REC-41)". The page guard recognises that
-// hand-over by `reason=expired` on the Login address (contract: "Signed in on /login -> /admin, except
-// /login?reason=expired"). So the address the 401 handler opens must carry it, or a cookie the API keeps
+// hand-over by `reason=expired` on the Login address (auth.md BR-REC-42 v2: signed in on /login -> /admin, except
+// /login?reason=expired). So the address the 401 handler opens must carry it, or a cookie the API keeps
 // refusing bounces Login <-> /admin forever.
 describe('BR-REC-42 v2 the address opened after a failed refresh tells the page guard why', () => {
   test('BR-REC-42 a 401 UNAUTHORIZED opens /login with reason=expired and still the page as next', async () => {
