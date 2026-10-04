@@ -14,7 +14,8 @@
 //     message: string | null }`: date > today -> `future` with the dictionary text of `DATE_IN_FUTURE`
 //     (`messageForCode`); date < joinedOn -> `before_join` "This is before <first word of the name> joined
 //     (<formatDay(joinedOn, today)>)"; a future date wins over before-join.
-//   `savedMessage(count, memberName)` "Saved 9 results for Surya" / "Saved 1 result for Surya";
+//   `savedMessage(count, memberName)` "Saved 9 results for Surya" / "Saved 1 result for Surya" (the first word of
+//     `memberName`, as `entryDateIssue`: "Surya Pratap" -> "Surya");
 //   `resultCountLabel(count)` "15 results" / "1 result".
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { formatDay } from '@/lib/format';
@@ -265,6 +266,28 @@ describe('BR-REC-84 savedMessage', () => {
     [1, 'Surya', 'Saved 1 result for Surya'], // singular
   ])('BR-REC-84 savedMessage(%d, "%s") is "%s"', (count, name, expected) => {
     expect(labels.savedMessage(count, name)).toBe(expected);
+  });
+
+  // Contract: the first word of the member name, as in `entryDateIssue` ("Surya Pratap" -> "Surya").
+  test.each([
+    [9, 'Surya Pratap', 'Saved 9 results for Surya'], // spec example with a full name
+    [1, 'Surya Pratap', 'Saved 1 result for Surya'],
+    [15, 'Meera Devi Nair', 'Saved 15 results for Meera'],
+    [2, 'Anil Kumar', 'Saved 2 results for Anil'],
+  ])('BR-REC-84 savedMessage(%d, "%s") uses the first word: "%s"', (count, name, expected) => {
+    expect(labels.savedMessage(count, name)).toBe(expected);
+  });
+
+  test('BR-REC-84 savedMessage and entryDateIssue name the member the same way', () => {
+    const name = 'Surya Pratap';
+    const joined = labels.entryDateIssue({
+      date: '2025-05-31',
+      today: TODAY,
+      joinedOn: '2025-06-01',
+      memberName: name,
+    }).message;
+    expect(joined).toContain('Surya joined');
+    expect(labels.savedMessage(3, name)).toBe('Saved 3 results for Surya');
   });
 });
 

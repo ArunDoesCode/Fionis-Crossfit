@@ -5,7 +5,8 @@
 // Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
 //   `@/lib/assessments/parseNumber`: `parseNumberText(text, decimals)` -> `{ kind: 'empty' } |
 //   { kind: 'ok', value } | { kind: 'invalid' }`; rounds half away from zero on the decimal digits of the text
-//   (not through binary floats); never returns -0; an absolute value above 999,999,999.999 is invalid.
+//   (not through binary floats); never returns -0; the ROUNDED value's absolute value above 999,999,999.999 is
+//   invalid ("999999999.6"@0 -> invalid, the same rule as the server, D3).
 import { beforeAll, describe, expect, test } from 'bun:test';
 
 type Decimals = 0 | 1 | 2;
@@ -199,4 +200,40 @@ describe('BR-REC-76 parseNumberText: the size limit is 999,999,999.999 either wa
       expect(parser.parseNumberText(text, decimals)).toEqual({ kind: 'invalid' });
     }
   });
+});
+
+describe('BR-REC-76 / D3 the size limit is on the rounded value (same rule as the server)', () => {
+  test.each([
+    ['999999999.6', 0], // contract example: rounds to 1,000,000,000
+    ['999999999.5', 0], // a half goes away from zero, past the limit
+    ['-999999999.6', 0],
+    ['-999999999.5', 0],
+    ['999999999.95', 1],
+    ['-999999999.95', 1],
+    ['999999999.999', 1],
+    ['999999999.999', 2],
+    ['999999999.995', 2],
+    ['-999999999.995', 2],
+  ] as const)(
+    'D3 parseNumberText(%j, %d decimals) is invalid (it rounds past 999,999,999.999)',
+    (text, decimals) => {
+      expect(parser.parseNumberText(text, decimals)).toEqual({ kind: 'invalid' });
+    },
+  );
+
+  test.each([
+    ['999999999.4', 0, 999999999],
+    ['999999999.499', 0, 999999999],
+    ['-999999999.4', 0, -999999999],
+    ['999999999.94', 1, 999999999.9],
+    ['-999999999.94', 1, -999999999.9],
+    ['999999999.984', 2, 999999999.98],
+    ['999999999.99', 2, 999999999.99],
+    ['-999999999.99', 2, -999999999.99],
+  ] as const)(
+    'D3 parseNumberText(%j, %d decimals) is ok %d (it rounds to within the limit)',
+    (text, decimals, value) => {
+      expect(parser.parseNumberText(text, decimals)).toEqual({ kind: 'ok', value });
+    },
+  );
 });
