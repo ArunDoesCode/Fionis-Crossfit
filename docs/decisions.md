@@ -134,3 +134,17 @@ the visitor's `X-Forwarded-For` and `User-Agent`, so limits and the change log s
 defaults to 0 (one shared bucket, fails closed) and is 1 on the D-018 server. (4) Auth owns the unlisted files
 `lib/env.ts`, `.env.example`, `package.json`, `lib/http.ts`, `client.ts`, `queryClient.ts` (user decision). Rejected:
 waiting for the M0 PR (idle hours), rotating again inside the grace (cookie-order race), a new `APP_ORIGIN` frontend env var.
+
+**D-021 · 2026-10-04 · member-records members (Stream B) build choices: own settings read, per-member row lock, join-date rule, lazy sheets, tests grouped by surface.**
+(1) The members repository reads `gym_settings` (time zone, `expiry_lead_days`) per request itself, so Stream B does not depend on
+Stream C's code. (2) Period writes (E22, E23) and a changed join date (E19) take `select … for update` on the member row first,
+then check overlap / join date: parallel renewals cannot overlap (BR-REC-09; there is no database constraint, data-model v2).
+(3) E19 refuses a join date after any membership start only when the join date changes (keeps BR-REC-50/55 true both ways).
+(4) E16 name order uses `lower(full_name) COLLATE "C"` (word by word); Stream 0's name index does not serve it, fine for ~1,000
+members, to be measured by `bench` in Stream G. (5) The member page lists every membership, also a single one, so a typo in
+the first plan can be corrected. (6) Renew / edit sheet and archive confirm load on demand (own `sheetLoader` + `useLazySheet`, one `import()` per sheet,
+retry after a failed load) to stay under the bundle budget (tactic 4); server-side data start (tactic 1) is decided once for all streams in Stream G (#20). (7) Admin
+"today" = the device's time zone (gym and phones share one); the server stays authoritative.
+Why: found while building; each keeps the spec's rules true without a shared-file change. Rejected: a database exclusion
+constraint (hand SQL, D-019), caching settings (breaks a lead-days change), Stream-B-only HydrationBoundary (inconsistent).
+

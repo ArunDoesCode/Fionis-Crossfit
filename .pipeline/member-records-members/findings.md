@@ -23,3 +23,10 @@ Review round 2 — minors:
 | R-11 | minor | spec/test | api-contract E16 row said 2+; no test for 101 characters | row fixed (docs); regression tests by test-writer (backend 100/101, admin clamp) |
 
 Fix round 2 is the last (max 2 iterations); then test-runner + a focused review of the fix diff.
+
+Fix round 2 (90c696f test, 06f55f1 fix): R-8, R-9, R-10, R-11 closed. Review round 3: READY (0 blocker, 0 major) + test-runner green
+(backend 1281, frontend 1073, contract/types current, bundle did not grow). Round 3 minors: R-12 (spec changelog, Implementation status row,
+D-021 wording) fixed in the docs commit; R-13 (checklist lines for lazy sheets, 100-char search) added by test-writer. Not unit-tested:
+`sheetLoader` (pure promise cache with failure reset; exercised by the reviewer's and dev's throwaway scripts and the manual checklist).
+Rejected / deferred: R-5 → #20.
+

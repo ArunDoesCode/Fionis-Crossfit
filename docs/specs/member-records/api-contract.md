@@ -68,10 +68,10 @@ Errors column lists codes beyond `VALIDATION_ERROR` (400) and `UNAUTHORIZED` (40
 | E13 | POST `/api/assessment-types/:typeId/metrics` | setup | metric fields (see E09) | metric | 404, 409 `NAME_TAKEN` |
 | E14 | PATCH `/api/metrics/:metricId` | setup | any metric field + `isActive` | metric | 404, 409 `NAME_TAKEN`, 409 `METRIC_LOCKED` |
 | E15 | PUT `/api/assessment-types/:typeId/metric-order` | setup | `{ metricIds[] }` | `{}` | 404 |
-| E16 | GET `/api/members` | members | `q` (2+ chars), `phone` (last-10-digit match), `status` (active·expiring·expired·archived·any; without it archived are left out), page, pageSize, `sortBy` (name·joinedOn·lastAssessedOn), sortDir | list `{ id, fullName, phone, lastAssessedOn, archivedAt, membership{ status, plan, endOn, daysLeft } }` | — |
+| E16 | GET `/api/members` | members | `q` (2–100 chars), `phone` (last-10-digit match), `status` (active·expiring·expired·archived·any; without it archived are left out), page, pageSize, `sortBy` (name·joinedOn·lastAssessedOn), sortDir | list `{ id, fullName, phone, lastAssessedOn, archivedAt, membership{ status, plan, endOn, daysLeft } }` | — |
 | E17 | POST `/api/members` | members | member fields + `firstPeriod{ plan, startOn }`; header `Idempotency-Key` | member (as E18) | 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN`, `IDEMPOTENCY_KEY_MISSING`; 422 `IDEMPOTENCY_KEY_REUSED` |
 | E18 | GET `/api/members/:memberId` | members | — | `{ id, fullName, phone, email, dateOfBirth, age, sex, joinedOn, objective, notes, archivedAt, membership{ status, plan, startOn, endOn, daysLeft }, periods[{ id, plan, startOn, endOn }] }` | 404 |
-| E19 | PATCH `/api/members/:memberId` | members | any member field (archived members too) | member | 404, 400 `DATE_IN_FUTURE` |
+| E19 | PATCH `/api/members/:memberId` | members | any member field (archived members too) | member | 404, 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN` (join date after a membership start) |
 | E20 | POST `/api/members/:memberId/archive` | members | — | member | 404 |
 | E21 | POST `/api/members/:memberId/restore` | members | — | member | 404 |
 | E22 | POST `/api/members/:memberId/periods` | members | `{ plan, startOn }`; header `Idempotency-Key` | period + `memberRestored` | 404, 409 `PERIOD_OVERLAP`, 400 `START_BEFORE_JOIN` |
@@ -128,3 +128,5 @@ Cursor/keyset pagination (performance.md), public API keys, webhooks, a change-l
   E17, E22; E40 204; `VALIDATION_ERROR` carries `details.issues[{ path, message }]`; endpoints not built yet answer
   501 `NOT_IMPLEMENTED` (temporary, D-019). E39 CSV is streamed and not gzip-compressed by the API (BR-REC-147
   first byte; the HTTPS front may compress). No rule changed.
+- 2026-10-04 v1 — clarified during build (Stream B; no rule changed): E19 can answer 400 `START_BEFORE_JOIN` (changed join date
+  after a membership start); E16 `q` is 2–100 characters; E16 `sortBy` defaults to `name`.

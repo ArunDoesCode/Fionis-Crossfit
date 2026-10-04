@@ -1,8 +1,8 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: c6fcdda
-last_verified_on: 2026-10-03
+last_verified_commit: 06f55f1
+last_verified_on: 2026-10-04
 depends_on: []
 ---
 
@@ -18,6 +18,8 @@ their own files (ownership: spec index → "Shared files"). Working copies per s
 Stream 0 choices: D-019. Run notes: `.pipeline/member-records-foundation/` (plan, contract, findings, screens, checklist).
 Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), Account (S17); choices D-020; run notes
 `.pipeline/member-records-auth/` (plan, contract incl. admin interfaces, findings, screens, checklist).
+Stream B (members) is built: E16–E24, S4–S9, Home search + membership sections, member header + membership block, archived/ended
+banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -39,7 +41,9 @@ Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), 
 | auth (A) backend | `backend/src/{routes,controller,service,repository}/auth*`, `service/authLock.ts` (pure lock rules), `scripts/bootstrap-admin.ts` | `authService.{login,refresh,logout,logoutAll,me,changePassword,createAccount,resetPassword,unlock}(…, meta, now)`, `authRepository.{lockForUpdate,rotateSession,touchSession,…}` |
 | auth (A) libs | `backend/src/lib/{token,http,auth-middleware,rate-limiter}.ts` | `signAccessToken` (iss/aud pinned), `generateRefreshToken`, `hashRefreshToken` (HMAC hex); `setAccessCookie`, `setRefreshCookie(c, token, remember)`, `clearAuthCookies`, `clientAddress` (`TRUST_PROXY_HOPS`), `deviceLabel`; `readAccessToken`; `rateLimiter({windowMs,max})` |
 | auth (A) admin | `frontend/src/proxy.ts`, `lib/auth/{safeNextPath,loginError,loginUrl,signOut}.ts`, `lib/validators/auth.ts`, `lib/api/auth/{fetchers,queries}.ts`, `components/{views,pages}/auth/*`, `app/(auth)/login`, `app/(app)/admin/settings/account` | page guard + server E02; `useMe`, `useLogin`, `useChangePassword`, `useSignOut(All)`; `authKeys.me()`; global 401 handler in `lib/queryClient.ts` |
-| slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
+| members (B) backend | `backend/src/{controller,service,repository}/{members,memberships}*`, `service/{membersView,membershipsRules}.ts`, `repository/membersSql.ts` | `membersService.{list,create,get,update,archive,restore,restoreInTransaction}`, `membershipsService.{add,update,ending}`; pure `periodsOverlap`, `coversDay`, `restoresMember`, `RECENTLY_ENDED_DAYS`; `statusCondition()` (SQL twin of `membershipStatus`); field rules + `cleanPhone`/`phoneDigits` in `types/members.types.ts` |
+| members (B) admin | `frontend/src/{lib/validators/members.ts,lib/members/**,lib/api/members/**,components/{views,pages}/members/**}`, routes `app/(app)/admin/{members,memberships}/**` | pure: `memberFormSchema`, `cleanPhone`, `samePhone`, `membershipStatusText`, `memberListBadge`, `memberBannerText`, `renewDefaults`, `renewRestoresMember`, `duplicatePhoneMatches`; hooks `useMemberList` (25/page), `useMember`, `useSavePeriod`, `useEndingList/Preview`; keys `memberKeys` `['members']`, `membershipKeys` `['memberships']`; `PeriodSheetLazy` + `useLazySheet`; `clampSearchText` (E16 `q` ≤ 100) |
+| slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B, filled), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B, filled), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
 Tables: data-model.md v2 (no hand SQL, no extensions, no exclusion constraint — overlap is the BR-REC-09 service
@@ -51,7 +55,7 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 (local only, adds 1,000 members; run `db:reset` first) · `bun run db:reset` (push + seed) · `SEED_PERF_FULL=1 bun test tests/scripts/seed-perf.test.ts` (full 1,000 run; default tests use 100).
 
 ## Starting a stream session (D-017)
-Remaining streams, in order: setup + members (M2) → assessments, due-list, progress (M3) → performance (M4). Each is
+Remaining streams, in order: setup (M2; members built) → assessments, due-list, progress (M3) → performance (M4). Each is
 one new desktop-app session on this repo with the worktree option on and Opus, started from fresh `main` once the
 previous merge point is merged (check `docs/specs/member-records/` exists in the new session).
 Before: Postgres is started once (`docker compose up -d` in `backend/`, never from a second worktree); create
@@ -88,12 +92,24 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Live server tests: `backend/tests/auth/signin` spawns the real API (`bun --no-env-file src/index.ts`); do not run two auth suites at once on one DB (one-row tables).
 - Theme follows the device (`defaultTheme="system"`); Settings (C) must render `ThemeToggle` for the manual choice.
 
+- Members (B): every write to one member takes `select … for update` on its row first (`membersRepository.lockById`); overlap, join-date and restore checks run after it. Idempotency and the settings read happen outside the transaction; refusals throw before the first write.
+- Members (B): gym "today" and `expiry_lead_days` are read from `gym_settings` per request (no cache); a missing row falls back to Asia/Kolkata / 14. E16 status filters are SQL (`membersSql.statusCondition`) — change `lib/domain/membership.ts` and it together. E16 name order is `lower(full_name) COLLATE "C"` (word by word); `members_name_active_idx` does not serve it (bench in G).
+- Members (B): `phone` is stored cleaned (`+919845012345`), `phone_digits` digits only; `phone` filter and "same phone" compare the last 10 digits. In a query string a bare `+` becomes a space: send `%2B`.
+- Members (B): zod transforms in request schemas: a bare `.transform()` shows `unrepresentable` in the manifest; use `.trim()`/`.overwrite()` or `…nullable().transform(fn).pipe(z.x().nullable())`. `Idempotency-Key` is checked before the handler (E22 unknown member without the header is 400, not 404).
+- Members (B) admin: `useToday()` has a server snapshot (UTC day): never take form defaults from it — `AfterHydration` draws S6 in the browser only. `memberFormSchema` object-level checks need `.refine(…, { when: () => true })` or zod skips them once a field fails. `ChoiceChips` cannot un-choose (Goal has a "Not set" chip). `ApiError.body.details.field` carries the field.
+- Members (B) admin: sheets not needed at first paint (`PeriodSheet`, `ConfirmSheet` in Archive) load through `lib/members/useLazySheet.ts`: `sheetLoader(() => import(…))` = ONE `import()` site per sheet (a second site makes Turbopack emit a second chunk copy) with a cache that resets on failure (`React.lazy`/`next/dynamic` keep a rejected load forever); the sheet mounts CLOSED and opens one frame later (Base UI skips the open animation for a sheet that mounts open), stays mounted (unmounting calls `history.back()` via `useBackToClose` and loses the exit animation); a failed load toasts "Couldn't load this. Try again." and the next tap retries. Keep `useForm` inside the sheet children. Renew pointer-down/focus preloads the chunk and `prefetchMember`s the detail. Biome rejects `onPointerDown` on a div: native listeners via ref (`MembershipHistory`).
+- Members (B) admin: list/search requests forward the abort signal; idempotency key reused only while the JSON body is identical (a changed body with the same key is 422); `crypto.randomUUID` needs a secure page, so `newIdempotencyKey` falls back to `getRandomValues`.
+
 ## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
 |---|---|---|
 | — | transient refresh failures (5xx, 429, network) sign the device out (R-3) | [#7](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/7) (A) |
 | — | page-guard refresh behind the HTTPS front: public origin + `TRUST_PROXY_HOPS=1` check (R-12) | [#8](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/8) (G) |
 | — | no component tests for Login / Account (no DOM test library) (R-13) | [#9](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/9) |
+| — | shared words, `START_BEFORE_JOIN` wording for Edit member, `DateField` onBlur/warning (members uses local stand-ins) | [#16](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/16) |
+| — | S5 desktop columns (phone, last assessment) not built; `ListRow` has no column slot | [#17](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/17) |
+| — | server-side data start (HydrationBoundary) used nowhere; decide once for all streams (tactic 1) | [#20](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/20) (G) |
+| — | `SignOutSection` (auth) still imports `ConfirmSheet` statically (bundle on `/admin/settings/account`) | G |
 | 13 | manifest / installable app | performance (G) |
 | — | idempotency answer outside the handler transaction | [#3](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/3) (B) |
 | — | ResponsiveSheet ships Drawer + Dialog + AlertDialog together (RV-11) | [#4](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/4) (G) |
@@ -144,7 +160,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | frontend libs | `frontend/tests/lib/{format,messages/errors}.test.ts` | 127, 128, 154 |
 | auth backend | `backend/tests/auth/signin/*` (live API child), `backend/tests/auth/session/*` (`createApp().request` + probe child) | 01, 02, 25–35, 37, 38, 43, 44, 171 |
 | auth admin | `frontend/tests/auth/{proxy,fetch-wrapper,query-cache-401,locked-line,login-error,safe-next-path,sign-out,validators}.test.ts` | 01, 02, 27, 29, 35, 38–42 |
-| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
+| members backend | `backend/tests/members/{field-rules,create-member,member-detail,update-member,archive-restore,add-period,edit-period,list-search,search-text-length,memberships-ending,membership-status}.test.ts` (+ `support/suite.ts`) | 03–09, 45–59, 172, 154–158 |
+| members admin | `frontend/tests/members/{validators-helpers,validators-forms,membership-text,banner,date-warning,renew,duplicates,search,search-clamp}.test.ts` | 03–05, 07, 45–50, 52, 54, 58, 59, 125, 134, 172 |
+| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-members/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, S4–S9, Home search/sections, real-server items |
 
 ## History
 | Date | PR / commit | Change |
@@ -153,3 +171,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | — | v2 answers folded (36 questions; D-017, D-018); benchmark moved here; tech notes added |
 | 2026-10-03 | Stream 0 branch `claude/member-records-foundation-57e849` | Foundation built (M0): schema, 40 routes (501), middleware, change log, domain maths, seeds, shell + slots; data-model v2 (no hand SQL); D-019; 2 review rounds (round 2 READY), issues #3–#6; 551 backend + 506 frontend tests |
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
+| 2026-10-04 | members branch `claude/member-records-feature-8fca5b` | Stream B built (from `main` 9244b2c): E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds, 2 fix rounds (2 major fixed: lazy sheets −58…−68 KB gz, history from one period; 9 minor fixed, 1 → #20); D-021; issues #16, #17, #20 |
