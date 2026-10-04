@@ -110,7 +110,6 @@ S18 Export data (`/admin/settings/export`): three rows — Members, Memberships,
 | P9 | 118 | The guard runs on every cell before quoting, numbers included: a cell starting with `=`, `+`, `-`, `@` or a tab gets a leading `'` (so a phone `+91…` and a negative value export as text). |
 | P10 | 119 | E39 sends `Content-Disposition: attachment; filename="<file>-<gym today>.csv"` and the CSV headers before reading the rows, then streams rows in batches. S18 first makes sure the sign-in is fresh (one E05 call), then starts a plain browser download. |
 | P11 | 111 | S13 URL keys: `metric`, `joinedFrom`, `joinedTo` (YYYY-MM), `plan`, `sex`, `age` (an age-band code); unknown values are ignored. Default measurement: the first measurement that is on whose name starts with "Body fat" (any case), else the first one that is on. The measurement list shows measurements that are on. |
-
 | P12 | 108 | Two assessments with table values on the same date: the one earlier in setup order wins. |
 | P13 | 117 | CSV `display` for a time of 1 h or more follows `formatDuration`: 3930 s → "1:05:30"; under 1 h → "m:ss" ("2:02"). |
 | P14 | 118 | The guard characters are ASCII: `=`, `+`, `-` (hyphen-minus), `@`, tab. The "−" in the BR-REC-118 text is typography, not U+2212. |
@@ -128,6 +127,25 @@ and bars, comparing two members, CSV import.
 | Q2 | Age bands | **A** Under 30, 30–39, 40–49, 50+ / B 10-year bands from 20 | **B** → BR-REC-114 |
 | Q3 | Leaderboard length | **A** top 10 with "Show more" / B top 10 only / C top 3 | **A** |
 | Q4 | Report card covers | **A** all time / B the last 12 months | **A** |
+
+## Implementation status (2026-10-04, branch `claude/feature-f-progress-report-6c2bbe`)
+
+All 17 rules built (BR-REC-109 is a manual print check). Backend tests: `backend/tests/progress/` (`domain/*`, `csv`, `access`, `e35`…`e39`); admin tests: `frontend/tests/progress/`; manual: `.pipeline/member-records-progress/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 22 | `progress/domain/{best-and-summary,report-card}.test.ts`, `progress/e35-report-card.test.ts`; `frontend/tests/progress/value-text.test.ts` |
+| 23 | `progress/domain/progress-stats.test.ts`, `progress/e36-progress.test.ts`; `frontend/tests/progress/counts.test.ts` |
+| 24, 117, 118 | `progress/{csv,e39-export}.test.ts` |
+| 106, 107, 108 | `progress/{e35-report-card,domain/best-and-summary,domain/report-card}.test.ts`; `frontend/tests/progress/reading-date.test.ts` |
+| 109 | manual print check (Chrome Android + desktop): `.pipeline/member-records-progress/checklist.md` |
+| 110 | `progress/{e36-progress,e37-leaderboard,e38-active-by-plan}.test.ts` (write, then read); `frontend/tests/progress/queries.test.ts` (`staleTime: 0`) |
+| 111, 113 | `progress/e36-progress.test.ts`; `frontend/tests/progress/{filters,default-metric,counts}.test.ts` |
+| 112, 114 | `progress/domain/{progress-stats,age-band}.test.ts`, `progress/e36-progress.test.ts` |
+| 115, 116 | `progress/domain/leaderboard-and-plans.test.ts`, `progress/{e37-leaderboard,e38-active-by-plan}.test.ts` |
+| 119 | `progress/e39-export.test.ts` (30,000 values; the 300,000-value timing is Stream G's `bench`); `frontend/tests/progress/export.test.ts` |
+| 158, 159 (shared rules) | `progress/access.test.ts` (401 without a sign-in, no change-log row) |
+
+Open for the owner: confirm the build clarifications P1–P14 (P1 is the user's "no server cache" decision). Follow-ups: issues #26–#31.
 
 ## Changelog
 

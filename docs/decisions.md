@@ -148,3 +148,21 @@ retry after a failed load) to stay under the bundle budget (tactic 4); server-si
 Why: found while building; each keeps the spec's rules true without a shared-file change. Rejected: a database exclusion
 constraint (hand SQL, D-019), caching settings (breaks a lead-days change), Stream-B-only HydrationBoundary (inconsistent).
 
+**D-022 · 2026-10-04 · member-records progress (Stream F) build choices: no server cache, live reads, streamed CSV by member pages, own print styles, segmental as its own section.**
+(1) No server cache for gym progress and leaderboards (user decision: keep the MVP light): BR-REC-110 is met by reading the
+database on every call and by `staleTime: 0` in the admin; progress v2, performance BR-REC-147 loses "50 ms cached", tactic 19
+dropped. The writes that would have to clear a cache live in streams B and D (other sessions' files). Measured on the perf seed
+(1,000 members, 336,640 values): E35 ≈ 50 ms, E36 80–140 ms, E37 ≈ 110 ms, E38 ≈ 60 ms warm, all inside the budgets.
+(2) E36 is one grouped query (count, first and latest per member) joined to members and their latest period; E37 ranks the
+whole list with the pure `rankLeaderboard` and then cuts the page, so ranks continue across pages; E38 uses the pure
+`membershipStatus` (no second copy of the rule in SQL).
+(3) E39 sends the headers and the first chunk before any row is read, then reads keyset pages of members (measurements: 10
+members per batch) into a pull-based stream; no DB cursor (may not survive the Supabase transaction pooler) and no keyset on
+measurement rows (no index serves the CSV order).
+(4) The print layout is an inline `@media print` style that ships only with S12 and hides the shell by its `data-slot` marks:
+no edit of shared shell files or `globals.css`.
+(5) The segmental table is its own S12 section after the assessments (E35 carries no assessment id), not inside "Body
+composition" as the sketch draws it.
+(6) Build clarifications P2–P14 are in the progress spec (v2); the owner confirms them at merge.
+Why: each keeps the spec's rules true without a shared-file change. Rejected: a fingerprint cache or write hooks (touch other
+streams' code), a chart library (BR-REC-146), per-row CSV from one big query (re-sorts the table per batch).

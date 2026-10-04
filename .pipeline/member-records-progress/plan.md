@@ -28,13 +28,13 @@ folders), then backend-dev ∥ frontend-dev for all three slices; slices below a
 
 - [x] **0. Contract** — `types/progress.types.ts` (E35 `id`/`decimals`, segmental groups), route notes, `contract:generate`, `types:api`, `contract.md` — 998abff
 - [x] **Red tests** — backend `tests/progress/**` (41cec8b), frontend `tests/progress/**` (6ef6547)
-- [ ] **1. Report card** — BR-REC-22, 106, 107, 108, 109
+- [x] **1. Report card** — BR-REC-22, 106, 107, 108, 109
   - backend: E35, pure `reportCard` / `summariseReadings` / `bestReading`
   - admin: S12 — phone: one card per measurement; desktop + print: table; Print button; print layout (A4, shell hidden, black on white)
-- [ ] **2. Gym progress + leaderboards** — BR-REC-23, 110, 111, 112, 113, 114, 115, 116
+- [x] **2. Gym progress + leaderboards** — BR-REC-23, 110, 111, 112, 113, 114, 115, 116
   - backend: E36, E37, E38 (live, no cache), pure `progressStats`, `changeOutcome`, `ageBand`, `rankLeaderboard`, `countActiveByPlan`
   - admin: S13 — measurement picker, filters in the URL, average change + n / not counted, outcome bar, Male/Female leaderboard with "Show more", active by plan
-- [ ] **3. CSV export** — BR-REC-24, 117, 118, 119
+- [x] **3. CSV export** — BR-REC-24, 117, 118, 119
   - backend: E39 streamed CSV, pure helpers `service/progressCsv.ts`
   - admin: S18 — three rows with "Download CSV" (fresh sign-in first, then a plain browser download)
 
@@ -48,4 +48,6 @@ lint, `bun test` 1407 pass.
 - User decision 2026-10-04: no server cache (BR-REC-110 v2).
 
 ## Status
-Planning done; contract next.
+**Built and verified 2026-10-04; ready for hand-over** (user asks for the PR). Commits: spec v2 a18211c, a3b2867 · contract 998abff · tests 6ef6547 (admin), 41cec8b (backend) ·
+admin b972f7a · backend 11abe64 · fix round 1 (R-6, L-1, L-2) 0cd9595 · docs (this commit). Review: 1 round, 0 blocker, 1 major found by the live check (L-1 print, fixed), minors fixed or filed (#26–#31);
+see `findings.md`. Tests: backend 2226, frontend 1805 (baseline 1855 / 1407). Manual checklist: `checklist.md`. Open for the owner: confirm clarifications P1–P14 and decide O-1 (negative numbers in the CSV).

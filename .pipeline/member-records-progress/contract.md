@@ -1,6 +1,6 @@
 # member-records/progress · contract (E35–E39)
 
-Spec: `docs/specs/member-records/progress.md` v2 (rules + build clarifications P1–P11). Endpoint table: `api-contract.md`.
+Spec: `docs/specs/member-records/progress.md` v2 (rules + build clarifications P1–P14). Endpoint table: `api-contract.md`.
 Schemas: `backend/src/types/progress.types.ts` → `.contracts/openapi.json` → `frontend/src/types/api.generated.ts`.
 All five need a sign-in (401 `UNAUTHORIZED` without), are GET, write nothing and write no change-log row.
 
@@ -92,7 +92,7 @@ csvCell(value: string | number | boolean | null): string
   // then the guard (P9): text starting with = + - @ or a tab gets a leading '  ("-1.5" → "'-1.5", "+9198…" → "'+9198…");
   // then quoting: text with a comma, ", CR or LF → wrapped in "…" with inner " doubled ("a,b" → "\"a,b\"").
 csvLine(cells: (string | number | boolean | null)[]): string   // cells through csvCell, joined by ",", plus "\r\n"
-displayValue(value: number, datatype: "number" | "duration", decimals: 0 | 1 | 2): string   // 122 duration → "2:02"; 94 @1 → "94.0"
+displayValue(value: number, datatype: "number" | "duration", decimals: 0 | 1 | 2): string   // 122 duration → "2:02"; 3930 duration → "1:05:30" (P13, formatDuration); 94 @1 → "94.0"
 exportFileName(file: ExportFile, today: string): string        // ("measurements.csv", "2026-10-03") → "measurements-2026-10-03.csv"
 ```
 

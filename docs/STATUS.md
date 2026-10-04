@@ -3,13 +3,13 @@
 > Single entry point for "where are we and what's next". Updated by `/feature` (at phase changes and in
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
-**Updated:** 2026-10-04 · **Milestone:** member-records M1 done (Stream 0 #10 and auth #11 merged); M2 in progress: members (B) built and verified on its branch, setup (C) in its own session (`member/` skipped for the member-records MVP)
-**Next action:** open the members PR (`claude/member-records-feature-8fca5b`; checklist `.pipeline/member-records-members/checklist.md`), then after M2 start D assessments, E due-list, F progress as three sessions from fresh `main` (D-017; steps in the map → "Starting a stream session").
+**Updated:** 2026-10-04 · **Milestone:** member-records M2 merged (B #22, C #23); M3 in progress: progress (F) built and verified on its branch, assessments (D) and due-list (E) in their own sessions
+**Next action:** open the progress PR (`claude/feature-f-progress-report-6c2bbe`; checklist `.pipeline/member-records-progress/checklist.md`), then D and E merge in their sessions → M4: performance (G) + scenario test + owner/coach check.
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
 |---|---|---|---|---|
-| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v2: index + 10 sub-specs (data-model v2, auth v2, members v1 + build clarifications) | current (Stream 0 + auth + members) | partial: Stream 0 (M0) + auth (M1) on `main`; members (B) on its branch, PR next | C (M2, own session) → D, E, F (M3) → G (M4) |
+| member-records (assessment entry, overdue list, report card, gym progress, membership terms) | frozen v2: index + 10 sub-specs (data-model v2, auth v2, members v1 + build clarifications) | current (Stream 0 + auth + members) | partial: Stream 0, auth, members, setup on `main`; progress (F) on its branch, PR next | D, E (own sessions) → G (M4) |
 | auth-members (login, invites, roles, permissions) | none | — | none | M1 — `/spec auth-members` |
 | workouts (library, benchmarks, versions, timer config) | none | — | none | M1 |
 | sessions (templates, schedule, lifecycle state machine, jobs) | none | — | none | M1 |
@@ -30,8 +30,11 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 |---|---|---|---|---|
 | member-records/members (Stream B) | `claude/member-records-feature-8fca5b` | verified, ready for PR (review 3 rounds, 2 fix rounds, all checks green) | — | you: "open the PR" |
 | member-records/setup (Stream C) | `claude/member-records-setup-8ce4cb` | own session (not this one) | — | — |
+| member-records/progress (Stream F) | `claude/feature-f-progress-report-6c2bbe` | verified, ready for PR (1 review round, 0 blocker/major, 2 minors fixed, 6 → issues #26–#31) | — | you: "open the PR" |
 
 ## Waiting on you
+- [ ] Progress: say "open the PR"; run `.pipeline/member-records-progress/checklist.md` on a phone and do the print check (BR-REC-109) on Chrome Android + desktop (start: `cd backend && bun run db:reset && bun run seed:perf && bun run bootstrap-admin`, API 4006, web 3006).
+- [ ] Progress: confirm the build clarifications P1–P14 in `docs/specs/member-records/progress.md` (P1 = your "no server cache" decision, D-022).
 - [ ] Members: say "open the PR"; then run `.pipeline/member-records-members/checklist.md` on a phone (start: `cd backend && bun run db:reset && bun run bootstrap-admin`, API on 4002, web on 3002).
 - [ ] Members: confirm two build choices (D-021): E19 join-date rule only when the join date changes; E16 name order word-by-word without the name index (bench in G).
 - [ ] Run the auth manual checklist `.pipeline/member-records-auth/checklist.md` (start with `cd backend && bun run bootstrap-admin`).
@@ -40,6 +43,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 - [ ] Decide: member login by email OTP or password — settled in the `auth-members` interview.
 
 ## Recently done
+- 2026-10-04 — member-records progress (Stream F) built and verified on its branch: E35–E39, S12 report card, S13 gym progress, S18 export; no server cache (D-022); 2226 backend + 1805 admin tests; review READY (issues #26–#31).
 - 2026-10-04 — member-records members (Stream B) built and verified on its branch: E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds (D-021; issues #16, #17, #20).
 - 2026-10-03 — member-records spec PR #2, Stream 0 #10, auth #11 (M1) and the CI fix #12 merged to `main`.
 - 2026-10-03 — member-records auth (Stream A) built and verified: E01–E06, lock, sessions, rate limits, `bootstrap-admin`, page guard, Login, Account (D-020; auth spec v2; issues #7–#9).

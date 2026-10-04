@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: 1dd728c
+last_verified_commit: 0cd9595
 last_verified_on: 2026-10-04
 depends_on: []
 ---
@@ -22,6 +22,8 @@ Stream B (members) is built: E16–E24, S4–S9, Home search + membership sectio
 banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 Assessment setup, S16 Reminders & gym; run notes
 `.pipeline/member-records-setup/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec setup.md v2 (C1–C13).
+Stream F (progress) is built: E35–E39, S12 Report card, S13 Gym progress, S18 Export data, pure `lib/domain/report.ts`, streamed CSV; no server cache
+(BR-REC-110 v2); choices D-022; run notes `.pipeline/member-records-progress/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec progress.md v2 (P1–P14).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -50,6 +52,8 @@ Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 
 | domain (C) | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)` — half away from zero on the decimal digits; the assessments stream (D) calls it when saving (BR-REC-76) |
 | setup (C) admin | `frontend/src/{lib/validators/setup.ts,lib/setup/{describe,text,form,timezones}.ts,lib/api/setup/{fetchers,queries}.ts,components/{views,pages}/setup/*}`, `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `setupKeys`, `settingsQueryOptions`/`assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`), `SetupSheet` (edit sheet + confirm step), `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
+| progress (F) backend | `backend/src/{routes/progress,controller/progressController,service/progressService,service/progressCsv,repository/progressRepository}.ts`, `lib/domain/report.ts` | `progressService.{reportCard,progress,leaderboard,activeByPlan,openExport}(…, now)`; pure `bestReading`, `summariseReadings`, `reportCard`, `changeOutcome`, `progressStats`, `ageBand`, `ageBandBirthRange`, `rankLeaderboard`, `countActiveByPlan`; CSV `csvCell`, `csvLine`, `displayValue`, `exportFileName`, `csvPreamble`, `memberCsvLine`/`membershipCsvLine`/`measurementCsvLine`; reads `latestPeriod`, `onLatestPeriod`, `nameKey` from `repository/membersSql.ts` |
+| progress (F) admin | `frontend/src/{lib/progress/{filters,text}.ts,lib/api/progress/{fetchers,queries}.ts,components/{views,pages}/progress/**}`, routes `app/(app)/admin/{members/[memberId]/report,reports,settings/export}` | `parseProgressFilters`, `progressFiltersSearch`, `toProgressQuery`, `pickDefaultMetricId`, `valueText`/`changeText`/`readingDateText`/`outcomeShares`; `progressKeys` (all `staleTime: 0`), `useReportCard`, `useProgressStats`, `useLeaderboard`, `useActiveByPlan`, `useDownloadExport`; `ReportCardView`, `GymProgressView`, `ExportView`, `ReportPrintStyles` |
 
 ## Data model / API
 Tables: data-model.md v2 (no hand SQL, no extensions, no exclusion constraint — overlap is the BR-REC-09 service
@@ -116,6 +120,15 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Members (B) admin: sheets not needed at first paint (`PeriodSheet`, `ConfirmSheet` in Archive) load through `lib/members/useLazySheet.ts`: `sheetLoader(() => import(…))` = ONE `import()` site per sheet (a second site makes Turbopack emit a second chunk copy) with a cache that resets on failure (`React.lazy`/`next/dynamic` keep a rejected load forever); the sheet mounts CLOSED and opens one frame later (Base UI skips the open animation for a sheet that mounts open), stays mounted (unmounting calls `history.back()` via `useBackToClose` and loses the exit animation); a failed load toasts "Couldn't load this. Try again." and the next tap retries. Keep `useForm` inside the sheet children. Renew pointer-down/focus preloads the chunk and `prefetchMember`s the detail. Biome rejects `onPointerDown` on a div: native listeners via ref (`MembershipHistory`).
 - Members (B) admin: list/search requests forward the abort signal; idempotency key reused only while the JSON body is identical (a changed body with the same key is 422); `crypto.randomUUID` needs a secure page, so `newIdempotencyKey` falls back to `getRandomValues`.
 
+- Progress (F): no server cache (user decision, BR-REC-110 v2): E36–E38 read the database on every call and the admin queries use `staleTime: 0`. Reading date: E35/E39 use `assessments.assessed_on`, E36/E37 the denormalised `measurements.measured_on` (indexed). E36–E38 leave archived members out; E35 and E39 include them.
+- Progress (F): E36 = one grouped query (count, first and latest via ordered `array_agg(...)[1]`) joined to `members` and `latestPeriod`; the age band filter is birth-date bounds (`ageBandBirthRange`, checked against `ageBand` on 1M cases incl. 29 Feb); E37 = `distinct on (member_id)` latest reading, ranked over the whole list and then paged (ranks continue across pages); E38 status from the pure `membershipStatus` (no SQL twin, no rule fork). A Drizzle subquery's `sql` columns need `.mapWith(Number).as(…)` (raw numeric arrives as a string). A member with no period → E35 500, as E18 (members always have one).
+- Progress (F): `change`/`avgChange` are whole thousandths, half away from zero, never `-0`; `changeOutcome` compares |change|×100 < |first| in thousandths, so exactly 1% counts as a change (float 0.03 would mis-round). `displayValue` rounds through `roundMetricValue` first (1.005 @2 → 1.01); times use `formatDuration` (P13: "1:05:30"). CSV order uses `collate "C"` like E16.
+- Progress (F) E39: headers + BOM + header row leave before any row is read; rows come in keyset pages of members ordered by `(lower(full_name) collate "C", id)` (measurements.csv 10 members per batch via `measurements_member_metric_date_idx`, memberships 500, members 2,000) into a pull-based `ReadableStream` (backpressure; client hang-up cancels the reads). Not a DB cursor (may not survive the Supabase transaction pooler), not gzipped (`dataResponseHeaders` only compresses JSON). A failure after the headers cuts the download and is logged ([#27](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/27)); no shared snapshot ([#30](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/30)). Perf seed (1,000 members, 336,640 values): first byte 8 ms, whole 37.8 MB file 8–11 s.
+- Progress (F) admin: S12 print = inline `<style>` in `ReportPrintStyles` (React 19 escapes only `</style`, so attribute selectors survive SSR); it overrides the theme variables in `@media print` and hides the shell by its `data-slot` marks. Paper is ~700 px wide so `lg:` never applies: use `print:` variants (`hidden lg:table print:table`). The segmental table is its own section (E35 has no type id).
+- Progress (F) admin: S13 reads filters with `useSearchParams` and writes with `window.history.replaceState` (no page request); the default measurement goes into the URL once the catalog is known; the catalog read is `useAssessmentTypes(true)` (shared key with setup). With no `metric`, E36/E37 wait for E09 ([#28](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/28)); a "No direction" measurement answers E37 400 `NO_DIRECTION`, shown as a short line. `<input type="month">` is missing in desktop Firefox/Safari: `MonthField` falls back to text. Base UI `SelectValue` needs function children to show labels. Generated `decimals` is `number`: `text.ts` clamps to 0|1|2.
+- Progress (F) admin: print column widths are `print:w-[…]` on the six `<col>`s of `MeasurementTable` (28/15/15/14.5/17/10.5 %): narrower name columns wrapped long names and a 29-measurement card spilled onto a 2nd A4 page (BR-REC-109). Checked with Chrome print-to-PDF at 12 mm margins on 30 perf-seed members (all 1 page, ≥ 12 mm spare; a member whose rows are all single readings has only 1.5 mm spare). `ReportPrintStyles` forces `color-scheme: light !important` (the inline dark scheme on `<html>` otherwise leaves a dark page margin with background graphics on).
+- Progress (F) admin: S18 download = one E05 call through `api` (refreshes the sign-in), then a hidden `<a href download>` click on the E39 URL (the browser streams it; nothing is held in JS).
+
 ## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
 |---|---|---|
@@ -134,6 +147,12 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | — | ResponsiveSheet desktop dialog does not scroll; `useBackToClose` not stack-aware | [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18) (shared) |
 | — | DurationField reads an out-of-range box as empty | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) (shared) |
 | — | NumberField cannot type a minus on iOS (needed by setup ranges and Stream D results) | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (shared, before D) |
+| — | progress: a hand-edited month `0000-05` gives 500 instead of 400 | [#26](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/26) (F) |
+| — | progress export: error log carries a member name; stream wrapper in the controller | [#27](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/27) (F) |
+| — | progress: Reports opens with E36/E37 waiting for the catalog (BR-REC-149) | [#28](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/28) (F, G) |
+| — | progress: leaderboard rows opening the member page (idea, not in spec) | [#29](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/29) (F) |
+| — | progress CSV: leading CR in the formula guard; snapshot read for long exports | [#30](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/30) (F) |
+| — | progress test: BR-REC-119 30,000-row test times out under heavy machine load | [#31](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/31) (test) |
 
 ## Tech notes
 - Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
@@ -185,6 +204,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | setup backend | `backend/tests/setup/{metric-value,settings,assessment-types,metrics,change-log,gates}.test.ts` (+ `settings-empty` for C13) | 10, 11, 13, 14, 60–67, 69, 72, 158, 159, 160 |
 | setup admin | `frontend/tests/setup/{validators,describe,text,queries}.test.ts` | 10, 13, 14, 60–67, 69–72, 126 (UI wiring of 70, 71 is manual: no DOM test library, #9) |
 | manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
+| progress backend | `backend/tests/progress/{domain/{best-and-summary,report-card,progress-stats,age-band,leaderboard-and-plans},csv,access,e35-report-card,e36-progress,e37-leaderboard,e38-active-by-plan,e39-export}.test.ts` (+ `support/suite.ts`) | 22–24, 106–108, 110–119, 158, 159 |
+| progress admin | `frontend/tests/progress/{filters,default-metric,text,value-text,reading-date,counts,queries,export}.test.ts` | 22, 106, 107, 110–115, 119 (S12/S13/S18 wiring and print BR-REC-109 are manual: no DOM test library, #9) |
+| manual | `.pipeline/member-records-progress/checklist.md` | S12 print check (Chrome Android + desktop), S13, S18 on a phone |
 
 ## History
 | Date | PR / commit | Change |
@@ -195,3 +217,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
 | 2026-10-04 | members branch `claude/member-records-feature-8fca5b` | Stream B built (from `main` 9244b2c): E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds, 2 fix rounds (2 major fixed: lazy sheets −58…−68 KB gz, history from one period; 9 minor fixed, 1 → #20); D-021; issues #16, #17, #20 |
 | 2026-10-04 | setup branch `claude/member-records-setup-8ce4cb` | Stream C built (from `main` after M1): E07–E15, `roundMetricValue`, S14–S16; setup spec v2 (C1–C13); 2 review rounds (1 major fixed, minors fixed or filed), issues #18, #19, #21; 541 backend + 334 admin tests |
+| 2026-10-04 | progress branch `claude/feature-f-progress-report-6c2bbe` | Stream F built (from `main` 8e3d569): E35–E39, S12, S13, S18; progress spec v2 (no server cache, P1–P14); +371 backend, +398 admin tests (backend 2226, frontend 1805); 1 review round (0 blocker, 0 major, 8 minors: 2 fixed, 6 → issues #26–#31); live check on the perf seed; D-022 |
