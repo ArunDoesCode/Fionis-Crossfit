@@ -500,6 +500,16 @@ export function useAssessmentsSuite() {
         .set({ isActive })
         .where(eq(assessmentTypes.id, typeId));
     },
+    /** Changes a measurement's decimals directly (setup C9: stored values are never rewritten). */
+    async setMetricDecimals(
+      metricId: string,
+      decimals: 0 | 1 | 2,
+    ): Promise<void> {
+      await db
+        .update(metrics)
+        .set({ decimals })
+        .where(eq(metrics.id, metricId));
+    },
     async setMetricActive(metricId: string, isActive: boolean): Promise<void> {
       await db
         .update(metrics)

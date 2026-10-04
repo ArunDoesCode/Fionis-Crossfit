@@ -265,7 +265,8 @@ describe("the answer envelope (BR-REC-154)", () => {
   });
 
   test("BR-REC-154 a refusal is { success: false, message, code } with a plain-text message", async () => {
-    const reply = await s.save({ ...saveBody(), values: [] });
+    // a date this member has no assessment on: nothing filled in a new assessment is refused
+    const reply = await s.save({ ...saveBody("2025-11-11"), values: [] });
     expect(reply.body?.success).toBe(false);
     expect(reply.body?.code).toBe("NO_VALUES");
     expect(typeof reply.body?.message).toBe("string");

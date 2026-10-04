@@ -11,7 +11,7 @@ import {
 
 // E26 POST /api/assessments: record, edit and remove values (upsert on member + type + date).
 // BR-REC-12 (durations in seconds), BR-REC-19 (one per member + type + date, partial entry, estimated),
-// BR-REC-77 (clearing a saved value), BR-REC-78 (nothing filled), BR-REC-83 (before the join date saves),
+// BR-REC-77 (clearing a saved value), BR-REC-78 (a save that would leave no value at all is refused), BR-REC-83 (before the join date saves),
 // BR-REC-86 (saving twice never makes two), BR-REC-163 / 164 (a day is a day, values are numbers),
 // BR-REC-166 (values copy member and date), build clarifications D1, D2, D4, D6.
 
@@ -513,8 +513,8 @@ describe("E26 set, leave out, remove (BR-REC-77, D2)", () => {
   });
 });
 
-describe("E26 nothing filled (BR-REC-78, D2)", () => {
-  test("BR-REC-78 an empty values list is refused 400 NO_VALUES and no assessment is made", async () => {
+describe("E26 nothing filled in a new assessment (BR-REC-78, D2)", () => {
+  test("BR-REC-78 an empty values list for a new assessment is refused 400 NO_VALUES and no assessment is made", async () => {
     const m = await s.seedMember();
     const reply = await s.save({
       memberId: m.id,
@@ -527,7 +527,7 @@ describe("E26 nothing filled (BR-REC-78, D2)", () => {
     expect((await s.assessmentRows(m.id)).length).toBe(0);
   });
 
-  test("BR-REC-78 values that are all null are refused 400 NO_VALUES and no assessment is made", async () => {
+  test("BR-REC-78 values that are all null for a new assessment are refused 400 NO_VALUES and no assessment is made", async () => {
     const m = await s.seedMember();
     const reply = await s.saveValues(m, body, "2025-12-30", [
       [body.metric("Weight"), null],
@@ -537,20 +537,36 @@ describe("E26 nothing filled (BR-REC-78, D2)", () => {
     expect((await s.assessmentRows(m.id)).length).toBe(0);
   });
 
-  test("D2 editing with only nulls is refused too: nothing is removed, the flag is not changed", async () => {
+  test("BR-REC-78 a refused new assessment does not leave the estimated flag or a half-made row behind: the next save is a create", async () => {
     const m = await s.seedMember();
-    const first = dataOf<SaveResult>(
-      await s.saveValues(
-        m,
-        body,
-        "2025-03-12",
-        [
-          [body.metric("Weight"), 95.5],
-          [body.metric("Plank"), 122],
-        ],
-        false,
-      ),
+    expectError(
+      await s.saveValues(m, body, "2025-12-30", [], true),
+      400,
+      "NO_VALUES",
     );
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-12-30", [[body.metric("Weight"), 94]]),
+    );
+    expect(result.created).toBe(true);
+    expect((await s.assessmentRow(result.assessmentId))?.isEstimated).toBe(
+      false,
+    );
+  });
+});
+
+describe("E26 an edit that would leave no value at all is refused (BR-REC-78, D2)", () => {
+  test("D2 nulls that remove every remaining value are refused 400 NO_VALUES: nothing is removed, the flag is not changed, no log row", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      isEstimated: false,
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+      ],
+    });
     const reply = await s.saveValues(
       m,
       body,
@@ -562,27 +578,306 @@ describe("E26 nothing filled (BR-REC-78, D2)", () => {
       true,
     );
     expectError(reply, 400, "NO_VALUES");
-    expect(await s.storedValues(first.assessmentId)).toEqual({
+    expect(await s.storedValues(a.id)).toEqual({
       [body.metric("Weight").id]: 95.5,
       [body.metric("Plank").id]: 122,
     });
-    expect((await s.assessmentRow(first.assessmentId))?.isEstimated).toBe(
-      false,
+    expect((await s.assessmentRow(a.id))?.isEstimated).toBe(false);
+    expect((await s.assessmentRows(m.id)).length).toBe(1);
+    expect((await s.audit({ entityId: a.id })).length).toBe(0);
+  });
+
+  test("D2 nulls for measurements that hold nothing, listed next to the nulls that remove everything, do not save it", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [[body.metric("Weight"), 95.5]],
+    });
+    const reply = await s.saveValues(m, body, "2025-03-12", [
+      [body.metric("Weight"), null],
+      [body.metric("Plank"), null],
+      [body.metric("Waist"), null],
+    ]);
+    expectError(reply, 400, "NO_VALUES");
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+    });
+  });
+
+  test("D2 the last remaining value cannot be removed through E26, even after earlier removals (use E30)", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+      ],
+    });
+    const first = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [[body.metric("Plank"), null]]),
     );
+    expect(first.removed).toBe(1);
+    const second = await s.saveValues(m, body, "2025-03-12", [
+      [body.metric("Weight"), null],
+    ]);
+    expectError(second, 400, "NO_VALUES");
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+    });
+    expect(await s.assessmentRow(a.id)).toBeDefined();
+  });
+});
+
+describe("E26 an edit that leaves a value stored is fine (BR-REC-77, 78, D2)", () => {
+  test("BR-REC-78 an empty values list on a saved assessment is 200: saved 0, removed 0, created false, the same assessment, values untouched", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      isEstimated: false,
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+      ],
+    });
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [], true),
+    );
+    expect(result).toEqual({
+      assessmentId: a.id,
+      created: false,
+      saved: 0,
+      removed: 0,
+    });
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+      [body.metric("Plank").id]: 122,
+    });
+    for (const row of await s.measurementRows(a.id)) {
+      expect(row.measuredOn).toBe("2025-03-12");
+    }
     expect((await s.assessmentRows(m.id)).length).toBe(1);
   });
 
-  test("D2 an empty list on an existing assessment is refused and the assessment stays", async () => {
+  test("D2 an empty values list replaces the estimated flag: false to true and back", async () => {
     const m = await s.seedMember();
-    const first = dataOf<SaveResult>(
-      await s.saveValues(m, body, "2025-03-12", [
-        [body.metric("Weight"), 95.5],
-      ]),
-    );
-    const reply = await s.saveValues(m, body, "2025-03-12", []);
-    expectError(reply, 400, "NO_VALUES");
-    expect(await s.storedValues(first.assessmentId)).toEqual({
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      isEstimated: false,
+      values: [[body.metric("Weight"), 95.5]],
+    });
+    dataOf<SaveResult>(await s.saveValues(m, body, "2025-03-12", [], true));
+    expect((await s.assessmentRow(a.id))?.isEstimated).toBe(true);
+    expect(dataOf<Detail>(await s.detail(a.id)).isEstimated).toBe(true);
+    dataOf<SaveResult>(await s.saveValues(m, body, "2025-03-12", [], false));
+    expect((await s.assessmentRow(a.id))?.isEstimated).toBe(false);
+    expect(await s.storedValues(a.id)).toEqual({
       [body.metric("Weight").id]: 95.5,
     });
+  });
+
+  test("D2 an empty values list on a saved assessment writes exactly one assessment.save change-log row", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [[body.metric("Weight"), 95.5]],
+    });
+    await s.saveValues(m, body, "2025-03-12", [], true);
+    const rows = await s.audit({ entityId: a.id });
+    expect(rows.length).toBe(1);
+    expect(rows[0]?.action).toBe("assessment.save");
+  });
+
+  test("BR-REC-77 nulls that remove only some of the stored values are 200: the removed ones go, the others stay", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+        [body.metric("Waist"), 91],
+      ],
+    });
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [
+        [body.metric("Plank"), null],
+        [body.metric("Waist"), null],
+      ]),
+    );
+    expect(result).toEqual({
+      assessmentId: a.id,
+      created: false,
+      saved: 0,
+      removed: 2,
+    });
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+    });
+  });
+
+  test("D2 a null for a measurement that holds nothing, on an assessment that keeps its other values, is a no-op: 200, removed 0", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [[body.metric("Weight"), 95.5]],
+    });
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [[body.metric("Plank"), null]]),
+    );
+    expect(result.created).toBe(false);
+    expect(result.saved).toBe(0);
+    expect(result.removed).toBe(0);
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+    });
+  });
+
+  test("D2 removing every stored value is fine when the same save sets another measurement", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+      ],
+    });
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [
+        [body.metric("Weight"), null],
+        [body.metric("Plank"), null],
+        [body.metric("Waist"), 90],
+      ]),
+    );
+    expect(result.saved).toBe(1);
+    expect(result.removed).toBe(2);
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Waist").id]: 90,
+    });
+  });
+
+  test("D2 an edit may send only the changed measurement: the others stay as they are", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+        [body.metric("Waist"), 91],
+      ],
+    });
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, body, "2025-03-12", [[body.metric("Waist"), 90]]),
+    );
+    expect(result.saved).toBe(1);
+    expect(result.removed).toBe(0);
+    expect(await s.storedValues(a.id)).toEqual({
+      [body.metric("Weight").id]: 95.5,
+      [body.metric("Plank").id]: 122,
+      [body.metric("Waist").id]: 90,
+    });
+  });
+});
+
+describe("E26 an untouched value is never re-rounded (D2, setup C9)", () => {
+  /** Weight shows 2 decimals when 95.55 is stored, then setup lowers it to 1 decimal. */
+  async function seedAfterDecimalsChange() {
+    const t = await s.seedType({
+      metrics: [
+        { name: "Weight", unit: "kg", decimals: 2, better: "lower" },
+        { name: "Waist", unit: "cm", decimals: 1, better: "lower" },
+      ],
+    });
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: t,
+      date: "2025-03-12",
+      values: [
+        [t.metric("Weight"), 95.55],
+        [t.metric("Waist"), 91],
+      ],
+    });
+    await s.setMetricDecimals(t.metric("Weight").id, 1);
+    return { t, m, a };
+  }
+
+  test("D2 a stored 95.55 stays 95.55 when decimals is now 1 and the save changes only another measurement", async () => {
+    const { t, m, a } = await seedAfterDecimalsChange();
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, t, "2025-03-12", [[t.metric("Waist"), 90]]),
+    );
+    expect(result.assessmentId).toBe(a.id);
+    expect(result.saved).toBe(1);
+    expect(await s.storedValues(a.id)).toEqual({
+      [t.metric("Weight").id]: 95.55,
+      [t.metric("Waist").id]: 90,
+    });
+    const detail = dataOf<Detail>(await s.detail(a.id));
+    expect(detail.values.map((v) => [v.name, v.value])).toEqual([
+      ["Weight", 95.55],
+      ["Waist", 90],
+    ]);
+  });
+
+  test("D2 the change log's after-snapshot still shows 95.55 (and so does the before-snapshot)", async () => {
+    const { t, m, a } = await seedAfterDecimalsChange();
+    await s.saveValues(m, t, "2025-03-12", [[t.metric("Waist"), 90]]);
+    const rows = await s.audit({ entityId: a.id });
+    expect(rows.length).toBe(1);
+    expect(rows[0]?.before).toEqual({
+      date: "2025-03-12",
+      isEstimated: false,
+      values: {
+        [t.metric("Weight").id]: 95.55,
+        [t.metric("Waist").id]: 91,
+      },
+    });
+    expect(rows[0]?.after).toEqual({
+      date: "2025-03-12",
+      isEstimated: false,
+      values: {
+        [t.metric("Weight").id]: 95.55,
+        [t.metric("Waist").id]: 90,
+      },
+    });
+  });
+
+  test("D2 an empty values list (only About changes) leaves the stored 95.55 as it is", async () => {
+    const { t, m, a } = await seedAfterDecimalsChange();
+    const result = dataOf<SaveResult>(
+      await s.saveValues(m, t, "2025-03-12", [], true),
+    );
+    expect(result.saved).toBe(0);
+    expect(await s.storedValues(a.id)).toEqual({
+      [t.metric("Weight").id]: 95.55,
+      [t.metric("Waist").id]: 91,
+    });
+    const form = await s.formOf(m.id, t.id, "2025-03-12");
+    expect(form.existing?.values[t.metric("Weight").id]).toBe(95.55);
+  });
+
+  test("BR-REC-76 a measurement that is sent is rounded to its current decimals: 95.55 sent for a 1-decimal measurement is stored as 95.6", async () => {
+    const { t, m, a } = await seedAfterDecimalsChange();
+    dataOf<SaveResult>(
+      await s.saveValues(m, t, "2025-03-12", [[t.metric("Weight"), 95.55]]),
+    );
+    expect((await s.storedValues(a.id))[t.metric("Weight").id]).toBe(95.6);
   });
 });

@@ -176,6 +176,91 @@ describe("E26 change log (BR-REC-92, 158, D7)", () => {
     });
   });
 
+  test("D7 an empty values list on a saved assessment (only About changes) writes one assessment.save row: the flag flips, the values are the same before and after", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      isEstimated: false,
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+      ],
+    });
+    expect(
+      dataOf<SaveResult>(await s.saveValues(m, body, "2025-03-12", [], true))
+        .saved,
+    ).toBe(0);
+    const rows = await s.audit({ entityId: a.id });
+    expect(rows.length).toBe(1);
+    expect(rows[0]?.action).toBe("assessment.save");
+    expect(rows[0]?.before).toEqual({
+      date: "2025-03-12",
+      isEstimated: false,
+      values: {
+        [body.metric("Weight").id]: 95.5,
+        [body.metric("Plank").id]: 122,
+      },
+    });
+    expect(rows[0]?.after).toEqual({
+      date: "2025-03-12",
+      isEstimated: true,
+      values: {
+        [body.metric("Weight").id]: 95.5,
+        [body.metric("Plank").id]: 122,
+      },
+    });
+  });
+
+  test("D7 nulls that remove only some values are one assessment.save row: before holds all values, after only the rest", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [
+        [body.metric("Weight"), 95.5],
+        [body.metric("Plank"), 122],
+        [body.metric("Waist"), 91],
+      ],
+    });
+    await s.saveValues(m, body, "2025-03-12", [
+      [body.metric("Plank"), null],
+      [body.metric("Waist"), null],
+    ]);
+    const rows = await s.audit({ entityId: a.id });
+    expect(rows.length).toBe(1);
+    expect(Object.keys(rows[0]?.before?.values as object).length).toBe(3);
+    expect(rows[0]?.after).toEqual({
+      date: "2025-03-12",
+      isEstimated: false,
+      values: { [body.metric("Weight").id]: 95.5 },
+    });
+  });
+
+  test("BR-REC-158 an edit refused as NO_VALUES (its nulls would remove every remaining value) writes no row", async () => {
+    const m = await s.seedMember();
+    const a = await s.seedAssessment({
+      member: m,
+      type: body,
+      date: "2025-03-12",
+      values: [[body.metric("Weight"), 95.5]],
+    });
+    const before = await assessmentLogCount();
+    const reply = await s.saveValues(
+      m,
+      body,
+      "2025-03-12",
+      [[body.metric("Weight"), null]],
+      true,
+    );
+    expect(reply.status).toBe(400);
+    expect(reply.body?.code).toBe("NO_VALUES");
+    expect(await assessmentLogCount()).toBe(before);
+    expect((await s.audit({ entityId: a.id })).length).toBe(0);
+  });
+
   test("BR-REC-158 five racing saves write five rows, exactly one of them a create", async () => {
     const m = await s.seedMember();
     const replies = await Promise.all(
