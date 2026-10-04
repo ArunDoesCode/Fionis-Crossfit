@@ -95,7 +95,7 @@ export function assertLocalDatabase(databaseUrl: string): void {
 
 // ─── repeatable randomness ──────────────────────────────────────────────────
 
-function createRandom(seed: number) {
+export function createRandom(seed: number) {
   let state = seed >>> 0;
   /** mulberry32: uniform in [0, 1) */
   const next = (): number => {
@@ -336,7 +336,7 @@ const PROFILES: Record<string, Profile> = {
   "crossfit total": { male: [280, 70], female: [160, 45], drift: 2, noise: 6 },
 };
 
-type CatalogMetric = {
+export type CatalogMetric = {
   id: string;
   typeId: string;
   name: string;
@@ -347,7 +347,7 @@ type CatalogMetric = {
 };
 
 /** Profile of a measurement; one a coach added later gets values around the middle of its check range. */
-function profileOf(metric: CatalogMetric): Profile {
+export function profileOf(metric: CatalogMetric): Profile {
   const known = PROFILES[metric.name.toLowerCase()];
   if (known) return known;
   const min = metric.plausibleMin ?? 0;
