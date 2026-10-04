@@ -1,0 +1,119 @@
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import Section from '@/components/common/Section';
+import { RowSkeletons } from '@/components/common/Skeletons';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { isApiError } from '@/lib/api/errors';
+import { useLeaderboard } from '@/lib/api/progress/queries';
+import { formatDay } from '@/lib/format';
+import { useToday } from '@/lib/members/useToday';
+import { messageForCode } from '@/lib/messages/errors';
+import type { Sex } from '@/lib/progress/filters';
+import { PROGRESS_TEXT, type ValueMetric, valueText } from '@/lib/progress/text';
+
+const text = PROGRESS_TEXT.progress;
+
+interface LeaderboardProps {
+  /** `null` until a measurement is known. */
+  metricId: string | null;
+  /** How to write a value; `undefined` until the measurement has loaded. */
+  metric: ValueMetric | undefined;
+  className?: string;
+}
+
+const TABS: { value: Sex; label: string }[] = [
+  { value: 'male', label: text.male },
+  { value: 'female', label: text.female },
+];
+
+const ROW =
+  'grid min-h-14 grid-cols-[2rem_minmax(0,1fr)_auto_5rem] items-center gap-3 px-4 py-2 outline-none hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
+function Rows({
+  metricId,
+  metric,
+  sex,
+}: {
+  metricId: string | null;
+  metric: ValueMetric | undefined;
+  sex: Sex;
+}) {
+  const today = useToday();
+  const board = useLeaderboard(metricId, sex, true);
+  const items = board.data?.pages.flatMap((page) => page.data) ?? [];
+
+  if (board.isError && !board.data) {
+    const code = isApiError(board.error) ? board.error.code : undefined;
+    return code === 'NO_DIRECTION' ? (
+      <p className="text-base text-muted-foreground">{messageForCode(code)}</p>
+    ) : (
+      <ErrorState onRetry={() => void board.refetch()} />
+    );
+  }
+  if (!board.data || !metric) return <RowSkeletons count={5} />;
+  if (items.length === 0) return <EmptyState compact title={text.nobodyRanked} />;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ol className="divide-y overflow-hidden rounded-2xl border bg-card">
+        {items.map((item) => (
+          <li key={item.memberId}>
+            <Link href={`/admin/members/${item.memberId}`} className={ROW}>
+              <span className="font-mono text-base text-muted-foreground">{item.rank}</span>
+              <span className="truncate text-base font-medium">{item.fullName}</span>
+              <span className="font-mono text-base">{valueText(item.value, metric)}</span>
+              <span className="text-right text-sm text-muted-foreground">
+                {formatDay(item.on, today)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+      {board.hasNextPage && (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={board.isFetchingNextPage}
+          onClick={() => void board.fetchNextPage()}
+        >
+          {text.showMore}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// S13 leaderboard (BR-REC-115): each member's latest value of the measurement, best first, Male and
+// Female tabs (Male first), the top 10 and "Show more" for the next 10. Equal values share a rank. A
+// measurement with "No direction" has no leaderboard, only a short line. Its own loading and error state.
+export default function Leaderboard({ metricId, metric, className }: LeaderboardProps) {
+  const [sex, setSex] = useState<Sex>('male');
+
+  return (
+    <Section title={text.leaderboard} className={className}>
+      {metric?.better === 'none' ? (
+        <p className="text-base text-muted-foreground">{messageForCode('NO_DIRECTION')}</p>
+      ) : (
+        <Tabs value={sex} onValueChange={(next) => setSex(next as Sex)}>
+          <TabsList className="w-full">
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="text-base">
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {TABS.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="pt-3">
+              <Rows metricId={metricId} metric={metric} sex={tab.value} />
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+    </Section>
+  );
+}

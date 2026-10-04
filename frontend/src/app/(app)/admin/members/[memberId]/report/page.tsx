@@ -1,18 +1,11 @@
-import PlaceholderScreen from '@/components/common/PlaceholderScreen';
-import { UI_TEXT } from '@/lib/messages/words';
+import ReportCardView from '@/components/views/progress/ReportCardView';
 
-// Placeholder until the owning stream builds this screen.
+// The id is runtime data: the route's loading.tsx is the boundary while it resolves.
 export default async function ReportCardPage({
   params,
 }: {
   params: Promise<{ memberId: string }>;
 }) {
   const { memberId } = await params;
-  return (
-    <PlaceholderScreen
-      title={UI_TEXT.screens.reportCard}
-      width="wide"
-      backHref={`/admin/members/${memberId}`}
-    />
-  );
+  return <ReportCardView memberId={memberId} />;
 }
