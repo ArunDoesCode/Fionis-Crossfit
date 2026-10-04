@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import { progressController } from "../controller/progressController";
+import { asyncHandler } from "../lib/async-handler";
 import {
   badRequestResponse,
   errorResponse,
@@ -22,9 +24,9 @@ import {
   reportCardSchema,
 } from "../types/progress.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import { ANY_AUTHENTICATED, notImplemented, routeMounter } from "./mount-route";
+import { ANY_AUTHENTICATED, routeMounter } from "./mount-route";
 
-// Owner: progress stream. E35-E39. Handlers answer 501 until Stream F builds them.
+// Owner: progress stream. E35-E39. All reads: nothing is written, nothing is cached.
 const progressRouter = new Hono<AppEnv>();
 const route = routeMounter(progressRouter, MAIN_ROUTES.progress);
 const EP = END_POINTS.progress;
@@ -44,8 +46,11 @@ route(
       "401": unauthorizedResponse,
       "404": notFoundResponse,
     },
+    notes: [
+      "404 for an unknown member; an archived member still answers 200. Sections and measurements with no reading are left out; turned-off ones with readings stay.",
+    ],
   },
-  notImplemented,
+  asyncHandler(progressController.reportCard),
 );
 
 route(
@@ -63,10 +68,10 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      "404 when `metricId` does not exist. Only members with 2+ readings count; `notCounted` says how many were left out.",
+      "Computed from the database on every call (no cache): a value saved just before the call is counted. 404 when `metricId` does not exist; a turned-off measurement still answers. Only non-archived members with 2+ readings count; `notCounted` says how many had exactly one.",
     ],
   },
-  notImplemented,
+  asyncHandler(progressController.progress),
 );
 
 route(
@@ -85,10 +90,10 @@ route(
     },
     pagination: { sortableFields: [], searchable: false },
     notes: [
-      "Ranked by latest value, best first by direction; equal values share a rank. 400 NO_DIRECTION for a measurement with no better direction.",
+      "Computed from the database on every call (no cache). Ranked by each member's latest value, best first by direction; equal values share a rank (1, 2, 2, 4) and ranks continue across pages. Errors in order: 404 unknown `metricId`, then 400 NO_DIRECTION for a measurement with no better direction.",
     ],
   },
-  notImplemented,
+  asyncHandler(progressController.leaderboard),
 );
 
 route(
@@ -102,8 +107,9 @@ route(
       "200": successResponse(activeByPlanSchema),
       "401": unauthorizedResponse,
     },
+    notes: ["Computed from the database on every call (no cache)."],
   },
-  notImplemented,
+  asyncHandler(progressController.activeByPlan),
 );
 
 route(
@@ -121,10 +127,10 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      `Not JSON: the 200 body is CSV text (\`text/csv; charset=utf-8\`, UTF-8 with BOM, streamed), a documented exception to the envelope. \`file\` is one of ${EXPORT_FILES.join(", ")}; anything else is 404 NOT_FOUND.`,
+      `Not JSON: the 200 body is CSV text (UTF-8 with BOM, lines end CRLF, streamed in batches), a documented exception to the envelope. \`file\` is one of ${EXPORT_FILES.join(", ")}; anything else is 404 NOT_FOUND. Headers are sent before the rows are read: \`Content-Type: text/csv; charset=utf-8\`, \`Content-Disposition: attachment; filename="<stem>-<gym today>.csv"\`, \`Cache-Control: private, no-store\`; never gzip-compressed.`,
     ],
   },
-  notImplemented,
+  asyncHandler(progressController.export),
 );
 
 export { progressRouter as progressRoutes };

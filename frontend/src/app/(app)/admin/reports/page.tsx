@@ -1,7 +1,7 @@
-import PlaceholderScreen from '@/components/common/PlaceholderScreen';
-import { UI_TEXT } from '@/lib/messages/words';
+import GymProgressView from '@/components/views/progress/GymProgressView';
 
-// Placeholder until the progress stream (F) builds S13.
+// S13. The measurement and the filters are in the URL (`?metric=`, `?joinedFrom=` …), read by the client leaf
+// under the route's loading.tsx.
 export default function ReportsPage() {
-  return <PlaceholderScreen title={UI_TEXT.screens.gymProgress} />;
+  return <GymProgressView />;
 }

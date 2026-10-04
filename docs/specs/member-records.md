@@ -80,6 +80,7 @@ Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths fro
 
 Implementation status: **Stream 0 built** (branch `claude/member-records-foundation-57e849`): data-model, api-contract,
 ux shell rules + BR-REC-12, 51, 52, 75, 94, 150, 174 — BR → test file in the map's Tests table; merged to `main` (M0).
+Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Stream F (progress) built on `claude/feature-f-progress-report-6c2bbe` (progress.md v2 → Implementation status). Streams B, D, E, G: see their sub-specs.
 Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Stream D (assessments) built on `claude/member-record-assessment-696977` (assessments.md v2 → Implementation status). Streams E–G: see their sub-specs.
 
 Merge points: **M0** Stream 0 → **M1** A (needed to click through anything) → **M2** C, B → **M3** D, E, F
@@ -157,3 +158,4 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
 - 2026-10-03 v2 — data-model v2 during the Stream 0 build (user: keep the MVP light): BR-REC-167 struck, BR-REC-169
   rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
 - 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.
+- 2026-10-04 v2 — progress v2 during the Stream F build (user: keep the MVP light): BR-REC-110 computed live, no server cache; performance BR-REC-147 / tactic 19 follow; build clarifications P1–P11 in progress.md.

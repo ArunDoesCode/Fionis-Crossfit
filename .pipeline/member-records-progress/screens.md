@@ -1,0 +1,35 @@
+## S12 + S13 + S18 — progress admin (frontend-dev, Stream F)
+
+Permission for all three: the shared login (any signed-in visitor; the page guard sends everyone else to Login). Words come from the word list (BR-REC-126); server answers go through the dictionary (`messageForCode`). Every progress read asks the server again on every open (`staleTime: 0`, BR-REC-110).
+
+### S12 Report card — `/admin/members/[memberId]/report`
+- Reached from the Member page button **Report card**. Header: back arrow to the member page, title **Report card**, main action **Print** (bar above the tabs on phones, right of the header from 1024 px). **Print** is shown only when the member has at least one result; it opens the browser's print (`window.print()`).
+- Top block: gym name and **Printed 3 Oct 2026** (desktop and paper only), member name, "44 y · Male", "Annual (Active) · Joined 1 Jun 2025" (Active / Ends soon / Ended; one line on desktop and paper, two lines on phones).
+- One section per assessment in setup order (also an assessment that is turned off, when it has results). Measurements never recorded for this member are not listed; a turned-off measurement with results stays.
+  - **Phone (< 1024 px): one card per measurement** — name, latest value with unit and its date (≈ month and year when estimated), "first 98.0 (12 Jan) · best 94.0 (3 Oct)", the change line ("↓ 4.0 kg better", "↑ 1.2 % worse", "+0.5 cm" for No direction, "No change"), and a small trend line of the last 12 results. With only **one** result: the value and "(1 reading)" only. "No direction" shows no best.
+  - **Desktop (≥ 1024 px) and paper: a table** — Measurement · First · Latest · Best · Change · Trend, one row per measurement (numbers in the mono font, dates small beside them, "–" for no value). One result: the name carries "(1 reading)", Latest shows the value, the other cells are "–".
+- **Segmental** section (after the assessments, titled "Segmental · 12 Sep"; "≈ Sep 2026" when estimated): rows Whole body, Arms, Trunk, Legs; one column per group; a missing value is "–". Phone: one card per group with the four parts as lines; desktop and paper: a table. Not shown when the member has no segmental values.
+- States:
+  - loading = grey shapes in the real layout (header block, two assessments as cards on a phone / table rows on desktop);
+  - empty (member has no results) = name block and "No results recorded yet." (no Print button);
+  - load error = "Couldn't load this." with **Try again**;
+  - unknown member or a malformed id (404 / 400) = "This member was not found."
+- **Print notes (BR-REC-109):** A4 portrait, 12 mm margins, black on white even when the app is in dark mode. The side bar, bottom tabs, page header (back arrow and Print), offline banner and toasts are not printed. The table layout is used on paper whatever the screen. The seeded-style test member in the visual check (29 measurements + segmental table) fits one page with room to spare. The print rules are an inline `<style>` that exists only while this screen is open; no shell file or `globals.css` is touched. Check with Chrome on Android (print to PDF) and Chrome on desktop.
+
+### S13 Gym progress — `/admin/reports?metric=&joinedFrom=&joinedTo=&plan=&sex=&age=`
+- Header "Gym progress"; no main action. 1080 px wide on desktop: results and leaderboard side by side (results and Active members by plan on the left, leaderboard on the right). The filters are one row from a 1280 px screen; between 640 and 1279 px they are three to a line (measurement on its own line); on a phone two to a line where short.
+- **Filters** (all stay in the address, so a view can be bookmarked; Back leaves the screen, a filter change replaces the address, no page reload):
+  - **Measurement** — a list of the measurements that are turned on, grouped by assessment. Default: the first measurement starting with "Body fat" (any case), else the first one that is on; the default is written to the address as `metric=` once known. A bookmarked measurement that was turned off since still answers and shows "(turned off)".
+  - **Joined from** and **Joined to** — month pickers (the phone's own). Months the wrong way round in a typed address are swapped.
+  - **Plan** (Any plan, Monthly, Quarterly, Half-annual, Annual) · **Sex** (Any sex, Male, Female) · **Age** (Any age, Under 20, 20–29, 30–39, 40–49, 50–59, 60+). A value in the address that is not one of these is ignored.
+- **Results card:** "Average change" (signed, in the unit: "−2.1 %"), the measurement name and "since the first reading", "n = 12 · 5 with one reading not counted" (just "n = 12" when nobody was left out), then "Improved 8 · No change 3 · Worse 1" with a coloured bar from the whole-percent shares. For a measurement with **No direction**: only the average and n. With nobody counted (n = 0): "–" and "Not enough results yet. A member needs two to be counted." While a filter changes the old numbers stay on screen, dimmed.
+- **Leaderboard:** tabs **Male** (chosen first) and **Female**; each row = rank, name, latest value, its date; equal values share a rank (1, 2, 2, 4); top 10 and **Show more** loads the next 10 (the button disappears at the end). Empty = "Nobody has a result yet." For a measurement with No direction: the line "This measurement has no direction, so it can't be ranked. Pick a different one." and no tabs.
+- **Active members by plan:** Monthly, Quarterly, Half-annual, Annual and Total.
+- Calls (BR-REC / contract): with `metric` in the address the four reads (assessment list, progress, leaderboard Male, active members) start together; without it the assessment list and active members start first, the other two as soon as the default is known. Female and "Show more" are one extra call each, on tap.
+- States: loading = grey shapes in the real layout (filter row, results, leaderboard rows, plan counts); each part has its own error "Couldn't load this." with **Try again** (results, leaderboard, plans, and the filter row when the assessment list fails) — the rest keeps working; unknown measurement in the address (404) = "We couldn't find that. It may have been removed." in the results card; no measurement turned on at all = "No measurements are turned on yet." (plan counts still show).
+
+### S18 Export data — `/admin/settings/export`
+- Header: back arrow to Settings, title **Export data**; 720 px wide. No main action.
+- Three rows **Members**, **Memberships**, **Measurements**, each with the line "Opens in Excel or Google Sheets" and a **Download CSV** button (spoken as "Download CSV Members" etc.).
+- Tap: one sign-in check (E05; the sign-in is refreshed if needed), then the browser starts a plain download of `/api/exports/<file>` (saved as `<file>-<date>.csv`; the app does not read the body). While the check runs all three buttons wait and the tapped one says "Starting…". A failed check = a toast with the dictionary text (an ended sign-in opens Login instead); no download starts.
+- States: loading = three grey rows; no data of its own (no empty or error state besides the toast).

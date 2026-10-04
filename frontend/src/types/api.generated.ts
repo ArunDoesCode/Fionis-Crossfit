@@ -487,7 +487,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** E35 A member's report card */
+        /**
+         * E35 A member's report card
+         * @description 404 for an unknown member; an archived member still answers 200. Sections and measurements with no reading are left out; turned-off ones with readings stay.
+         */
         get: operations["getApiMembersMemberIdReport-card"];
         put?: never;
         post?: never;
@@ -506,7 +509,7 @@ export interface paths {
         };
         /**
          * E36 Gym-wide progress for one measurement
-         * @description 404 when `metricId` does not exist. Only members with 2+ readings count; `notCounted` says how many were left out.
+         * @description Computed from the database on every call (no cache): a value saved just before the call is counted. 404 when `metricId` does not exist; a turned-off measurement still answers. Only non-archived members with 2+ readings count; `notCounted` says how many had exactly one.
          */
         get: operations["getApiReportsProgress"];
         put?: never;
@@ -526,7 +529,7 @@ export interface paths {
         };
         /**
          * E37 Leaderboard for one measurement and sex
-         * @description Ranked by latest value, best first by direction; equal values share a rank. 400 NO_DIRECTION for a measurement with no better direction.
+         * @description Computed from the database on every call (no cache). Ranked by each member's latest value, best first by direction; equal values share a rank (1, 2, 2, 4) and ranks continue across pages. Errors in order: 404 unknown `metricId`, then 400 NO_DIRECTION for a measurement with no better direction.
          */
         get: operations["getApiReportsLeaderboard"];
         put?: never;
@@ -544,7 +547,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** E38 Active members by plan */
+        /**
+         * E38 Active members by plan
+         * @description Computed from the database on every call (no cache).
+         */
         get: operations["getApiReportsActive-by-plan"];
         put?: never;
         post?: never;
@@ -563,7 +569,7 @@ export interface paths {
         };
         /**
          * E39 CSV export (members, memberships or measurements)
-         * @description Not JSON: the 200 body is CSV text (`text/csv; charset=utf-8`, UTF-8 with BOM, streamed), a documented exception to the envelope. `file` is one of members.csv, memberships.csv, measurements.csv; anything else is 404 NOT_FOUND.
+         * @description Not JSON: the 200 body is CSV text (UTF-8 with BOM, lines end CRLF, streamed in batches), a documented exception to the envelope. `file` is one of members.csv, memberships.csv, measurements.csv; anything else is 404 NOT_FOUND. Headers are sent before the rows are read: `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment; filename="<stem>-<gym today>.csv"`, `Cache-Control: private, no-store`; never gzip-compressed.
          */
         get: operations["getApiExportsFile"];
         put?: never;
@@ -3274,12 +3280,17 @@ export interface operations {
                                 joinedOn: string;
                             };
                             types: {
+                                /** Format: uuid */
+                                id: string;
                                 name: string;
                                 metrics: {
+                                    /** Format: uuid */
+                                    id: string;
                                     name: string;
                                     unit: string;
                                     /** @enum {string} */
                                     datatype: "number" | "duration";
+                                    decimals: number;
                                     /** @enum {string} */
                                     better: "higher" | "lower" | "none";
                                     first: {
@@ -3309,7 +3320,11 @@ export interface operations {
                             segmental: {
                                 on: string;
                                 isEstimated: boolean;
-                                groups: string[];
+                                groups: {
+                                    name: string;
+                                    unit: string;
+                                    decimals: number;
+                                }[];
                                 rows: {
                                     /** @enum {string} */
                                     part: "whole_body" | "arms" | "trunk" | "legs";
