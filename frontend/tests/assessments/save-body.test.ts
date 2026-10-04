@@ -9,7 +9,7 @@
 //               removes the stored value.
 // Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
 //   `@/lib/assessments/saveBody`: `buildSaveValues(fields)` with `fields` = `{ metricId, datatype, decimals,
-//   input, hadValue }[]` in screen order (`input` = typed text for `number`, seconds or `null` for `duration`;
+//   input, hadValue, unchanged? }[]` in screen order (`input` = typed text for `number`, seconds or `null` for `duration`;
 //   `hadValue` = a value is stored on this date) -> `{ ok: true, values: { metricId, value }[], filled, removed }
 //   | { ok: false, problems: { metricId, message }[] }`.
 //   Fixed line: `ASSESSMENT_TEXT.numberError` = "Enter a number like 95.5" (`@/lib/assessments/text`).
@@ -23,6 +23,7 @@ interface Field {
   decimals: Decimals;
   input: string | number | null;
   hadValue: boolean;
+  unchanged?: boolean;
 }
 type Result =
   | {
@@ -332,4 +333,137 @@ describe('BR-REC-78 buildSaveValues: nothing filled is the screen\'s "Enter at l
       removed: 2,
     });
   });
+});
+
+// D2 / contract: a field with `unchanged: true` (optional, default false) is skipped entirely: not in `values`,
+// not in `filled` / `removed`. The form sets it for an opened saved assessment whose box still equals what it
+// held, so a stored value is never re-sent or re-rounded.
+describe('D2 buildSaveValues: an unchanged field is skipped entirely', () => {
+  const same = (field: Field): Field => ({ ...field, hadValue: true, unchanged: true });
+
+  test('D2 a Number that still holds what it held is not sent', () => {
+    expect(saveBody.buildSaveValues([same(num(WEIGHT, '94.0'))])).toEqual({
+      ok: true,
+      values: [],
+      filled: 0,
+      removed: 0,
+    });
+  });
+
+  test('D2 a Time that still holds what it held is not sent', () => {
+    expect(saveBody.buildSaveValues([same(dur(PLANK, 122))])).toEqual({
+      ok: true,
+      values: [],
+      filled: 0,
+      removed: 0,
+    });
+  });
+
+  test('D2 a stored 95.25 shown as "95.3" (one decimal) and left alone is never re-rounded', () => {
+    expect(saveBody.buildSaveValues([same(num(WEIGHT, '95.3', true, 1))])).toEqual({
+      ok: true,
+      values: [],
+      filled: 0,
+      removed: 0,
+    });
+  });
+
+  test('D2 every field unchanged: nothing is sent, nothing counted', () => {
+    expect(
+      saveBody.buildSaveValues([
+        same(num(WEIGHT, '94.0')),
+        same(num(FAT, '17.5')),
+        same(dur(PLANK, 122)),
+      ]),
+    ).toEqual({ ok: true, values: [], filled: 0, removed: 0 });
+  });
+
+  test('D2 only the changed field is sent; the unchanged ones stay out', () => {
+    expect(
+      saveBody.buildSaveValues([
+        same(num(WEIGHT, '94.0')),
+        num(FAT, '18', true),
+        same(dur(PLANK, 122)),
+      ]),
+    ).toEqual({
+      ok: true,
+      values: [{ metricId: FAT, value: 18 }],
+      filled: 1,
+      removed: 0,
+    });
+  });
+
+  test('D2 a cleared field next to unchanged ones is still a removal', () => {
+    expect(
+      saveBody.buildSaveValues([
+        same(num(WEIGHT, '94.0')),
+        num(FAT, '', true),
+        same(dur(PLANK, 122)),
+      ]),
+    ).toEqual({
+      ok: true,
+      values: [{ metricId: FAT, value: null }],
+      filled: 0,
+      removed: 1,
+    });
+  });
+
+  test('D2 a newly typed value in an empty box next to unchanged ones is sent', () => {
+    expect(
+      saveBody.buildSaveValues([
+        same(num(WEIGHT, '94.0')),
+        num(WAIST, '81,5', false),
+        same(dur(PLANK, 122)),
+      ]),
+    ).toEqual({
+      ok: true,
+      values: [{ metricId: WAIST, value: 81.5 }],
+      filled: 1,
+      removed: 0,
+    });
+  });
+
+  test('D2 changed, cleared and unchanged fields together keep screen order and counts', () => {
+    expect(
+      saveBody.buildSaveValues([
+        num(WAIST, '80.5', true), // changed
+        same(num(WEIGHT, '94.0')), // unchanged
+        dur(PLANK, null, true), // cleared
+        same(num(FAT, '17.5')), // unchanged
+      ]),
+    ).toEqual({
+      ok: true,
+      values: [
+        { metricId: WAIST, value: 80.5 },
+        { metricId: PLANK, value: null },
+      ],
+      filled: 1,
+      removed: 1,
+    });
+  });
+
+  test('D2 a bad number in a changed field is still a problem next to unchanged ones', () => {
+    expect(
+      saveBody.buildSaveValues([
+        same(num(WEIGHT, '94.0')),
+        num(FAT, 'abc', true),
+        same(dur(PLANK, 122)),
+      ]),
+    ).toEqual({
+      ok: false,
+      problems: [{ metricId: FAT, message: NUMBER_ERROR }],
+    });
+  });
+
+  test.each([[false], [undefined]])(
+    'D2 unchanged = %s behaves like before (the value is sent and counted)',
+    (unchanged) => {
+      expect(saveBody.buildSaveValues([{ ...num(WEIGHT, '94', true), unchanged }])).toEqual({
+        ok: true,
+        values: [{ metricId: WEIGHT, value: 94 }],
+        filled: 1,
+        removed: 0,
+      });
+    },
+  );
 });
