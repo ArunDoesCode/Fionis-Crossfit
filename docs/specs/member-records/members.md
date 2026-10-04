@@ -136,6 +136,28 @@ Custom plans and prices, payments, freezes/pauses, bonus days or manual end date
 | Q6 | An archived member is… | **A** read-only until restored / B still editable | **B**, and their page shows when the membership ended (owner) → BR-REC-58, 172 |
 | Q7 | Renewing an archived member… | **A** keeps them archived; the sheet says how to restore (recommended: safe when typing in old binder members) / B restores them when the new membership covers today | **B** → BR-REC-58 |
 
+## Implementation status (2026-10-04, branch `claude/member-records-feature-8fca5b`)
+
+All 23 rules built. Backend tests: `backend/tests/members/`; admin tests: `frontend/tests/members/`; manual: `.pipeline/member-records-members/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 03, 05 | `create-member`, `field-rules`, `member-detail`; `frontend/validators-forms` |
+| 04 | `create-member`; `frontend/duplicates` |
+| 06 | `archive-restore`, `list-search` |
+| 07, 56, 57 | `list-search`, `search-text-length`; `frontend/{search,search-clamp}` |
+| 08, 51, 52 | `membership-status`, `create-member`, `add-period`; `frontend/membership-text`; Stream 0 domain golden fixture |
+| 09 | `add-period`, `edit-period`; `frontend/renew` |
+| 45, 46, 49 | `field-rules`; `frontend/{validators-helpers,validators-forms}` |
+| 47 | `list-search` (`phone` filter); `frontend/duplicates`; manual (warning timing) |
+| 48 | `create-member`, `update-member`; `frontend/{validators-forms,date-warning}` |
+| 50 | `create-member`, `add-period`, `edit-period`, `update-member`; `frontend/validators-forms` |
+| 53 | `memberships-ending` |
+| 54 | `add-period`; `frontend/renew`; manual |
+| 55 | `edit-period`; manual |
+| 58 | `archive-restore`, `add-period`, `edit-period`, `update-member`; `frontend/renew` (E26 half belongs to assessments) |
+| 59, 172 | `member-detail`; `frontend/{membership-text,banner}`; manual |
+Backend files are under `backend/tests/members/*.test.ts`. Screens S4–S9, Home search and sections have no automated UI test (no DOM test library, #9); manual checklist.
+
 ## Changelog
 
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-03…09 from v1 unchanged
@@ -145,3 +167,9 @@ Custom plans and prices, payments, freezes/pauses, bonus days or manual end date
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 "within the lead days" is inclusive (14 days left, lead 14 → Ends soon); no rule changed
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 a latest period that has not started yet is Active whatever the lead days (example "Renewed early → Active, not Ends soon"); no rule changed
+- 2026-10-04 v1 — clarified during build (Stream B): BR-REC-50/55 hold both ways — editing the join date (E19) to a day after
+  any membership's start is refused with 400 `START_BEFORE_JOIN`; no rule changed
+- 2026-10-04 v1 — clarified during build (Stream B, review R-2, R-6; no rule changed): E19 refuses a join date that falls after a
+  membership start only when the join date is actually changed; `q` in E16 is 2–100 characters; the member page lists every
+  membership (also a single one) so BR-REC-55 "periods can be edited" is reachable for a new member; the admin cuts a longer
+  search text (pasted or from `?q=`) to its first 100 characters before asking E16.

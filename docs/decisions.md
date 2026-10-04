@@ -135,7 +135,16 @@ defaults to 0 (one shared bucket, fails closed) and is 1 on the D-018 server. (4
 `lib/env.ts`, `.env.example`, `package.json`, `lib/http.ts`, `client.ts`, `queryClient.ts` (user decision). Rejected:
 waiting for the M0 PR (idle hours), rotating again inside the grace (cookie-order race), a new `APP_ORIGIN` frontend env var.
 
-**D-021 · 2026-10-04 · member-records setup (Stream C) build choices: setup spec clarifications C1–C13, a confirmation is a step inside the sheet, theme as three choices.**
-(1) Where the frozen setup spec was silent the coordinator decided and logged C1–C13 in `setup.md` (gym name 2–60, IANA time zone, trimmed names; a Time measurement is always `min:sec` and 0 decimals; the datatype/unit lock only on a real change; an off assessment hides its measurements without changing their own state; every id once in an order list; pair checks on edit; the rounding function ships for Stream D; name races end in 409; E07 never writes); the owner confirms them at merge. (2) Confirmations (repeat, "better") are a second step inside the one edit sheet, because `useBackToClose` is not stack-aware and nested sheets lose typed values on Back (#18). (3) Theme is three choices System / Light / Dark on S14 (`ThemeChoice`), since the shared `ThemeToggle` is a two-state icon. (4) The catalog loads with `pageSize=100` (E12/E15 need every item in one list). (5) Check ranges are bounded to ±999,999,999.999 (the `numeric(12,3)` limit). (6) The BR-REC-11 example changed from Fran to Deadlift kg → lb (Fran is a Time measurement).
-Why: keep the MVP light and avoid six conflicting guesses; each is cheap to reverse. Rejected: a local copy of `NumberField` to type negative ranges on iOS (filed #21 for the shared fix), a second nested `ConfirmSheet`, fixing the shared sheet in this stream (Stream 0 files).
+**D-021 · 2026-10-04 · member-records members (Stream B) build choices: own settings read, per-member row lock, join-date rule, lazy sheets, tests grouped by surface.**
+(1) The members repository reads `gym_settings` (time zone, `expiry_lead_days`) per request itself, so Stream B does not depend on
+Stream C's code. (2) Period writes (E22, E23) and a changed join date (E19) take `select … for update` on the member row first,
+then check overlap / join date: parallel renewals cannot overlap (BR-REC-09; there is no database constraint, data-model v2).
+(3) E19 refuses a join date after any membership start only when the join date changes (keeps BR-REC-50/55 true both ways).
+(4) E16 name order uses `lower(full_name) COLLATE "C"` (word by word); Stream 0's name index does not serve it, fine for ~1,000
+members, to be measured by `bench` in Stream G. (5) The member page lists every membership, also a single one, so a typo in
+the first plan can be corrected. (6) Renew / edit sheet and archive confirm load on demand (own `sheetLoader` + `useLazySheet`, one `import()` per sheet,
+retry after a failed load) to stay under the bundle budget (tactic 4); server-side data start (tactic 1) is decided once for all streams in Stream G (#20). (7) Admin
+"today" = the device's time zone (gym and phones share one); the server stays authoritative.
+Why: found while building; each keeps the spec's rules true without a shared-file change. Rejected: a database exclusion
+constraint (hand SQL, D-019), caching settings (breaks a lead-days change), Stream-B-only HydrationBoundary (inconsistent).
 

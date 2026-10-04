@@ -1,7 +1,7 @@
-import PlaceholderScreen from '@/components/common/PlaceholderScreen';
-import { UI_TEXT } from '@/lib/messages/words';
+import MembersView from '@/components/views/members/MembersView';
 
-// Placeholder until the members stream (B) builds S5.
+// S5. The search text and the chip are in the URL (`?q=`, `?status=`), read by the client leaf under the
+// route's loading.tsx.
 export default function MembersPage() {
-  return <PlaceholderScreen title={UI_TEXT.screens.members} />;
+  return <MembersView />;
 }
