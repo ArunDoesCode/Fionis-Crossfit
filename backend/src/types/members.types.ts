@@ -171,7 +171,7 @@ const memberFields = {
 // ─── E16 list ───────────────────────────────────────────────────────────────
 
 /**
- * `q`: trimmed, 2+ characters (BR-REC-07). `phone`: cleaned like a member's phone,
+ * `q`: trimmed, 2-100 characters (BR-REC-07). `phone`: cleaned like a member's phone,
  * so fewer than 10 digits is a 400; it matches on the last 10 digits (BR-REC-46, 47).
  * `sortBy` defaults to `name`; with `q` and `name` the prefix-first order applies (BR-REC-56).
  */
@@ -183,8 +183,9 @@ export const memberListQuerySchema = sortedListQuerySchema(
     .string()
     .trim()
     .min(2)
+    .max(100)
     .optional()
-    .describe("Trimmed, 2+ characters: part of the name, email or phone."),
+    .describe("Trimmed, 2-100 characters: part of the name, email or phone."),
   phone: phoneSchema
     .describe(
       "Cleaned like a member's phone (fewer than 10 digits = 400); matches members whose last 10 digits are the same.",

@@ -301,7 +301,7 @@ export interface paths {
         };
         /**
          * E16 Find and list members
-         * @description `q`: trimmed, 2+ characters (else 400). Matches part of the name or email (case-insensitive) and, when `q` without spaces, dashes, brackets and `+` is only digits, part of the phone digits. `%` and `_` are plain characters (BR-REC-07, 56).
+         * @description `q`: trimmed, 2-100 characters (else 400). Matches part of the name or email (case-insensitive) and, when `q` without spaces, dashes, brackets and `+` is only digits, part of the phone digits. `%` and `_` are plain characters (BR-REC-07, 56).
          *     `phone`: cleaned like a member's phone, fewer than 10 digits = 400; matches members whose last 10 digits are the same (BR-REC-46, 47). Send `+` as `%2B` (a bare `+` reads as a space and is dropped, which does not change the match). With `q` and/or `status`, every filter must match.
          *     `status`: omitted = non-archived; `active`|`expiring`|`expired` = non-archived with that membership status (BR-REC-52); `archived` = archived only; `any` = all (BR-REC-06, 57).
          *     Order: `sortBy` defaults to `name`, `sortDir` asc = A-Z. With `q` and `sortBy` omitted or `name`: names starting with `q` first, then the rest, each by name then id (BR-REC-56). `joinedOn` and `lastAssessedOn` break ties by name then id; never-assessed members come last in both directions.

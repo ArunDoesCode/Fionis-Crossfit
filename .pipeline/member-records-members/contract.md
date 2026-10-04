@@ -17,7 +17,7 @@ Handlers answer 501 until the build slices land. "Gym today" = today in `gym_set
 ## Endpoints
 | ID | Method + path | Request | `data` | Errors (beyond 401, 400 `VALIDATION_ERROR`) |
 |---|---|---|---|---|
-| E16 | GET `/api/members` | query `q?`, `phone?`, `status?` (`active|expiring|expired|archived|any`), `page`=1, `pageSize`=10 (≤100), `sortBy`=`name` (`name|joinedOn|lastAssessedOn`), `sortDir`=`asc` | list of `{ id, fullName, phone, lastAssessedOn \| null, archivedAt \| null, membership{ status, plan, endOn, daysLeft } }` | — |
+| E16 | GET `/api/members` | query `q?` (trimmed, 2–100 characters; 101 → 400), `phone?`, `status?` (`active|expiring|expired|archived|any`), `page`=1, `pageSize`=10 (≤100), `sortBy`=`name` (`name|joinedOn|lastAssessedOn`), `sortDir`=`asc` | list of `{ id, fullName, phone, lastAssessedOn \| null, archivedAt \| null, membership{ status, plan, endOn, daysLeft } }` | — |
 | E17 | POST `/api/members` + `Idempotency-Key` | `{ fullName, phone, dateOfBirth, sex, joinedOn, firstPeriod{ plan, startOn }, email?, objective?, notes? }` | member (E18 shape) | 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN`, `IDEMPOTENCY_KEY_MISSING`, `INVALID_JSON` · 422 `IDEMPOTENCY_KEY_REUSED` · 429 `RATE_LIMITED` |
 | E18 | GET `/api/members/:memberId` | — | `{ id, fullName, phone, email \| null, dateOfBirth, age, sex, joinedOn, objective \| null, notes \| null, archivedAt \| null, membership{ status, plan, startOn, endOn, daysLeft }, periods[{ id, plan, startOn, endOn }] }` | 404 |
 | E19 | PATCH `/api/members/:memberId` | any of `fullName, phone, email, dateOfBirth, sex, joinedOn, objective, notes` (≥ 1; nothing else) | member | 404 · 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN`, `INVALID_JSON` |
@@ -42,7 +42,7 @@ Handlers answer 501 until the build slices land. "Gym today" = today in `gym_set
 Required on E17: `fullName, phone, dateOfBirth, sex, joinedOn, firstPeriod`. Two members may share a name or a phone (never refused, BR-REC-04).
 
 ## Behaviour a test can rely on
-- **E16 filters.** `q` is trimmed; fewer than 2 characters → 400. It matches part of `fullName` or `email` (case-insensitive) and, when `q`
+- **E16 filters.** `q` is trimmed, then 2–100 characters (fewer than 2 or more than 100 → 400). It matches part of `fullName` or `email` (case-insensitive) and, when `q`
   without spaces, dashes, brackets and `+` is non-empty and all digits, part of `phone_digits`; `%` and `_` are plain characters.
   `phone` is cleaned like a member phone (fewer than 10 digits → 400) and matches members whose last 10 digits are the same, archived ones
   included under `status=any|archived`. `q`, `phone` and `status` combine with AND.
