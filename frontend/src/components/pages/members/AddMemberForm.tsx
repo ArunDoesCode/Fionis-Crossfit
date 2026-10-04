@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { focusFirstProblem } from '@/components/pages/members/focusFirstProblem';
 import MembershipFields from '@/components/pages/members/MembershipFields';
 import MoreDetailsFields from '@/components/pages/members/MoreDetailsFields';
-import { asMemberControl } from '@/components/pages/members/memberFormControl';
+import { asMemberControl, asPeriodControl } from '@/components/pages/members/memberFormControl';
 import PersonFields from '@/components/pages/members/PersonFields';
 import { useCreateMember } from '@/lib/api/members/queries';
 import { newIdempotencyKey } from '@/lib/members/idempotencyKey';
@@ -99,7 +99,7 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
       />
       <MembershipFields
         formId={formId}
-        control={form.control}
+        control={asPeriodControl(form.control)}
         onStartOnChange={() => {
           startOnChangedByHand.current = true;
         }}

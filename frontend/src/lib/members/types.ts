@@ -31,3 +31,18 @@ export type UpdateMemberBody = NonNullable<
 
 export type MemberListQuery = NonNullable<operations['getApiMembers']['parameters']['query']>;
 export type MemberStatusFilter = NonNullable<MemberListQuery['status']>;
+
+/** E22 / E23 bodies and answer: the saved period, and whether it brought an archived member back. */
+export type CreatePeriodBody = NonNullable<
+  operations['postApiMembersMemberIdPeriods']['requestBody']
+>['content']['application/json'];
+export type UpdatePeriodBody = NonNullable<
+  operations['patchApiMembersMemberIdPeriodsPeriodId']['requestBody']
+>['content']['application/json'];
+export type SavedPeriod = Reply<'postApiMembersMemberIdPeriods', 201>['data'];
+
+/** E24 `data[]`: one member on the Memberships ending lists (Home sections and S4). */
+export type EndingItem = Reply<'getApiMembershipsEnding', 200>['data'][number];
+export type EndingPage = Reply<'getApiMembershipsEnding', 200>;
+export type EndingQuery = operations['getApiMembershipsEnding']['parameters']['query'];
+export type EndingStatus = EndingQuery['status'];

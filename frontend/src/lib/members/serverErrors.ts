@@ -74,3 +74,28 @@ function fieldErrorOf(
   }
   return null;
 }
+
+export type PeriodFormField = 'plan' | 'startOn';
+
+/**
+ * Renew / Edit membership (E22, E23): `START_BEFORE_JOIN` and `PERIOD_OVERLAP` both belong to "Starts on"
+ * (the contract carries no field for them, the endpoint says which); a `VALIDATION_ERROR` goes under the
+ * first of Plan / Starts on it names. Anything else is not a field's: null (the mutation shows a message).
+ */
+export function periodFieldError(err: unknown): { field: PeriodFormField; message: string } | null {
+  if (!isApiError(err)) return null;
+  if (err.code === 'START_BEFORE_JOIN' || err.code === 'PERIOD_OVERLAP') {
+    return { field: 'startOn', message: messageForCode(err.code) };
+  }
+  if (err.code === 'VALIDATION_ERROR') {
+    const details = asRecord(asRecord(err.body)?.details);
+    const issues = Array.isArray(details?.issues) ? details.issues : [];
+    for (const issue of issues) {
+      const field = toFormField(asRecord(issue)?.path);
+      if (field === 'plan' || field === 'startOn') {
+        return { field, message: messageForCode(err.code) };
+      }
+    }
+  }
+  return null;
+}

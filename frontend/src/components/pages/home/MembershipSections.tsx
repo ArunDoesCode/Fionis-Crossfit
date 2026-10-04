@@ -1,14 +1,20 @@
-import Section from '@/components/common/Section';
-import { UI_TEXT } from '@/lib/messages/words';
+'use client';
 
-// SLOT owned by members (Stream B): "Memberships ending" then "Recently ended" (BR-REC-101, 53).
-// The frame (HomeView) only places this; replace this whole file.
-// Placeholder: the two sections as grey rows, no data calls.
+import EndingSection from '@/components/pages/members/EndingSection';
+import PeriodSheet from '@/components/pages/members/PeriodSheet';
+import { useRenewTarget } from '@/lib/members/useRenewTarget';
+
+// SLOT owned by members (Stream B): "Memberships ending" then "Recently ended" (BR-REC-101, 53). Each shows
+// its count, the first 5 rows and "See all"; Renew on a row opens the S9 sheet, so Renew from Home is two
+// taps (Renew, Renew; BR-REC-140). The frame (HomeView) only places this; one sheet serves both sections.
 export default function MembershipSections() {
+  const renew = useRenewTarget();
+
   return (
     <>
-      <Section title={UI_TEXT.sections.membershipsEnding} isLoading />
-      <Section title={UI_TEXT.sections.recentlyEnded} isLoading />
+      <EndingSection status="expiring" onRenew={renew.renew} />
+      <EndingSection status="expired" onRenew={renew.renew} />
+      <PeriodSheet memberId={renew.memberId} open={renew.open} onOpenChange={renew.onOpenChange} />
     </>
   );
 }

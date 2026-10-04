@@ -54,3 +54,38 @@ Permission for every screen below: the shared login (any signed-in visitor; the 
   - Loading: grey name and two lines. Failed: "Couldn't load this." [Try again]; unknown id: "We couldn't find that. It may have been removed." (no retry).
   - **Edit** is the frame's button in the page header (not repeated here).
 - **MembershipBlock**: card `Annual · [Active] 241 days left` and a line `Ends 31 May 2026` (`Ended 31 May 2026` when ended). Badge words: **Active**, **Ends soon** ("Ends in 7 days" / "Ends tomorrow" / "Ends today"), **Ended** ("Ended yesterday" / "Ended 5 days ago"); a membership that starts later: **Active** "Starts 20 Oct". 1 day left reads "1 day left". No Renew button yet (round B). Loading: grey card. Failed: "Couldn't load this." [Try again] inside the block; the rest of the page keeps working.
+
+## Round B (slices 4-5) — admin: renew, edit membership, memberships ending (frontend-dev, Stream B)
+
+Permission for every screen below: the shared login (any signed-in visitor). "Today" = the device's day; the server stays the judge.
+
+### S9 Renew / Edit membership — sheet (no URL of its own)
+Opened from: member page `/admin/members/[memberId]` (**Renew** button in the membership card; a row of "Membership history"), and **Renew** on a row of Home (`/admin`) and S4 (`/admin/memberships`). Bottom sheet on phones (swipe down or Back closes it), centred dialog from 1024 px; X button at the top right. Works for archived members too (BR-REC-58).
+- **Renew**: title "Renew membership", the member's name under it. Fields: **Membership \*** chips Monthly · Quarterly · Half-annual · Annual, starts on the member's LAST plan; **Starts on \*** starts as the last end + 1 day (a past or future day is allowed; both changeable). Live line `Ends 31 May 2027` (follows plan and start; always with the year). Buttons: **Cancel**, **Renew** ("Saving…" + spinner while saving; Cancel is off then). No "Are you sure?".
+- **Edit membership** (tap a history row): same sheet, title "Edit membership", filled with that period's plan and start; button **Save**. Only a changed plan/start is sent. Nothing changed → closes with no request (an archived member with a period that covers today: the save is still sent, see the line below).
+- Archived member only: a line under "Ends …" `Renewing brings Surya Pratap back to the list.` (on Edit: `Saving brings … back to the list.`), shown only while the typed plan and start make a membership that covers today (an old binder entry or a later start: no line).
+- Opened from a list row the member is loaded when the sheet opens: grey form shapes first; failed → "Couldn't load this." [Try again] inside the sheet (no buttons until loaded).
+- Every opening starts fresh (Cancel, change plan, reopen → defaults again).
+- Success: sheet closes; toast `Anita Rao renewed.` (Renew) / `Saved.` (Edit) / `Anita Rao is back on the list.` (instead, when the save brought an archived member back). The member page, the lists and both Home sections refresh.
+- Server refusals under **Starts on** (the sheet stays open, button usable again): `PERIOD_OVERLAP` "This overlaps another membership. Change the start date."; `START_BEFORE_JOIN` "Membership can't start before the join date. Pick a later start date."; `VALIDATION_ERROR` under the field it names. Anything else (`RATE_LIMITED`, `IDEMPOTENCY_KEY_REUSED`, offline "Couldn't save. Check your connection and try again.") a toast.
+- Renew sends an `Idempotency-Key`: Renew tapped again with the same plan/start after a lost answer reuses the key (one membership, not two); changed details get a new key.
+
+### S7 member page — MembershipBlock (changed)
+- Card: `Annual · [Active] 241 days left`, then `Ends 31 May 2026` with **Renew** at the right (secondary button).
+- **Membership history** (title above a list) only when the member has MORE THAN ONE membership, newest first: each row `Annual` / `1 Jun 2025 – 31 May 2026` (plan, then dates with the year, `>` at the right); tap → Edit membership.
+- Loading: grey card (no Renew yet). Failed: "Couldn't load this." [Try again].
+
+### S4 Memberships ending — `/admin/memberships?tab=ending|ended`
+- Header: back arrow to Home, title "Memberships ending". No main action.
+- Tabs **Ends soon** (`tab=ending`, default) and **Ended** (`tab=ended`); the tab is in the URL (Back from a member returns to the same tab; unknown value = Ends soon).
+- Rows (not a table): name; phone `98450 12345`; status badge under the phone: Ends soon → `Ends in 4 days` / `Ends tomorrow` / `Ends today` (amber, triangle); Ended → `Ended yesterday` / `Ended 5 days ago` (red, circle !). **Renew** button at the right of each row. Tapping the row (not Renew) opens `/admin/members/<id>`. Order: Ends soon = soonest first; Ended = last 30 days, most recent first. Archived members are never listed.
+- 25 rows then a full-width **Show more** ("Loading…" while it loads; gone when no more; failed → "Couldn't load this." [Try again] under the rows).
+- Empty (one sentence, no button): Ends soon "Nobody's membership is ending soon."; Ended "No memberships ended in the last 30 days."
+- Loading: tabs + 8 grey rows (route `loading.tsx`, then grey rows while the first page loads). Failed first load: "Couldn't load this." [Try again].
+- Renew on a row opens S9 for that member; after Renewing the row leaves the list.
+
+### Home `/admin` — slot MembershipSections (new)
+- **Memberships ending** (count) then **Recently ended** (count): each shows the first 5 rows (same rows as S4, with Renew) and **See all** → `/admin/memberships?tab=ending` / `?tab=ended` (count and See all only when the section has rows).
+- Empty section: the same one sentence as S4, no See all.
+- Each section loads and fails on its own: 3 grey rows; failed → "Couldn't load this." [Try again] inside that section, the other keeps working.
+- Renew from a Home row = 2 taps: tap **Renew** on the row, tap **Renew** in the sheet.

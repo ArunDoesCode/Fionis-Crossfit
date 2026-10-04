@@ -1,5 +1,5 @@
-import { addDays, type IsoDate } from '@/lib/domain/dates';
-import type { Plan } from '@/lib/domain/membership';
+import { addDays, type IsoDate, isIsoDate } from '@/lib/domain/dates';
+import { membershipEnd, type Plan } from '@/lib/domain/membership';
 
 interface PeriodDates {
   startOn: IsoDate;
@@ -30,3 +30,14 @@ export const renewRestoresMember = (
   period: PeriodDates,
   today: IsoDate,
 ): boolean => archived && period.startOn <= today && today <= period.endOn;
+
+const PLAN_VALUES: readonly Plan[] = ['monthly', 'quarterly', 'half_annual', 'annual'];
+
+/**
+ * The end of the membership being typed (BR-REC-51, 54): null until a plan is chosen and the start is a
+ * real day. The Add, Renew and Edit forms hold plain text, so this takes what the form has.
+ */
+export const entryEnd = (plan: string, startOn: string): IsoDate | null => {
+  const chosen = PLAN_VALUES.find((option) => option === plan);
+  return chosen && isIsoDate(startOn) ? membershipEnd(chosen, startOn) : null;
+};

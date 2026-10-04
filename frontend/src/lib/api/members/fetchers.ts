@@ -2,10 +2,15 @@ import { api } from '@/lib/api/client';
 import { API_ROUTES, apiPath } from '@/lib/api/routes';
 import type {
   CreateMemberBody,
+  CreatePeriodBody,
+  EndingPage,
+  EndingQuery,
   MemberDetail,
   MemberListPage,
   MemberListQuery,
+  SavedPeriod,
   UpdateMemberBody,
+  UpdatePeriodBody,
 } from '@/lib/members/types';
 
 // Success is `{ success: true, data }`; the fetchers hand back `data` (lists: `{ data, meta }`).
@@ -66,4 +71,39 @@ export async function restoreMember(memberId: string): Promise<MemberDetail> {
     apiPath(API_ROUTES.MEMBERS.RESTORE, { memberId }),
   );
   return res.data;
+}
+
+/**
+ * E22: renew (add a period). Like `createMember`, the `idempotencyKey` is kept by the sheet while the same
+ * details are retried, so a lost answer never adds the membership twice (BR-REC-156).
+ */
+export async function createPeriod(
+  memberId: string,
+  body: CreatePeriodBody,
+  idempotencyKey: string,
+): Promise<SavedPeriod> {
+  const res = await api.post<{ data: SavedPeriod }, CreatePeriodBody>(
+    apiPath(API_ROUTES.MEMBERS.PERIODS, { memberId }),
+    body,
+    { headers: { 'Idempotency-Key': idempotencyKey } },
+  );
+  return res.data;
+}
+
+/** E23: change one period's plan and/or start (the end follows). Only the fields sent change. */
+export async function updatePeriod(
+  memberId: string,
+  periodId: string,
+  body: UpdatePeriodBody,
+): Promise<SavedPeriod> {
+  const res = await api.patch<{ data: SavedPeriod }, UpdatePeriodBody>(
+    apiPath(API_ROUTES.MEMBERS.PERIOD, { memberId, periodId }),
+    body,
+  );
+  return res.data;
+}
+
+/** E24: members whose membership ends soon (`expiring`) or ended in the last 30 days (`expired`). */
+export async function listEndingMemberships(query: EndingQuery): Promise<EndingPage> {
+  return api.get<EndingPage>(API_ROUTES.MEMBERSHIPS.ENDING, { query });
 }

@@ -1,4 +1,4 @@
-import type { MemberDetail, UpdateMemberBody } from './types';
+import type { MemberDetail, MemberPeriod, UpdateMemberBody, UpdatePeriodBody } from './types';
 
 type Stored = Pick<
   MemberDetail,
@@ -33,5 +33,19 @@ export function changedMemberFields(
     changes.objective = values.objective;
   }
   if (values.notes !== undefined && values.notes !== stored.notes) changes.notes = values.notes;
+  return changes;
+}
+
+/**
+ * What an Edit membership save sends (E23): only the plan and/or start that differ from the stored period.
+ * Empty = nothing changed (the API refuses an empty body).
+ */
+export function changedPeriodFields(
+  values: { plan: MemberPeriod['plan']; startOn: string },
+  stored: Pick<MemberPeriod, 'plan' | 'startOn'>,
+): UpdatePeriodBody {
+  const changes: UpdatePeriodBody = {};
+  if (values.plan !== stored.plan) changes.plan = values.plan;
+  if (values.startOn !== stored.startOn) changes.startOn = values.startOn;
   return changes;
 }
