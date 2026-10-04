@@ -122,6 +122,7 @@ the server stays authoritative with `DATE_IN_FUTURE`). All functions below are p
 | | `renewRestoresMember(archived: boolean, period: { startOn, endOn }, today): boolean` | archived and `startOn` ≤ today ≤ `endOn` → S9 shows "Renewing brings {name} back to the list." (BR-REC-58) |
 | `lib/members/duplicates.ts` | `duplicatePhoneMatches(items: E16 items, selfId?: string): { id: string, label: string }[]` | other members only (drops `selfId`); label = full name, archived ones as "Anita Rao (archived)"; the form shows "Also used by {labels joined by ', '} · Open" and keeps Save enabled (BR-REC-47) |
 | `lib/members/search.ts` | `isSearchReady(q: string): boolean` | trimmed length ≥ 2 (BR-REC-07) |
+| | `clampSearchText(q: string): string` | the first 100 characters of `q` (E16 `q` is 2–100 characters, api-contract changelog 2026-10-04); shorter input unchanged. Used wherever the E16 `q` is built (Home search, Members list, `?q=` from the URL) so a long paste never produces a 400 |
 - E16 duplicate check: on leaving the phone field with a valid phone → `GET /api/members?phone=<cleaned, + sent as %2B>&status=any&pageSize=10`.
 - Lists ask `pageSize=25` with "Show more" (BR-REC-56, 57); Home sections ask `pageSize=5` and link "See all" to `/admin/memberships?tab=ending|ended`.
 - Error codes map through `messageForCode` (`DATE_IN_FUTURE`, `START_BEFORE_JOIN`, `PERIOD_OVERLAP` already in the dictionary); `DATE_IN_FUTURE`
