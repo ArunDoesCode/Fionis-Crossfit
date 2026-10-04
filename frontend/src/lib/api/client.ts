@@ -9,7 +9,7 @@ export type QueryParams = Record<string, Primitive | Primitive[] | null | undefi
 export interface ApiOptions {
   /**
    * Keep the last ETag and data per GET URL, send `If-None-Match`, and treat a 304 as the cached data
-   * (contract.md assumption 8: the API answers `private, no-store`, so the browser never revalidates
+   * (api-contract.md BR-REC-160, 161: the API answers `private, no-store`, so the browser never revalidates
    * on its own). Browser client only; the server client is per request and gains nothing.
    */
   etag?: boolean;

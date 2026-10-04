@@ -8,7 +8,7 @@ import type {
   MemberDueItem,
 } from '@/lib/due/types';
 
-// E31–E34 (contract.md). Success is `{ success: true, data }`; the fetchers hand back `data` (E31: the
+// E31–E34 (api-contract.md, due-list.md). Success is `{ success: true, data }`; the fetchers hand back `data` (E31: the
 // `{ data, meta }` envelope, the count of a Home section is `meta.total`). Failures throw ApiError with the
 // server's `code`. Writes carry no `Idempotency-Key` (BR-REC-156 covers E17 and E22 only): E33 and E34 are
 // idempotent by nature.

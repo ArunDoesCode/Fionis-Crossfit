@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Mirrors backend/src/types/setup.types.ts (the server checks again). Limits, issue `path`s and messages are
-// the "Request limits" table of .pipeline/member-records-setup/contract.md; messages are plain sentences that
+// BR-REC-60 to 62 and the build clarifications C1, C2 of docs/specs/member-records/setup.md; messages are plain sentences that
 // say what to do (BR-REC-128). Names and the report group are trimmed first, so the limits count the trimmed
 // text (C1, C2). The unit is a label and is kept as typed (BR-REC-69).
 

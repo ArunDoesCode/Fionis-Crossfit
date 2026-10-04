@@ -6,7 +6,7 @@ import { gymToday, type IsoDate } from '@/lib/domain/dates';
 /** The device's time zone (the gym and its phones are in one zone; the server stays authoritative). */
 export const deviceTimeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-/** Gym today = the device's calendar day (contract.md "Admin app interfaces"). */
+/** Gym today = the device's calendar day (BR-REC-93, due-list.md). */
 export const gymTodayNow = (): IsoDate => gymToday(new Date(), deviceTimeZone());
 
 const MINUTE = 60_000;

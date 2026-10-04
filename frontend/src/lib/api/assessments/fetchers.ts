@@ -12,7 +12,7 @@ import type {
   UpdateAssessmentBody,
 } from '@/lib/assessments/types';
 
-// E25–E30 (contract.md). Success is `{ success: true, data }`; the fetchers hand back `data` (the list keeps
+// E25–E30 (api-contract.md, assessments.md). Success is `{ success: true, data }`; the fetchers hand back `data` (the list keeps
 // `meta`). Failures throw ApiError with the server's code. Types come from the generated contract.
 
 /**

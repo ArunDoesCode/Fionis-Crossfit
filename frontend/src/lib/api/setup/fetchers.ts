@@ -2,7 +2,7 @@ import { api } from '@/lib/api/client';
 import { API_ROUTES, apiPath } from '@/lib/api/routes';
 import type { operations } from '@/types/api.generated';
 
-// E07–E15 (contract.md). Success is `{ success: true, data }`; the fetchers hand back `data`. Failures throw
+// E07–E15 (api-contract.md, setup.md). Success is `{ success: true, data }`; the fetchers hand back `data`. Failures throw
 // ApiError. Types come from the generated contract.
 type Json<T> = T extends { content: { 'application/json': infer B } } ? B : never;
 type Reply<Name extends keyof operations, Status extends number> = operations[Name] extends {
@@ -26,7 +26,7 @@ export type UpdateAssessmentTypeBody = RequestBody<'patchApiAssessment-typesType
 export type CreateMetricBody = RequestBody<'postApiAssessment-typesTypeIdMetrics'>;
 export type UpdateMetricBody = RequestBody<'patchApiMetricsMetricId'>;
 
-/** One page of 100 holds the whole catalog, and E12 needs every assessment in one list (contract.md). */
+/** One page of 100 holds the whole catalog, and E12 needs every assessment in one list (api-contract.md E09). */
 export const CATALOG_PAGE_SIZE = 100;
 
 /** E07 */
