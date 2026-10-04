@@ -13,7 +13,9 @@ export interface paths {
         };
         /**
          * E25 Entry form: measurements with previous values and any saved assessment
-         * @description `previous` is the latest value dated before `date` (BR-REC-81). Durations are seconds.
+         * @description `previous` is the stored value with the latest date strictly before `date`, from any assessment of the member; `previous.isEstimated` is that assessment's flag (BR-REC-81, D5). Durations are seconds.
+         *     `metrics`: the type's turned-on measurements in setup order (none while the assessment is off) plus any measurement, on or off, that holds a value in `existing`. Works for a turned-off assessment and an archived member (D4).
+         *     Only the shape of `date` is checked: a future date just returns a form (D1). Unknown member or type: 404.
          */
         get: operations["getApiMembersMemberIdEntry-form"];
         put?: never;
@@ -33,13 +35,18 @@ export interface paths {
         };
         /**
          * E27 A member's assessments, newest first
-         * @description Sorted by date then id; only `sortDir` is selectable (default `desc`).
+         * @description Sorted by date then id; only `sortDir` is selectable (default `desc`); there is no `sortBy`. `typeId` filters by assessment.
+         *     A member with nothing, or an unknown `memberId` / `typeId`, gives an empty list (no 404); `valueCount` = stored values (D10).
          */
         get: operations["getApiAssessments"];
         put?: never;
         /**
          * E26 Save an assessment (creates, or edits the one for member + type + date)
-         * @description Upsert: always 200; `created` says whether a new assessment was made. `value: null` removes a saved value; at most 60 values.
+         * @description Upsert: always 200; `created` says whether a new assessment was made. A measurement left out of `values` is untouched; `value: n` sets it; `value: null` removes the stored value (nothing happens when none is stored). `isEstimated` always replaces the stored flag (D2).
+         *     `saved` = non-null entries written; `removed` = stored values deleted by `null` entries. A body with no non-null value is 400 `NO_VALUES` and writes nothing, also when editing (D2).
+         *     Shape limits (400 `VALIDATION_ERROR`, `details.issues[{ path, message }]`): at most 60 values; a measurement id at most once (path `values.<i>.metricId`); `value` present, a finite number, absolute value at most 999,999,999.999 (path `values.<i>.value`); `date` a real `YYYY-MM-DD` day. Not visible in the schema: the service also refuses a Time (duration) value outside 0 to 35,999 seconds, and a value whose rounded form leaves its limit (D3).
+         *     Each value is rounded before it is stored: Number to the measurement's decimals, Time to whole seconds (BR-REC-76, D3). `METRIC_NOT_IN_TYPE`: a measurement id of another type or unknown; on or off measurements of the given type are accepted (D4).
+         *     Error order: 404 (unknown member or type) -> 400 `DATE_IN_FUTURE` (later than gym today; no lower bound, D1) -> 400 `METRIC_NOT_IN_TYPE` -> 400 `VALIDATION_ERROR` (Time or rounded limit) -> 400 `NO_VALUES`. Shape errors come before all of them. Archived members work. No `Idempotency-Key`: a retry is the same upsert (D6).
          */
         post: operations["postApiAssessments"];
         delete?: never;
@@ -55,20 +62,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** E28 One assessment with its values */
+        /**
+         * E28 One assessment with its values
+         * @description `values` holds every stored value, on or off measurements, in setup order; durations in seconds (D9).
+         */
         get: operations["getApiAssessmentsAssessmentId"];
         put?: never;
         post?: never;
         /**
          * E30 Delete an assessment with its values
-         * @description The one hard delete besides sign-ins and idempotency keys (BR-REC-165).
+         * @description The one hard delete besides sign-ins and idempotency keys (BR-REC-165). `removed` = how many values went with it (D9); deleting again is 404.
          */
         delete: operations["deleteApiAssessmentsAssessmentId"];
         options?: never;
         head?: never;
         /**
          * E29 Move an assessment's date or mark it estimated
-         * @description Unknown fields rejected; at least one field. Moving the date moves its values.
+         * @description Unknown fields rejected; at least one field. Moving the date moves its values in the same transaction (D8).
+         *     Error order: 404 -> 400 `DATE_IN_FUTURE` (later than gym today) -> 409 `ASSESSMENT_DATE_TAKEN` (another assessment of this member + type already has that date; the date it already has is not taken). Shape errors come first.
          */
         patch: operations["patchApiAssessmentsAssessmentId"];
         trace?: never;
