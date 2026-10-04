@@ -24,7 +24,8 @@ Tests: `backend/tests/setup/**`, `frontend/tests/setup/**` (test-writer only).
 Like auth: one contract step for E07–E15 + admin interfaces, then red tests (backend and frontend test-writers on disjoint
 folders, in parallel), then backend-dev ∥ frontend-dev for all three slices; slices below are the checkpoints.
 
-- [ ] **0. Contract** — field rules in `types/setup.types.ts` (C1–C3, C7, C8), `contract:generate`, `types:api`, `contract.md` (+ admin interfaces)
+- [x] **0. Contract** — field rules in `types/setup.types.ts` (C1–C3, C7, C8), `contract:generate`, `types:api`, `contract.md` (+ admin interfaces, rounding signature) — 2cae9bf
+  Decisions taken with the contract: E11 answers all measurements (on and off); check ranges bounded to ±999,999,999.999 (fits `numeric(12,3)`); E14 error order 404 → C8 400 → `METRIC_LOCKED` → `NAME_TAKEN`; catalog loaded with `pageSize=100`.
 - [ ] **Red tests** — backend `tests/setup/**`, frontend `tests/setup/**`
 - [ ] **1. Settings** — BR-REC-60, 72 (E07 ETag)
   - backend: E07 (row read; ETag), E08 (C1 checks, change log `settings.update`)
