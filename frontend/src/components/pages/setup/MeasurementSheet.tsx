@@ -1,13 +1,11 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import ConfirmSheet from '@/components/common/ConfirmSheet';
-import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { focusFirstProblem } from '@/components/pages/setup/focusFirstProblem';
 import MeasurementFields, { measurementFieldIds } from '@/components/pages/setup/MeasurementFields';
-import SheetBody from '@/components/pages/setup/SheetBody';
-import SheetFooter from '@/components/pages/setup/SheetFooter';
+import SetupSheet from '@/components/pages/setup/SetupSheet';
 import { isApiError } from '@/lib/api/errors';
 import type { Metric, UpdateMetricBody } from '@/lib/api/setup/fetchers';
 import { useCreateMetric, useUpdateMetric } from '@/lib/api/setup/queries';
@@ -57,9 +55,10 @@ interface Waiting {
 // Add / edit a measurement (BR-REC-10, 11, 14, 62–65, 69, 71). Kind and unit are locked while it has
 // results (BR-REC-11); a changed repeat asks "This changes due dates for all members" and a changed
 // "better" on a measurement with results asks "Best results and leaderboards will change for past
-// results" first (one question when both change; BR-REC-70, 71, 133). A name already used in this
-// assessment is said next to Name; other server answers are toasts from the hooks (a locked answer is
-// the safety net, the fields lock first). Bottom sheet on phones, dialog on desktop (BR-REC-138).
+// results" first (one question when both change; BR-REC-70, 71, 133), as a second step inside this same
+// sheet (SetupSheet). A name already used in this assessment is said next to Name; other server answers
+// are toasts from the hooks (a locked answer is the safety net, the fields lock first). Bottom sheet on
+// phones, dialog on desktop (BR-REC-138).
 export default function MeasurementSheet({
   typeId,
   measurement,
@@ -92,7 +91,8 @@ export default function MeasurementSheet({
       {
         onSuccess: () => onOpenChange(false),
         onError: (err) => {
-          setWaiting(null);
+          // Back to the form first (it is hidden during the question), so Name can take focus.
+          flushSync(() => setWaiting(null));
           showNameTaken(err);
         },
       },
@@ -124,48 +124,42 @@ export default function MeasurementSheet({
     send(body);
   };
 
-  const copy = confirmCopy({ repeat: waiting?.repeat ?? false, better: waiting?.better ?? false });
+  const confirm = waiting && {
+    ...confirmCopy({ repeat: waiting.repeat, better: waiting.better }),
+    pending: update.isPending,
+    onCancel: () => setWaiting(null),
+    onConfirm: () => send(waiting.body),
+  };
 
   return (
-    <ResponsiveSheet
+    <SetupSheet
       open={open}
       onOpenChange={onOpenChange}
       title={
         measurement ? SETUP_TEXT.measurementSheet.editTitle : SETUP_TEXT.measurementSheet.addTitle
       }
-      footer={<SheetFooter formId={formId} saving={saving} onCancel={() => onOpenChange(false)} />}
+      formId={formId}
+      saving={saving}
+      confirm={confirm}
     >
-      <SheetBody>
-        <form
-          id={formId}
-          noValidate
-          onSubmit={form.handleSubmit(onValid, (errors) =>
-            focusFirstProblem(
-              errors,
-              FIELD_ORDER,
-              measurementFieldIds(formId, form.getValues('datatype') === 'duration'),
-            ),
-          )}
-        >
-          <MeasurementFields
-            form={form}
-            base={formId}
-            locked={measurement?.hasValues ?? false}
-            isEdit={measurement !== null}
-          />
-        </form>
-      </SheetBody>
-      <ConfirmSheet
-        open={waiting !== null}
-        onOpenChange={(next) => {
-          if (!next) setWaiting(null);
-        }}
-        title={copy.title}
-        description={copy.description}
-        confirmLabel={copy.confirmLabel}
-        pending={update.isPending}
-        onConfirm={() => waiting && send(waiting.body)}
-      />
-    </ResponsiveSheet>
+      <form
+        id={formId}
+        noValidate
+        onSubmit={form.handleSubmit(onValid, (errors) =>
+          focusFirstProblem(
+            errors,
+            FIELD_ORDER,
+            measurementFieldIds(formId, form.getValues('datatype') === 'duration'),
+          ),
+        )}
+      >
+        <MeasurementFields
+          form={form}
+          base={formId}
+          locked={measurement?.hasValues ?? false}
+          isEdit={measurement !== null}
+        />
+      </form>
+    </SetupSheet>
   );
 }

@@ -1,9 +1,8 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import ConfirmSheet from '@/components/common/ConfirmSheet';
-import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import {
   ChipsControl,
   NumberControl,
@@ -11,8 +10,7 @@ import {
   TextControl,
 } from '@/components/pages/setup/FormControls';
 import { focusFirstProblem } from '@/components/pages/setup/focusFirstProblem';
-import SheetBody from '@/components/pages/setup/SheetBody';
-import SheetFooter from '@/components/pages/setup/SheetFooter';
+import SetupSheet from '@/components/pages/setup/SetupSheet';
 import { isApiError } from '@/lib/api/errors';
 import type { AssessmentType, UpdateAssessmentTypeBody } from '@/lib/api/setup/fetchers';
 import { useCreateAssessmentType, useUpdateAssessmentType } from '@/lib/api/setup/queries';
@@ -47,9 +45,10 @@ const UNIT_OPTIONS = [
 const FIELD_ORDER = ['name', 'intervalCount'] as const;
 
 // Add / edit an assessment (BR-REC-13, 61, 66, 70): name, repeat number + unit, and (when editing) the On
-// switch. A changed repeat asks "This changes due dates for all members" first (BR-REC-70, 133). A name
-// that is already used is said next to the Name field (BR-REC-61); every other server answer is a toast
-// from the mutation hook. Bottom sheet on phones, dialog on desktop (BR-REC-138).
+// switch. A changed repeat asks "This changes due dates for all members" first (BR-REC-70, 133), as a
+// second step inside this same sheet (SetupSheet). A name that is already used is said next to the Name
+// field (BR-REC-61); every other server answer is a toast from the mutation hook. Bottom sheet on phones,
+// dialog on desktop (BR-REC-138).
 export default function AssessmentSheet({ assessment, open, onOpenChange }: AssessmentSheetProps) {
   const formId = useId();
   const ids = {
@@ -83,7 +82,8 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
       {
         onSuccess: () => onOpenChange(false),
         onError: (err) => {
-          setWaiting(null);
+          // Back to the form first (it is hidden during the question), so Name can take focus.
+          flushSync(() => setWaiting(null));
           showNameTaken(err);
         },
       },
@@ -110,69 +110,57 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
     send(body);
   };
 
-  const copy = confirmCopy({ repeat: true, better: false });
+  const confirm = waiting && {
+    ...confirmCopy({ repeat: true, better: false }),
+    pending: update.isPending,
+    onCancel: () => setWaiting(null),
+    onConfirm: () => send(waiting),
+  };
 
   return (
-    <ResponsiveSheet
+    <SetupSheet
       open={open}
       onOpenChange={onOpenChange}
       title={assessment ? text.editTitle : text.addTitle}
-      footer={<SheetFooter formId={formId} saving={saving} onCancel={() => onOpenChange(false)} />}
+      formId={formId}
+      saving={saving}
+      confirm={confirm}
     >
-      <SheetBody>
-        <form
-          id={formId}
-          noValidate
-          onSubmit={form.handleSubmit(onValid, (errors) =>
-            focusFirstProblem(errors, FIELD_ORDER, ids),
-          )}
-          className="flex flex-col gap-2"
-        >
-          <TextControl
+      <form
+        id={formId}
+        noValidate
+        onSubmit={form.handleSubmit(onValid, (errors) =>
+          focusFirstProblem(errors, FIELD_ORDER, ids),
+        )}
+        className="flex flex-col gap-2"
+      >
+        <TextControl control={form.control} name="name" id={ids.name} label={text.name} required />
+        <div className="flex flex-col gap-2">
+          <NumberControl
             control={form.control}
-            name="name"
-            id={ids.name}
-            label={text.name}
+            name="intervalCount"
+            id={ids.intervalCount}
+            label={text.repeatEvery}
             required
           />
-          <div className="flex flex-col gap-2">
-            <NumberControl
-              control={form.control}
-              name="intervalCount"
-              id={ids.intervalCount}
-              label={text.repeatEvery}
-              required
-            />
-            <ChipsControl
-              control={form.control}
-              name="intervalUnit"
-              legend={text.weeksOrMonths}
-              hideLegend
-              options={UNIT_OPTIONS}
-            />
-          </div>
-          {assessment && (
-            <SwitchControl
-              control={form.control}
-              name="isActive"
-              id={ids.isActive}
-              label={text.on}
-              hint={text.onHint}
-            />
-          )}
-        </form>
-      </SheetBody>
-      <ConfirmSheet
-        open={waiting !== null}
-        onOpenChange={(next) => {
-          if (!next) setWaiting(null);
-        }}
-        title={copy.title}
-        description={copy.description}
-        confirmLabel={copy.confirmLabel}
-        pending={update.isPending}
-        onConfirm={() => waiting && send(waiting)}
-      />
-    </ResponsiveSheet>
+          <ChipsControl
+            control={form.control}
+            name="intervalUnit"
+            legend={text.weeksOrMonths}
+            hideLegend
+            options={UNIT_OPTIONS}
+          />
+        </div>
+        {assessment && (
+          <SwitchControl
+            control={form.control}
+            name="isActive"
+            id={ids.isActive}
+            label={text.on}
+            hint={text.onHint}
+          />
+        )}
+      </form>
+    </SetupSheet>
   );
 }

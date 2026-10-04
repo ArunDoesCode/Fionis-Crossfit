@@ -11,17 +11,19 @@ interface SheetFooterProps {
   formId: string;
   saving: boolean;
   onCancel: () => void;
+  /** Lets the sheet put focus back on Save after its confirmation step. */
+  saveRef?: React.Ref<HTMLButtonElement>;
 }
 
 // [ Cancel ] [ Save ] (BR-REC-134): Save stays tappable until the call runs, then reads "Saving…" with a
 // spinner. No Reset button. Listed Cancel first; ResponsiveSheet puts the action on top on phones.
-export default function SheetFooter({ formId, saving, onCancel }: SheetFooterProps) {
+export default function SheetFooter({ formId, saving, onCancel, saveRef }: SheetFooterProps) {
   return (
     <>
       <Button type="button" variant="secondary" disabled={saving} onClick={onCancel}>
         {UI_TEXT.cancel}
       </Button>
-      <Button type="submit" form={formId} disabled={saving}>
+      <Button ref={saveRef} type="submit" form={formId} disabled={saving}>
         {saving && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
         {saving ? UI_TEXT.saving : SETUP_TEXT.sheet.save}
       </Button>
