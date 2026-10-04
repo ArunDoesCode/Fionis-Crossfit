@@ -39,9 +39,12 @@ interface SetupSheetProps {
 // The edit sheet of the setup screens: the form, and (when a change needs a question first) the question
 // as a second step of the SAME sheet. One sheet means one Back entry (BR-REC-138): Back closes the whole
 // sheet, and Cancel on the question returns to the form with every typed value kept. A second sheet on
-// top would push a second Back entry (useBackToClose is not stack-aware). The footer's buttons are
-// replaced between steps, so focus is moved on purpose: Cancel on the question (never the action, so a
-// double tap on Save cannot confirm), Save again when back at the form.
+// top would push a second Back entry (useBackToClose is not stack-aware). The sheet keeps its form title;
+// the question is a `role="alert"` block in the body, so a screen reader reads it out when it appears (it
+// is not an AlertDialog: that would swap the dialog and remount the body). The footer's buttons are
+// replaced between steps, so focus is moved on purpose: Cancel on the question (the safe button, so
+// Enter or Space on the keyboard cannot confirm), Save again when back at the form. A finger double tap
+// is a different case: the action sits exactly where Save was, so it ignores taps for a moment (below).
 export default function SetupSheet({
   open,
   onOpenChange,
@@ -64,8 +67,7 @@ export default function SetupSheet({
     <ResponsiveSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={confirm ? confirm.title : title}
-      description={confirm?.description}
+      title={title}
       footer={
         confirm ? (
           <ConfirmFooter confirm={confirm} />
@@ -80,16 +82,31 @@ export default function SetupSheet({
       }
     >
       <SheetBody hidden={asking}>{children}</SheetBody>
+      {confirm && (
+        <div role="alert" className="flex flex-col gap-1">
+          <p className="text-base font-medium">{confirm.title}</p>
+          <p className="text-sm text-muted-foreground">{confirm.description}</p>
+        </div>
+      )}
     </ResponsiveSheet>
   );
 }
 
+// A second tap of a quick double tap on Save lands on the action here (same place on a phone, and it
+// would save before the sentence is read). Taps in the first moments are ignored; nothing looks different.
+const ARM_DELAY_MS = 300;
+
 // [ Cancel ] [ the action ] — the same pair as the old confirmation sheet, with the same "Saving…" state.
 function ConfirmFooter({ confirm }: { confirm: SetupSheetConfirm }) {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const armed = useRef(false);
 
   useEffect(() => {
     cancelRef.current?.focus();
+    const timer = setTimeout(() => {
+      armed.current = true;
+    }, ARM_DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -103,7 +120,13 @@ function ConfirmFooter({ confirm }: { confirm: SetupSheetConfirm }) {
       >
         {UI_TEXT.cancel}
       </Button>
-      <Button type="button" disabled={confirm.pending} onClick={confirm.onConfirm}>
+      <Button
+        type="button"
+        disabled={confirm.pending}
+        onClick={() => {
+          if (armed.current) confirm.onConfirm();
+        }}
+      >
         {confirm.pending && (
           <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />
         )}
