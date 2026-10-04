@@ -99,6 +99,8 @@ E17 therefore writes 2 rows; E22 1 or 2; E23 0, 1 or 2.
 4. E23: a no-op save still applies the restore rule (BR-REC-58 "saving a period that covers today").
 5. `fullName` collapses all whitespace runs (tabs, newlines), not only spaces.
 6. No `details.field` for `START_BEFORE_JOIN` / `PERIOD_OVERLAP`: the form knows which field from the endpoint (E17/E22/E23 → start date, E19 → join date).
+7. (backend build) E19 `START_BEFORE_JOIN` fires only when the sent `joinedOn` differs from the stored one (a sent-but-unchanged value is only date-checked): equivalent for data made through the API, and the S8 form sends every field.
+8. (backend build) E16 name order uses `lower(full_name) COLLATE "C"` (word-by-word, ASCII); Stream 0's `members_name_active_idx` does not serve it (about 1,000 rows, sorted in memory).
 
 ## Admin app interfaces (coordinator, 2026-10-04 — tests and frontend-dev both use these names)
 "Today" on the admin side = `gymToday(new Date(), <device time zone>)` from `lib/domain/dates.ts` (the gym and its phones are in one zone;
