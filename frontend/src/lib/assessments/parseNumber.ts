@@ -7,6 +7,12 @@ export type NumberParse = { kind: 'empty' } | { kind: 'ok'; value: number } | { 
 
 const NUMBER_TEXT = /^(-?)(?:(\d+)(?:[.,](\d*))?|[.,](\d+))$/;
 
+/** A Number box read exactly, without rounding ("95,55 " is 95.55); null when it is not a number. */
+export const exactNumber = (text: string): number | null => {
+  const trimmed = text.trim();
+  return NUMBER_TEXT.test(trimmed) ? Number(trimmed.replace(',', '.')) : null;
+};
+
 // The server refuses a stored number beyond ±999,999,999.999 (D3); after rounding to `decimals` digits the
 // largest whole count of 10^-decimals that fits is 10^(9 + decimals) − 1.
 const largestCount = (decimals: Decimals): bigint => 10n ** BigInt(9 + decimals) - 1n;

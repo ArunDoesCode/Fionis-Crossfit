@@ -1,9 +1,10 @@
 'use client';
 
 import { type Dispatch, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useSaveAssessment } from '@/lib/api/assessments/queries';
 import { browserDraftStorage, clearDraft, draftKey } from './draft';
-import { type EntryAction, type EntryState, isUnchangedField } from './entryState';
+import { type EntryAction, type EntryState, isChanged, isUnchangedField } from './entryState';
 import { type FlaggedField, flaggedFields } from './fieldView';
 import { dateDomId, fieldDomId, focusField } from './focusField';
 import { entryDateIssue } from './labels';
@@ -50,7 +51,8 @@ interface Prepared {
  * Save and "Save & next date" (BR-REC-19, 76–78, 82–84, 86). Order of the checks: a date is picked and not
  * in the future, no Time box out of range, every number readable, the assessment would still hold a value
  * (BR-REC-78, D2), then the one "Check these values" sheet when a value being sent looks odd (BR-REC-82).
- * A saved assessment sends only the boxes that changed (D2): an untouched value is never rewritten. A
+ * A saved assessment sends only the boxes that changed (D2): an untouched value is never rewritten, and one
+ * with nothing changed sends no request at all (it would only add an identical change-log row). A
  * failed Save keeps everything and says so next to the bar; saving again is the same E26 upsert, never a
  * second assessment (BR-REC-86).
  */
@@ -64,22 +66,25 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
   const [nextWanted, setNextWanted] = useState(false);
   const prepared = useRef<Prepared | null>(null);
 
+  /** The assessment is saved (or there was nothing to write): drop the draft, then leave or start the next date. */
+  function finish(next: boolean) {
+    const storage = browserDraftStorage();
+    if (storage) clearDraft(storage, draftKey(memberId, typeId, state.date));
+    if (!next) {
+      exitToStart();
+      return;
+    }
+    dispatch({ type: 'next' });
+    setAttempted(false);
+    requestAnimationFrame(() => focusField(dateDomId(formId)));
+  }
+
   function send({ values, next }: Prepared) {
     setStatus(null);
     mutation.mutate(
       { memberId, typeId, date: state.date, isEstimated: state.isEstimated, values },
       {
-        onSuccess: () => {
-          const storage = browserDraftStorage();
-          if (storage) clearDraft(storage, draftKey(memberId, typeId, state.date));
-          if (!next) {
-            exitToStart();
-            return;
-          }
-          dispatch({ type: 'next' });
-          setAttempted(false);
-          requestAnimationFrame(() => focusField(dateDomId(formId)));
-        },
+        onSuccess: () => finish(next),
         onError: (error) => setStatus(saveFailureText(error)),
       },
     );
@@ -108,6 +113,12 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
     const badTime = metrics.find((metric) => state.timeProblems[metric.id]);
     if (badTime) {
       focusField(fieldDomId(formId, badTime.id));
+      return;
+    }
+    // An opened saved assessment (still on its own date) with nothing changed: nothing to write (D2).
+    if (state.opened !== null && !isChanged(state)) {
+      toast.success(ASSESSMENT_TEXT.saved);
+      finish(next);
       return;
     }
 

@@ -1,5 +1,6 @@
 import type { DurationStatus } from '@/lib/durationStatus';
 import type { Draft } from './draft';
+import { exactNumber } from './parseNumber';
 import type { EntryMetric, ExistingAssessment, FieldInput, Inputs } from './types';
 import { storedNumberText } from './valueText';
 
@@ -69,8 +70,17 @@ export const emptyEntry = (date: string): EntryState => ({
   loadedFor: null,
 });
 
-const sameInput = (a: FieldInput | undefined, b: FieldInput | undefined): boolean =>
-  (isBlank(a) && isBlank(b)) || a === b;
+// Blank is blank. A Number box holds the same value however it is spelled ("95,55", "95.55 "): the typed
+// numbers are compared exactly, never rounded, so "95.56" over a stored 95.55 is a change (D2). A Time box is
+// seconds.
+const sameInput = (a: FieldInput | undefined, b: FieldInput | undefined): boolean => {
+  if (isBlank(a) && isBlank(b)) return true;
+  if (typeof a === 'string' && typeof b === 'string') {
+    const [x, y] = [exactNumber(a), exactNumber(b)];
+    if (x !== null && y !== null) return x === y;
+  }
+  return a === b;
+};
 
 const sameInputs = (a: Inputs, b: Inputs): boolean =>
   [...new Set([...Object.keys(a), ...Object.keys(b)])].every((id) => sameInput(a[id], b[id]));

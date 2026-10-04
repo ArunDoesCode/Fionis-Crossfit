@@ -6,10 +6,13 @@ import { type MutableRefObject, useEffect, useRef, useState } from 'react';
 export const DATE_PAUSE_MS = 300;
 
 // A desktop date box reports a complete date after every key of the year: 0002, 0020, 0202, 2026. Only a
-// four-digit year from 1000 on can be the finished one; anything else waits for the box to be left.
-const settled = (date: string): boolean => {
-  const match = /^(\d{4})-\d{2}-\d{2}$/.exec(date);
-  return match !== null && Number(match[1]) >= 1000;
+// four-digit year from 1000 on, on a real day, can be the finished one; anything else waits for the box to be left.
+export const settled = (date: string): boolean => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (match === null || Number(match[1]) < 1000) return false;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const real = new Date(Date.UTC(year, month - 1, day));
+  return real.getUTCMonth() === month - 1 && real.getUTCDate() === day;
 };
 
 type Timer = MutableRefObject<ReturnType<typeof setTimeout> | null>;
