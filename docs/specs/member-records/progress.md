@@ -111,6 +111,10 @@ S18 Export data (`/admin/settings/export`): three rows — Members, Memberships,
 | P10 | 119 | E39 sends `Content-Disposition: attachment; filename="<file>-<gym today>.csv"` and the CSV headers before reading the rows, then streams rows in batches. S18 first makes sure the sign-in is fresh (one E05 call), then starts a plain browser download. |
 | P11 | 111 | S13 URL keys: `metric`, `joinedFrom`, `joinedTo` (YYYY-MM), `plan`, `sex`, `age` (an age-band code); unknown values are ignored. Default measurement: the first measurement that is on whose name starts with "Body fat" (any case), else the first one that is on. The measurement list shows measurements that are on. |
 
+| P12 | 108 | Two assessments with table values on the same date: the one earlier in setup order wins. |
+| P13 | 117 | CSV `display` for a time of 1 h or more follows `formatDuration`: 3930 s → "1:05:30"; under 1 h → "m:ss" ("2:02"). |
+| P14 | 118 | The guard characters are ASCII: `=`, `+`, `-` (hyphen-minus), `@`, tab. The "−" in the BR-REC-118 text is typography, not U+2212. |
+
 ## Not now
 
 Server-made PDF, a date range on the report card, sending cards by WhatsApp/email, charts beyond trend lines
@@ -133,5 +137,5 @@ and bars, comparing two members, CSV import.
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-04 v2 — changed after freeze (user decision during the Stream F build): BR-REC-110 has no server cache
   (computed live, admin refetches on open); performance BR-REC-147 drops "50 ms cached", tactic 19 dropped.
-  Clarified during build (no other rule changed): P2–P11; E35 adds `id` + `decimals` per measurement, type `id`,
+  Clarified during build (no other rule changed): P2–P14 (P12–P14 answer the test-writer's questions); E35 adds `id` + `decimals` per measurement, type `id`,
   and segmental groups as `{ name, unit, decimals }` (BR-REC-162, own types file).

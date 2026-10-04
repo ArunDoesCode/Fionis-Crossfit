@@ -26,8 +26,8 @@ Tests: `backend/tests/progress/**`, `frontend/tests/progress/**` (test-writer on
 As setup: one contract step for E35–E39 + interfaces, then red tests (backend and frontend test-writers in parallel on disjoint
 folders), then backend-dev ∥ frontend-dev for all three slices; slices below are the checkpoints.
 
-- [ ] **0. Contract** — `types/progress.types.ts` (E35 `id`/`decimals`, segmental groups), route notes, `contract:generate`, `types:api`, `contract.md`
-- [ ] **Red tests** — backend `tests/progress/**`, frontend `tests/progress/**`
+- [x] **0. Contract** — `types/progress.types.ts` (E35 `id`/`decimals`, segmental groups), route notes, `contract:generate`, `types:api`, `contract.md` — 998abff
+- [x] **Red tests** — backend `tests/progress/**` (41cec8b), frontend `tests/progress/**` (6ef6547)
 - [ ] **1. Report card** — BR-REC-22, 106, 107, 108, 109
   - backend: E35, pure `reportCard` / `summariseReadings` / `bestReading`
   - admin: S12 — phone: one card per measurement; desktop + print: table; Print button; print layout (A4, shell hidden, black on white)
