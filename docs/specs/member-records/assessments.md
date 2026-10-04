@@ -130,26 +130,12 @@ S11 All assessments (`/admin/members/[memberId]/assessments`):
 | D20 | 160 | E25 sends no `ETag` (BR-REC-160 names E07 and E09 only); its example "re-open entry form → 304" is read as the catalog request the form makes. E25 `metrics` is one list in setup order (`sort_order`, then id) holding the turned-on measurements and the off ones that hold a value; an unknown `typeId` on E27 gives an empty list like an unknown `memberId`. |
 | D21 | 87 | E29 (move a saved assessment to another date) is built as an API only: v1 has no screen that moves an assessment (S11's sheet offers Edit and Delete; Edit reopens S10 at that date). The BR-REC-87 sentence is therefore not shown anywhere yet; the move screen is a GitHub issue. |
 
-## Implementation status (2026-10-04, branch `claude/member-record-assessment-696977`)
-
-All 24 rules built (E29 API-only, D21). Backend tests: `backend/tests/assessments/`; admin tests: `frontend/tests/assessments/` + `frontend/tests/lib/{numberText,durationStatus}.test.ts`; manual: `.pipeline/member-records-assessments/checklist.md`.
-| BR-REC | Test file(s) |
-|---|---|
-| 12, 19, 76, 77, 78 | `assessments/{save,save-values,save-errors,save-concurrency}.test.ts`; `frontend/tests/assessments/{parse-number,save-body}.test.ts` |
-| 20, 74, 81 | `assessments/entry-form.test.ts`; `frontend/tests/assessments/{change,field-view,entry-state}.test.ts` (offer UI manual) |
-| 21, 82 | `frontend/tests/assessments/{plausibility,field-view}.test.ts` (sheet manual) |
-| 75, 91 | `frontend/tests/lib/durationStatus.test.ts`, `frontend/tests/assessments/field-options.test.ts` (keypad on a phone manual) |
-| 79, 80, 83, 84 | `frontend/tests/assessments/{paper-columns,labels}.test.ts`, `assessments/{save-errors,move}.test.ts` |
-| 85 | `frontend/tests/assessments/{draft,entry-state}.test.ts` (restore UI manual) |
-| 86 | `assessments/{save,save-concurrency}.test.ts`; `frontend/tests/assessments/save-error.test.ts` |
-| 87 | `assessments/move.test.ts` (API only; no screen, D21, #32) |
-| 88, 89, 92 | `assessments/{delete,list,detail,change-log}.test.ts`; `frontend/tests/assessments/{queries,query-options}.test.ts` |
-| 73, 90 | manual (choose sheet needs E32 from the due-list stream; leave guard) |
-
 ## Not now
 
 Saving while offline and syncing later (only drafts are kept), photos of paper sheets, members entering their
 own results, two trainers editing the same assessment at once (last save wins), InBody/scale import.
+
+No automated UI tests for the choose sheet (BR-REC-73), the leave guard (BR-REC-90), the offer and check sheets (BR-REC-20, 21), the phone keypad (BR-REC-75, 91) or draft restore (BR-REC-85) (no DOM test library, #9); covered by the manual checklist.
 
 ## Questions (all answered 2026-10-03)
 
