@@ -24,8 +24,11 @@ Tests: `backend/tests/due/**`, `frontend/tests/due/**` (test-writer only).
 Like setup: one contract step for E31–E34 + `computeDue` + admin interfaces, then red tests (backend and frontend
 test-writers on disjoint folders, in parallel), then backend-dev ∥ frontend-dev for all slices; slices are the checkpoints.
 
-- [ ] **0. Contract** — `computeDue` signature, E31–E34 behaviour, schema tweaks if any (`types/due.types.ts`), `contract:generate`,
-  `types:api`, `contract.md` (+ admin interfaces by the coordinator)
+- [x] **0. Contract** — `computeDue` signature, E31–E34 behaviour, schema tweaks if any (`types/due.types.ts`), `contract:generate`,
+  `types:api`, `contract.md` (+ admin interfaces by the coordinator) — b16cc4f
+  Decisions taken with the contract: engine = `computeDue` + `dueListRows` + `memberDueItems` + `isListedInDueList` (C3 unit-testable);
+  last tie-break `memberId`; E31 unknown/off `typeId` → empty page; no settings row → Asia/Kolkata, 7; E34 with nothing set still logs
+  `due_override.clear`; error order schema 400 → 404 → `until` checks.
 - [ ] **Red tests** — backend `tests/due/**`, frontend `tests/due/**`
 - [ ] **1. Due engine** — BR-REC-15, 16, 93, 94, 95, 96, 105 (C1, C2; due examples 1–9, 14)
   - backend: `lib/domain/due.ts` `computeDue` (pure, `today` + lead days as arguments)
