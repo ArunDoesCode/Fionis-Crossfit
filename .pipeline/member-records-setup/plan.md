@@ -26,14 +26,14 @@ folders, in parallel), then backend-dev ∥ frontend-dev for all three slices; s
 
 - [x] **0. Contract** — field rules in `types/setup.types.ts` (C1–C3, C7, C8), `contract:generate`, `types:api`, `contract.md` (+ admin interfaces, rounding signature) — 2cae9bf
   Decisions taken with the contract: E11 answers all measurements (on and off); check ranges bounded to ±999,999,999.999 (fits `numeric(12,3)`); E14 error order 404 → C8 400 → `METRIC_LOCKED` → `NAME_TAKEN`; catalog loaded with `pageSize=100`.
-- [ ] **Red tests** — backend `tests/setup/**`, frontend `tests/setup/**`
-- [ ] **1. Settings** — BR-REC-60, 72 (E07 ETag)
+- [x] **Red tests** — backend `tests/setup/**` (fca6f76), frontend `tests/setup/**` (afce7df)
+- [x] **1. Settings** — BR-REC-60, 72 (E07 ETag)
   - backend: E07 (row read; ETag), E08 (C1 checks, change log `settings.update`)
   - admin: S14 Settings hub (rows Assessments › · Reminders & gym › · Account › · Export data › · Theme System/Light/Dark), S16 Reminders & gym form
-- [ ] **2. Assessments** — BR-REC-10, 13, 61, 66, 67, 70, 72 (E09 ETag)
+- [x] **2. Assessments** — BR-REC-10, 13, 61, 66, 67, 70, 72 (E09 ETag)
   - backend: E09 (C5 filter, C6 `hasValues`, setup order), E10 (added last, `NAME_TAKEN`), E11 (rename, repeat, On/Off), E12 (C7)
   - admin: S15 list (rows "Every 2 months", Off badge, Move up/down, + Add assessment), assessment sheet (name, repeat, On), repeat-change confirm (BR-REC-70)
-- [ ] **3. Measurements** — BR-REC-10, 11, 14, 62, 63, 64, 65, 66, 67, 69, 71
+- [x] **3. Measurements** — BR-REC-10, 11, 14, 62, 63, 64, 65, 66, 67, 69, 71
   - backend: E13, E14 (C3 Time normalisation, C4 `METRIC_LOCKED`, C8 pair checks), E15 (C7), `roundMetricValue` (C9); no unit conversion anywhere (BR-REC-69)
   - admin: S15 detail (rows name · unit · better or own repeat, Off, Move up/down, + Add measurement), measurement sheet
     (kind/unit locked when `hasValues`, decimals, better, please-check range, own repeat, report table, On), better-change confirm (BR-REC-71)
@@ -46,3 +46,9 @@ All green: backend typecheck, lint, `bun test` 809 pass, `contract:check` (41 ro
 - Own test DB `gym_setup_test` (`backend/.env`, created by the coordinator from `.env.example`; API `PORT=4002`, frontend `API_URL` → 4002).
   Dev DB `gym` is shared with the members session; same schema (`db:push` = no changes). Never `db:push` a different schema.
 - Other member-records worktrees exist (e.g. `member-records-feature-8fca5b`, likely Stream B); setup shares no files with members.
+
+## Status
+**Built and verified 2026-10-04; ready for hand-over** (user asks for the PR). Commits: contract 2cae9bf · tests afce7df, fca6f76 · backend c2f01e6 ·
+admin abc209f · fix round 1 (R-1 88e8ee5, R-3 2a3931e) · fix round 2 (R-9, R-10 1dd728c; C13 spec 81328c9 + test 6df8aad). Review: 2 rounds,
+1 major (R-1) fixed, minors fixed or filed (#18, #19, #21); see `findings.md`. Tests: backend 1383, frontend 1083 (baseline 809 / 749).
+Manual checklist: `checklist.md`. Open for the owner: confirm spec clarifications C1–C13 (R-2).

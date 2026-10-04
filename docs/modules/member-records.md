@@ -1,8 +1,8 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: c6fcdda
-last_verified_on: 2026-10-03
+last_verified_commit: 1dd728c
+last_verified_on: 2026-10-04
 depends_on: []
 ---
 
@@ -18,6 +18,8 @@ their own files (ownership: spec index → "Shared files"). Working copies per s
 Stream 0 choices: D-019. Run notes: `.pipeline/member-records-foundation/` (plan, contract, findings, screens, checklist).
 Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), Account (S17); choices D-020; run notes
 `.pipeline/member-records-auth/` (plan, contract incl. admin interfaces, findings, screens, checklist).
+Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 Assessment setup, S16 Reminders & gym; run notes
+`.pipeline/member-records-setup/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec setup.md v2 (C1–C13).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -39,6 +41,9 @@ Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), 
 | auth (A) backend | `backend/src/{routes,controller,service,repository}/auth*`, `service/authLock.ts` (pure lock rules), `scripts/bootstrap-admin.ts` | `authService.{login,refresh,logout,logoutAll,me,changePassword,createAccount,resetPassword,unlock}(…, meta, now)`, `authRepository.{lockForUpdate,rotateSession,touchSession,…}` |
 | auth (A) libs | `backend/src/lib/{token,http,auth-middleware,rate-limiter}.ts` | `signAccessToken` (iss/aud pinned), `generateRefreshToken`, `hashRefreshToken` (HMAC hex); `setAccessCookie`, `setRefreshCookie(c, token, remember)`, `clearAuthCookies`, `clientAddress` (`TRUST_PROXY_HOPS`), `deviceLabel`; `readAccessToken`; `rateLimiter({windowMs,max})` |
 | auth (A) admin | `frontend/src/proxy.ts`, `lib/auth/{safeNextPath,loginError,loginUrl,signOut}.ts`, `lib/validators/auth.ts`, `lib/api/auth/{fetchers,queries}.ts`, `components/{views,pages}/auth/*`, `app/(auth)/login`, `app/(app)/admin/settings/account` | page guard + server E02; `useMe`, `useLogin`, `useChangePassword`, `useSignOut(All)`; `authKeys.me()`; global 401 handler in `lib/queryClient.ts` |
+| setup (C) backend | `backend/src/{routes/setup,controller/setupController,service/setupService,service/setupRules,repository/setupRepository}.ts` | `setupService.{getSettings,updateSettings,listCatalog,createType,updateType,reorderTypes,createMetric,updateMetric,reorderMetrics}`; pure rules `setupRules.ts`: `newMetricFields`, `editedMetricFields` (C3), `metricIssues` (C8), `changesKindOrUnit` (C4), `listsEveryIdOnce` (C7) |
+| domain (C) | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)` — half away from zero on the decimal digits; the assessments stream (D) calls it when saving (BR-REC-76) |
+| setup (C) admin | `frontend/src/{lib/validators/setup.ts,lib/setup/{describe,text,form,timezones}.ts,lib/api/setup/{fetchers,queries}.ts,components/{views,pages}/setup/*}`, `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `setupKeys`, `settingsQueryOptions`/`assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`), `SetupSheet` (edit sheet + confirm step), `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
@@ -86,7 +91,17 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Page guard: its server E02 must send `Origin` (= `request.nextUrl.origin`; behind the HTTPS front Next must see the public origin, #8); `/login?reason=expired` renders Login even with an access cookie (no loop); only a 401 `UNAUTHORIZED` triggers the client refresh.
 - argon2id: 64 MiB / t=2 pinned; minimum cost only under `NODE_ENV=test`; a decoy hash at import keeps unknown-user timing equal.
 - Live server tests: `backend/tests/auth/signin` spawns the real API (`bun --no-env-file src/index.ts`); do not run two auth suites at once on one DB (one-row tables).
-- Theme follows the device (`defaultTheme="system"`); Settings (C) must render `ThemeToggle` for the manual choice.
+- Theme follows the device (`defaultTheme="system"`); the manual choice is `ThemeChoice` on S14 (the shared `ThemeToggle` is a two-state icon button and cannot offer System).
+
+- Setup E07 is a pure read (C13): no `gym_settings` row → the schema defaults (`SETTINGS_DEFAULTS` read from the Drizzle column defaults); only E08 (`lockSettings`) and `seed` create the row.
+- Setup locks (C11): E10–E12 take `pg_advisory_xact_lock(hashtext('setup.assessment_types'))`; E13 and E15 lock the type row `FOR UPDATE`; E14 locks the metric row (blocks a concurrent value insert, so `hasValues` cannot flip). Unique-index 23505 → 409 `NAME_TAKEN`; 23514 on the check range → 400.
+- Setup controllers parse the body again with the route schema: `validate()` only checks and discards, so the trim of `gymName`/`name`/`tableGroup` arrives through the controller's parse.
+- E09 `hasValues`: Drizzle drops table names inside `sql` fragments in a one-table select list, so a text sub-select compares its own columns and returns false — use `exists(db.select()…)` builders (`setupRepository.hasStoredValue`).
+- Setup audit: one `audit_log` row per successful write (entities `settings` id "1", `assessment_type`, `metric`; create rows hold the new item, reorder rows `{ order: [ids] }`); a no-op write still logs a row with null before/after; no ip/device.
+- Time → Number switch with no unit and no decimals in the body takes the creation defaults (unit "", decimals 1); a Time measurement is always `min:sec` + 0 decimals (C3). `INTERVAL`/`hasValues` rules and the E14 error order (404 → C8 400 → `METRIC_LOCKED` → `NAME_TAKEN`): setup contract.md.
+- Never nest Back-aware sheets (`useBackToClose` is not stack-aware, [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18)): a confirmation is a step inside the one `SetupSheet`, not a second `ResponsiveSheet`. A hidden (not unmounted) form keeps its state, but `focus()` on it fails until visible (`flushSync` first).
+- Setup edits to the catalog reach other screens through `setupKeys.all` only: the due-list stream's Home due query must use `staleTime: 0` (or a key setup invalidates) so BR-REC-70 ("Home reflects it at once") holds — the app default is 30 s (R-6).
+- iOS decimal keypad has no minus: `NumberField` cannot type a negative number ([#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21)); the desktop dialog of `ResponsiveSheet` does not scroll — setup wraps its sheets in `SheetBody` ([#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18)).
 
 ## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
@@ -99,6 +114,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | — | ResponsiveSheet ships Drawer + Dialog + AlertDialog together (RV-11) | [#4](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/4) (G) |
 | — | Server-Timing `db` accuracy + test (R2-2, R2-3) | [#5](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/5) (G) |
 | — | DurationField paste table test; offline banner under the notch (R2-5, R2-6) | [#6](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/6) (D, G) |
+| — | ResponsiveSheet desktop dialog does not scroll; `useBackToClose` not stack-aware | [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18) (shared) |
+| — | DurationField reads an out-of-range box as empty | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) (shared) |
+| — | NumberField cannot type a minus on iOS (needed by setup ranges and Stream D results) | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (shared, before D) |
 
 ## Tech notes
 - Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
@@ -144,7 +162,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | frontend libs | `frontend/tests/lib/{format,messages/errors}.test.ts` | 127, 128, 154 |
 | auth backend | `backend/tests/auth/signin/*` (live API child), `backend/tests/auth/session/*` (`createApp().request` + probe child) | 01, 02, 25–35, 37, 38, 43, 44, 171 |
 | auth admin | `frontend/tests/auth/{proxy,fetch-wrapper,query-cache-401,locked-line,login-error,safe-next-path,sign-out,validators}.test.ts` | 01, 02, 27, 29, 35, 38–42 |
-| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
+| setup backend | `backend/tests/setup/{metric-value,settings,assessment-types,metrics,change-log,gates}.test.ts` (+ `settings-empty` for C13) | 10, 11, 13, 14, 60–67, 69, 72, 158, 159, 160 |
+| setup admin | `frontend/tests/setup/{validators,describe,text,queries}.test.ts` | 10, 13, 14, 60–67, 69–72, 126 (UI wiring of 70, 71 is manual: no DOM test library, #9) |
+| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
 
 ## History
 | Date | PR / commit | Change |
@@ -153,3 +173,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | — | v2 answers folded (36 questions; D-017, D-018); benchmark moved here; tech notes added |
 | 2026-10-03 | Stream 0 branch `claude/member-records-foundation-57e849` | Foundation built (M0): schema, 40 routes (501), middleware, change log, domain maths, seeds, shell + slots; data-model v2 (no hand SQL); D-019; 2 review rounds (round 2 READY), issues #3–#6; 551 backend + 506 frontend tests |
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
+| 2026-10-04 | setup branch `claude/member-records-setup-8ce4cb` | Stream C built (from `main` after M1): E07–E15, `roundMetricValue`, S14–S16; setup spec v2 (C1–C13); 2 review rounds (1 major fixed, minors fixed or filed), issues #18, #19, #21; 541 backend + 334 admin tests |

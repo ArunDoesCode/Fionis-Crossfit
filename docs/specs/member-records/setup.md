@@ -138,6 +138,20 @@ S16 Reminders & gym (`/admin/settings/general`): gym name, time zone, "Due soon"
 | C13 | 60, 168 | E07 only reads: when the settings row does not exist yet it answers the defaults (Fionis CrossFit, Asia/Kolkata, 7, 14) and writes nothing; the first E08 creates the row, with its change-log row. |
 | C10 | 158 | Change-log actions: `settings.update`, `assessment_type.create`, `assessment_type.update`, `assessment_type.reorder`, `metric.create`, `metric.update`, `metric.reorder`. |
 
+## Implementation status (2026-10-04, branch `claude/member-records-setup-8ce4cb`)
+
+All 17 rules built. Backend tests: `backend/tests/setup/` (+ seed rules in `backend/tests/scripts/seed.test.ts`); admin tests: `frontend/tests/setup/`; manual: `.pipeline/member-records-setup/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 10, 13, 65, 68 | `setup/{assessment-types,metrics}.test.ts`, `scripts/seed.test.ts`; `frontend/tests/setup/{validators,describe}.test.ts` |
+| 11 | `setup/metrics.test.ts` (UI lock is manual) |
+| 14, 62, 63, 66, 67, 69 | `setup/{assessment-types,metrics}.test.ts`; `frontend/tests/setup/{validators,describe,text}.test.ts` |
+| 60, 72 | `setup/{settings,settings-empty,assessment-types}.test.ts`; `frontend/tests/setup/{validators,queries}.test.ts` |
+| 61 | `setup/assessment-types.test.ts`; `frontend/tests/setup/validators.test.ts` |
+| 64 | `setup/{metric-value,metrics}.test.ts`; `frontend/tests/setup/validators.test.ts` |
+| 70, 71 | `frontend/tests/setup/{describe,text}.test.ts` (the sheet wiring is manual, no DOM test library) |
+| 158, 159, 160 (shared rules) | `setup/{change-log,gates,settings,assessment-types}.test.ts` |
+
 ## Not now
 
 Custom membership plans, editable warning % (30%) and "no change" % (1%) — fixed for now (v1 Q4), unit conversion, calculated measurements.

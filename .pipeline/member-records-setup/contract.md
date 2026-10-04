@@ -1,9 +1,9 @@
 # member-records/setup · contract (E07–E15)
 
-Spec: `docs/specs/member-records/setup.md` v2 (incl. build clarifications C1–C10) + `api-contract.md` v1 (BR-REC-153…162).
+Spec: `docs/specs/member-records/setup.md` v2 (incl. build clarifications C1–C13) + `api-contract.md` v1 (BR-REC-153…162).
 Descriptors: `backend/src/routes/setup.ts`; schemas: `backend/src/types/setup.types.ts`; data model: `data-model.md` (`gym_settings`,
 `assessment_types`, `metrics`). Generated: `backend/.contracts/*`, `frontend/src/types/api.generated.ts` (coordinator runs `types:api`).
-Handlers answer **501 `NOT_IMPLEMENTED`** after auth and validation until Stream C builds them. The seed (BR-REC-68) already exists
+Built (Stream C): the handlers are real. The seed (BR-REC-68) already exists
 (`backend/scripts/seed.ts` → `CATALOG`; tests in `backend/tests/scripts/seed.test.ts`).
 
 ## All nine endpoints
@@ -74,6 +74,7 @@ If a field has the wrong type, the cross-field checks are skipped (only the type
 - Boundaries: `upcomingLeadDays` 0 and 30 pass, −1 and 31 fail, `45` fails with "Use 0 to 30 days"; `expiryLeadDays` 0 and 60 pass, 61 fails. `7.5` fails. `null` for any setting fails.
 - E07 ETag: same data → same tag → 304 on a matching `If-None-Match`; after an E08 that changes a value the old tag gets 200 with the new body (BR-REC-72, 160).
 - A refused E08 (400) changes nothing.
+- **C13:** E07 never writes: with no `gym_settings` row it answers the defaults (see the first bullet); the first E08 creates the row and its change-log row.
 
 **Assessments (BR-REC-10, 13, 61, 66, 67, 70, 72; C5–C7)**
 - E09 lists assessments ordered by `sortOrder` ascending, each with its `metrics` ordered by their `sortOrder`. After the seed: "Body composition" (1 month, order 1) then "Fitness test" (2 months, order 2); seeded `sortOrder` values start at 1.
@@ -121,11 +122,11 @@ If a field has the wrong type, the cross-field checks are skipped (only the type
 ## Admin app (frontend; BR-REC-60…72, UX BR-REC-120…140)
 - **Routes:** S14 `/admin/settings` (hub) · S15 `/admin/settings/assessments` (list) and `/admin/settings/assessments/[typeId]` (one assessment's measurements) · S16 `/admin/settings/general`.
   Each page is a thin server file → `components/views/setup/*View` → `components/pages/setup/*`. Both existing `loading.tsx` / `error.tsx` stay.
-- **S14 hub:** rows Assessments › · Reminders & gym › · Account › (`/admin/settings/account`) · Export data › (`/admin/settings/export`, built by the progress stream — a 404 until then is accepted) · Theme with the existing `ThemeToggle` (System / Light / Dark, BR-REC-136). Desktop: same list, 720 px.
+- **S14 hub:** rows Assessments › · Reminders & gym › · Account › (`/admin/settings/account`) · Export data › (`/admin/settings/export`, built by the progress stream — a 404 until then is accepted) · Theme: three choices System / Light / Dark (`ThemeChoice`; the shared `ThemeToggle` is a two-state icon button, BR-REC-136). Desktop: same list, 720 px.
 - **S15 list:** one `ListRow` per assessment: name, "Every 2 months", "Off" badge when off, Move up / Move down (44 px targets, disabled at the ends), tap → detail. Main action "Add assessment" (sheet: name, repeat number + unit). Edit (sheet: name, repeat, On switch). Off assessments are shown (the catalog is loaded with `includeInactive=true`) so they can be turned on again.
 - **S15 detail:** title = assessment name, "Repeat every 1 month", rows per measurement: name, `unit · "Higher is better"` (or own repeat "every 3 months"), "Off" badge, Move up / Move down; main action "Add measurement"; row tap opens the measurement sheet. A `typeId` not in the catalog → `EmptyState` "This assessment was not found." (+ back to the list).
 - **Measurement sheet** (`ResponsiveSheet`): Name *, Kind (Number / Time, `ChoiceChips`; **locked with a short note when `hasValues`**), Unit (same lock; hidden for Time, which always shows "min:sec"), Decimals (0 / 1 / 2; hidden for Time), Better (Higher / Lower / No direction), "Please check below / above" (two `NumberField`s; for Time two `DurationField`s in min:sec, stored as seconds), Repeat (Same as assessment / Own: number + unit), Report table (none, or group + part: Whole body / Arms / Trunk / Legs), On switch. No technical words (BR-REC-126).
-- **Confirmations (`ConfirmSheet`, BR-REC-133):** changing an assessment's or a measurement's repeat when editing → "This changes due dates for all members" (BR-REC-70); changing "Better" on a measurement with `hasValues` → "Best results and leaderboards will change for past results" (BR-REC-71). Nothing else asks.
+- **Confirmations (BR-REC-133):** a second step **inside the same edit sheet** (one `ResponsiveSheet`, one history entry; shown as a `role="alert"` block, Cancel keeps the typed values, Back closes the sheet, the action ignores taps for ~0.3 s): changing an assessment's or a measurement's repeat when editing → "This changes due dates for all members" (BR-REC-70); changing "Better" on a measurement with `hasValues` → "Best results and leaderboards will change for past results" (BR-REC-71). Nothing else asks.
 - **Errors:** every server code goes through `messageForCode`; `NAME_TAKEN` is shown next to the Name field, `METRIC_LOCKED` as a toast (the sheet locks the fields first, so it is a safety net). Forms follow BR-REC-134: validate on leaving a field and on Save; Save stays tappable and scrolls to the first problem; no Reset button.
 - **Catalog freshness (BR-REC-72):** the catalog and settings queries use `staleTime: 0`, so every mount revalidates through the client's ETag cache (`lib/api/client.ts`, 304 when unchanged); each successful write invalidates `setupKeys.all`. Order buttons send the whole new order (E12 / E15) and show the new order at once, rolling back with a toast if the call fails.
 - **Catalog page size:** `pageSize=100` (the catalog is a handful of assessments and E12 needs every one of them in one list); this is the one place that does not use the screens' 25.
