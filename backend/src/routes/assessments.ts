@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import { assessmentsController } from "../controller/assessmentsController";
+import { asyncHandler } from "../lib/async-handler";
 import {
   badRequestResponse,
   errorResponse,
@@ -23,9 +25,9 @@ import {
 } from "../types/assessments.types";
 import { memberIdParamsSchema } from "../types/common.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import { ANY_AUTHENTICATED, notImplemented, routeMounter } from "./mount-route";
+import { ANY_AUTHENTICATED, routeMounter } from "./mount-route";
 
-// Owner: assessments stream. E25-E30. Handlers answer 501 until Stream D builds them.
+// Owner: assessments stream. E25-E30.
 const assessmentsRouter = new Hono<AppEnv>();
 const route = routeMounter(assessmentsRouter, MAIN_ROUTES.assessments);
 const EP = END_POINTS.assessments;
@@ -52,7 +54,7 @@ route(
       "Only the shape of `date` is checked: a future date just returns a form (D1). Unknown member or type: 404.",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.entryForm),
 );
 
 route(
@@ -84,7 +86,7 @@ route(
       "Error order: 404 (unknown member or type) -> 400 `DATE_IN_FUTURE` (later than gym today; no lower bound, D1) -> 400 `METRIC_NOT_IN_TYPE` -> 400 `VALIDATION_ERROR` (Time or rounded limit) -> 400 `NO_VALUES`. Shape errors come before all of them. Archived members work. No `Idempotency-Key`: a retry is the same upsert (D6).",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.save),
 );
 
 route(
@@ -106,7 +108,7 @@ route(
       "A member with nothing, or an unknown `memberId` / `typeId`, gives an empty list (no 404); `valueCount` = stored values (D10).",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.list),
 );
 
 route(
@@ -127,7 +129,7 @@ route(
       "`values` holds every stored value, on or off measurements, in setup order; durations in seconds (D9).",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.get),
 );
 
 route(
@@ -153,7 +155,7 @@ route(
       "Error order: 404 -> 400 `DATE_IN_FUTURE` (later than gym today) -> 409 `ASSESSMENT_DATE_TAKEN` (another assessment of this member + type already has that date; the date it already has is not taken). Shape errors come first.",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.update),
 );
 
 route(
@@ -174,7 +176,7 @@ route(
       "The one hard delete besides sign-ins and idempotency keys (BR-REC-165). `removed` = how many values went with it (D9); deleting again is 404.",
     ],
   },
-  notImplemented,
+  asyncHandler(assessmentsController.remove),
 );
 
 export { assessmentsRouter as assessmentsRoutes };
