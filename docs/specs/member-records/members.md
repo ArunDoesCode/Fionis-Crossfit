@@ -145,3 +145,5 @@ Custom plans and prices, payments, freezes/pauses, bonus days or manual end date
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 "within the lead days" is inclusive (14 days left, lead 14 → Ends soon); no rule changed
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-52 a latest period that has not started yet is Active whatever the lead days (example "Renewed early → Active, not Ends soon"); no rule changed
+- 2026-10-04 v1 — clarified during build (Stream B): BR-REC-50/55 hold both ways — editing the join date (E19) to a day after
+  any membership's start is refused with 400 `START_BEFORE_JOIN`; no rule changed
