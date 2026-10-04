@@ -54,15 +54,15 @@ Why: each feature sub-spec is one build stream with its own files; the four shar
 (Stream 0). The report sub-spec is named `progress` because "report" file names are reserved for run reports.
 
 ## Rule map
-IDs are permanent and unique across sub-specs (strike out, never renumber). 175 rules, each with an example and
-a Check. Next free ID: **BR-REC-176**.
+IDs are permanent and unique across sub-specs (strike out, never renumber). 176 rules, each with an example and
+a Check. Next free ID: **BR-REC-177**.
 | BR-REC | Sub-spec | | BR-REC | Sub-spec |
 |---|---|---|---|---|
 | 01–02, 25–44, 171 | auth | | 15–18, 93–105 | due-list |
 | 03–09, 45–59, 172 | members | | 22–24, 106–119 | progress |
 | 10, 11, 13, 14, 60–72 | setup | | 120–140 | ux |
 | 12, 19–21, 73–92 | assessments | | 141–152, 173, 174 | performance |
-| 153–162 | api-contract | | 163–170, 175 | data-model |
+| 153–162 | api-contract | | 163–170, 175, 176 | data-model |
 v1 rules BR-REC-01…24 moved word for word; the v1 "Metric list" moved to setup.
 
 ## Parallel build plan
