@@ -163,6 +163,7 @@ measurement rows (no index serves the CSV order).
 no edit of shared shell files or `globals.css`.
 (5) The segmental table is its own S12 section after the assessments (E35 carries no assessment id), not inside "Body
 composition" as the sketch draws it.
-(6) Build clarifications P2–P14 are in the progress spec (v2); the owner confirms them at merge.
-Why: each keeps the spec's rules true without a shared-file change. Rejected: a fingerprint cache or write hooks (touch other
+(6) Build clarifications P2–P14 are in the progress spec (v2); the owner confirmed them 2026-10-04.
+(7) Owner decision O-1 (2026-10-04): the CSV formula guard applies to text only; real numbers are written plain (a negative Flexibility value stays a number in Excel), and a text that is exactly a negative number literal (the `display` "-0.5") is written as is (P9).
+Why: each keeps the spec's rules true without a shared-file change. Rejected: guarding numbers too (breaks sums and charts for negative values), a fingerprint cache or write hooks (touch other
 streams' code), a chart library (BR-REC-146), per-row CSV from one big query (re-sorts the table per batch).

@@ -4,7 +4,7 @@
 > every PR), `/status` (on demand) and `/wrap`. Humans: read this, then run `/status`.
 
 **Updated:** 2026-10-04 · **Milestone:** member-records M2 merged (B #22, C #23); M3 in progress: progress (F) built and verified on its branch, assessments (D) and due-list (E) in their own sessions
-**Next action:** open the progress PR (`claude/feature-f-progress-report-6c2bbe`; checklist `.pipeline/member-records-progress/checklist.md`), then D and E merge in their sessions → M4: performance (G) + scenario test + owner/coach check.
+**Next action:** run the progress checklist (`.pipeline/member-records-progress/checklist.md`) and merge the progress PR (`claude/feature-f-progress-report-6c2bbe`); D and E merge from their own sessions → M4: performance (G) + scenario test + owner/coach check.
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
@@ -30,11 +30,10 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 |---|---|---|---|---|
 | member-records/members (Stream B) | `claude/member-records-feature-8fca5b` | verified, ready for PR (review 3 rounds, 2 fix rounds, all checks green) | — | you: "open the PR" |
 | member-records/setup (Stream C) | `claude/member-records-setup-8ce4cb` | own session (not this one) | — | — |
-| member-records/progress (Stream F) | `claude/feature-f-progress-report-6c2bbe` | verified, ready for PR (1 review round, 0 blocker/major, 2 minors fixed, 6 → issues #26–#31) | — | you: "open the PR" |
+| member-records/progress (Stream F) | `claude/feature-f-progress-report-6c2bbe` | PR open (1 review round, 0 blocker/major after fixes, 6 minors → issues #26–#31; owner decision O-1 done) | see the PR from this branch | you: manual checklist, then merge |
 
 ## Waiting on you
-- [ ] Progress: say "open the PR"; run `.pipeline/member-records-progress/checklist.md` on a phone and do the print check (BR-REC-109) on Chrome Android + desktop (start: `cd backend && bun run db:reset && bun run seed:perf && bun run bootstrap-admin`, API 4006, web 3006).
-- [ ] Progress: confirm the build clarifications P1–P14 in `docs/specs/member-records/progress.md` (P1 = your "no server cache" decision, D-022).
+- [ ] Progress: run `.pipeline/member-records-progress/checklist.md` on a phone and do the print check (BR-REC-109) on Chrome Android + desktop (start: `cd backend && bun run db:reset && bun run seed:perf && bun run bootstrap-admin`, API 4006, web 3006).
 - [ ] Members: say "open the PR"; then run `.pipeline/member-records-members/checklist.md` on a phone (start: `cd backend && bun run db:reset && bun run bootstrap-admin`, API on 4002, web on 3002).
 - [ ] Members: confirm two build choices (D-021): E19 join-date rule only when the join date changes; E16 name order word-by-word without the name index (bench in G).
 - [ ] Run the auth manual checklist `.pipeline/member-records-auth/checklist.md` (start with `cd backend && bun run bootstrap-admin`).

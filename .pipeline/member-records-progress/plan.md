@@ -50,4 +50,4 @@ lint, `bun test` 1407 pass.
 ## Status
 **Built and verified 2026-10-04; ready for hand-over** (user asks for the PR). Commits: spec v2 a18211c, a3b2867 · contract 998abff · tests 6ef6547 (admin), 41cec8b (backend) ·
 admin b972f7a · backend 11abe64 · fix round 1 (R-6, L-1, L-2) 0cd9595 · docs (this commit). Review: 1 round, 0 blocker, 1 major found by the live check (L-1 print, fixed), minors fixed or filed (#26–#31);
-see `findings.md`. Tests: backend 2226, frontend 1805 (baseline 1855 / 1407). Manual checklist: `checklist.md`. Open for the owner: confirm clarifications P1–P14 and decide O-1 (negative numbers in the CSV).
+see `findings.md`. Tests: backend 2226, frontend 1805 (baseline 1855 / 1407). Manual checklist: `checklist.md`. Owner confirmed P1–P14 and decided O-1 (CSV guard on text only) on 2026-10-04: tests 9bbca11, fix `fix(…): CSV formula guard applies to text only`.
