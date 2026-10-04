@@ -7,7 +7,7 @@ import {
   getTableColumns,
   inArray,
   ne,
-  type SQL,
+  SQL,
   sql,
 } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
@@ -29,6 +29,11 @@ import type { PartialUpdate } from "../lib/types";
 type Executor = Db | Tx;
 
 export type SettingsRow = typeof gymSettings.$inferSelect;
+/** The four settings the API shows (a database without the row answers these, never a row). */
+export type SettingsFields = Pick<
+  SettingsRow,
+  "gymName" | "timezone" | "upcomingLeadDays" | "expiryLeadDays"
+>;
 export type NewType = typeof assessmentTypes.$inferInsert;
 export type NewMetric = typeof metrics.$inferInsert;
 export type StoredType = typeof assessmentTypes.$inferSelect;
@@ -100,6 +105,26 @@ export const nameTaken = () =>
 const invariantBroken = () =>
   new AppError("Internal server error", 500, "INTERNAL_ERROR");
 
+/** A column's default as declared in the schema: the one place the settings defaults live (BR-REC-60). */
+function declaredDefault<T>(column: {
+  name: string;
+  default: T | SQL | undefined;
+}): T {
+  const value = column.default;
+  if (value === undefined || value instanceof SQL) {
+    throw new Error(`gym_settings.${column.name} needs a plain default value`);
+  }
+  return value;
+}
+
+/** What a database without the settings row answers: the column defaults. */
+const SETTINGS_DEFAULTS: SettingsFields = {
+  gymName: declaredDefault(gymSettings.gymName),
+  timezone: declaredDefault(gymSettings.timezone),
+  upcomingLeadDays: declaredDefault(gymSettings.upcomingLeadDays),
+  expiryLeadDays: declaredDefault(gymSettings.expiryLeadDays),
+};
+
 // ─── queries ────────────────────────────────────────────────────────────────
 
 // Written as sub-selects (not as text): Drizzle drops the table name from a column used in the
@@ -149,19 +174,15 @@ function positionOf(idColumn: AnyPgColumn, ids: readonly string[]): SQL {
 export const setupRepository = {
   // ─── settings (one row, BR-REC-168) ───────────────────────────────────────
 
-  /** A fresh database has no row until the seed (or the first call) creates it with the defaults. */
-  async ensureSettingsRow(executor: Executor) {
-    await executor.insert(gymSettings).values({ id: 1 }).onConflictDoNothing();
+  /** The seed creates the row (BR-REC-168); the first E08 creates it too, with the column defaults. */
+  async ensureSettingsRow(tx: Tx) {
+    await tx.insert(gymSettings).values({ id: 1 }).onConflictDoNothing();
   },
 
-  async readSettings(executor: Executor = db): Promise<SettingsRow> {
-    const read = () => executor.select().from(gymSettings).limit(1);
-    const [row] = await read();
-    if (row) return row;
-    await setupRepository.ensureSettingsRow(executor);
-    const [created] = await read();
-    if (!created) throw invariantBroken();
-    return created;
+  /** E07 is a read: with no row it answers the column defaults and writes nothing. */
+  async readSettings(executor: Executor = db): Promise<SettingsFields> {
+    const [row] = await executor.select().from(gymSettings).limit(1);
+    return row ?? SETTINGS_DEFAULTS;
   },
 
   /** Reads the row with a row lock held until the transaction ends (two E08 run one after the other). */

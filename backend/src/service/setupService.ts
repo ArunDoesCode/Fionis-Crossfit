@@ -12,7 +12,7 @@ import {
   type MetricRow,
   nameTaken,
   setupRepository as repo,
-  type SettingsRow,
+  type SettingsFields,
   type StoredMetric,
   type TypeRow,
 } from "../repository/setupRepository";
@@ -56,7 +56,7 @@ const metricLocked = () =>
 
 // ─── views (what the API answers; the database keeps text, the check constraints keep the unions) ─
 
-const settingsView = (row: SettingsRow): Settings => ({
+const settingsView = (row: SettingsFields): Settings => ({
   gymName: row.gymName,
   timezone: row.timezone,
   upcomingLeadDays: row.upcomingLeadDays,
