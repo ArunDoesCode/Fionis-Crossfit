@@ -56,4 +56,18 @@ export const ASSESSMENT_TEXT = {
   leaveBody: 'Your entries stay as a draft.',
   stay: 'Stay',
   leave: 'Leave',
+
+  // All assessments (S11) and the member page's Recent block (BR-REC-80, 87, 88, 89; D18)
+  noAssessments: 'No assessments yet.',
+  nothingFor: (name: string) => `Nothing recorded for ${name} yet.`,
+  nothingForThis: 'Nothing recorded for this assessment yet.',
+  filterLegend: 'Assessment',
+  filterAll: 'All',
+  noSavedResults: 'No results are saved on this assessment.',
+  deleteButton: 'Delete',
+  deleteConfirm: 'Delete assessment',
+  deleteQuestion: (name: string, day: string) => `Delete ${name} from ${day}?`,
+  deleteBody: (results: string) => `${results} will be removed.`,
+  deleting: 'Deleting…',
+  notDeleted: 'Not deleted — check the connection and try again.',
 } as const;
