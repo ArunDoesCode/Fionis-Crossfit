@@ -24,6 +24,7 @@ model: sonnet
      the module's directories that the map doesn't list.
 3. Apply edits, add a History row (commit range + one line), set `last_verified_commit` to HEAD.
 4. If the map passes ~250 lines, propose splitting it into `docs/modules/<module>/<area>.md` + index.
+   A module with parallel streams (D-017) keeps one sub-map per stream under `docs/modules/<module>/`; the index file stays small.
 
 Never describe intended behaviour here (that's the spec); only what the code does. Contradictions between
 map and spec → add a line under **Known gaps / debt** and a GitHub issue.

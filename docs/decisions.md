@@ -55,9 +55,6 @@ The full versions live in `~/codes/ERP-diecast/.claude/` if they are needed late
 **D-011 · 2026-10-01 · Dev on local Docker Postgres; migrate to Supabase Postgres for prod. One repo, three folders (confirmed).**
 Switch by `DATABASE_URL`; schema moves via reviewed Drizzle migrations, not `push`. Confirms D-002.
 
----
-<!-- append below -->
-
 **D-012 · 2026-10-03 · First deliverable is `member-records`: assessment data entry + reports, one shared login, no roles.**
 Standalone MVP slice (backend + admin only; no member app, TV or SSE). Single shared login, no RBAC, so it
 overrides `role_t` for this slice only; entries have no per-user attribution. Metrics live in a configurable
@@ -91,7 +88,7 @@ they stay unique across sub-specs; v1 rules moved word for word. Why: the user w
 detailed, reviewable plan; one ID sequence keeps tests (`BR-REC-NN …`) unambiguous. User decision: phone + tablet
 first (bottom tabs, bottom action bar, no Reset button) — overrides `nextjs-standards.md` §14 button placement
 for this app; record in `frontend/CLAUDE.md` when Stream 0 lands. Open: per-stream worktrees vs the
-one-worktree rule (index Q6). Rejected: per-sub-spec ID prefixes (two IDs for one module), one 400-line spec.
+one-worktree rule (index Q6) (answered by D-017). Rejected: per-sub-spec ID prefixes (two IDs for one module), one 400-line spec.
 
 **D-017 · 2026-10-03 · member-records only: one session + worktree + branch per build stream; each stream opens its own PR to `main`.**
 Each stream (index "Parallel build plan") runs in its own desktop-app session and worktree, started from fresh
@@ -113,85 +110,60 @@ cross-site cookie and CORS set-up, an extra network hop). The provider and machi
 time; they must be in ap-south-1. Answers member-records index Q7.
 
 **D-019 · 2026-10-03 · member-records Stream 0 build choices: 501 placeholders, `sid` claim now, no hand-written SQL, no CORS, shared formatters.**
-(1) Endpoints whose stream has not built them yet answer 501 `NOT_IMPLEMENTED`; each stream replaces its own.
-(2) The access token carries `sid` (session id) from Stream 0, because `idempotency_keys` and `audit_log` are keyed
-by session; auth (Stream A) issues the real ids. (3) No hand-written SQL (user decision, keep the MVP light): everything is
-expressed in Drizzle; dev, test and CI keep `db:push`; production gets a generated migration at deploy. So no
-extensions, no trigram indexes and no exclusion constraint (BR-REC-167 struck; overlap is the BR-REC-09 service
-check); the `login_attempts` row is created by `seed` (data-model v2). (4) Backend CORS is removed: same origin (D-018), writes guarded by the Origin check (BR-REC-37).
-(5) BR-REC-127 formatters and the gym-day "today" helper are shared frontend libs built by Stream 0. (6) One TS union
-per enum-like column in `backend/src/lib/enums.ts`, used by the Drizzle checks and Zod (BR-REC-175).
-Why: every stream needs these before it starts; deciding them once avoids six conflicting versions.
-Rejected: hand SQL in custom migrations (the guard hook blocks editing migrations; not worth it for 1,000 members), formatters per stream.
+(1) Unbuilt endpoints answer 501 `NOT_IMPLEMENTED`. (2) The access token carries `sid` from the start. (3) No hand-written SQL
+(user, MVP light): all Drizzle, `db:push` in dev/test/CI, a generated migration in production; no extensions, trigram indexes or
+exclusion constraint (BR-REC-167 struck; overlap = BR-REC-09 service check); `seed` creates the `login_attempts` row. (4) No
+backend CORS: same origin (D-018) + Origin check. (5) Shared frontend libs for BR-REC-127 formatters and gym-day "today". (6)
+One TS union per enum-like column (BR-REC-175). Why: every stream needs these first. Rejected: hand SQL in custom migrations
+(the guard hook blocks migration edits), per-stream formatters. Details: data-model.md v2 changelog.
 
 **D-020 · 2026-10-03 · member-records auth (Stream A) build choices: stacked on Stream 0, grace without re-rotation, guard forwards the visitor, no new frontend env.**
-(1) Stream A was built stacked on the unmerged Stream 0 branch (user decision: do not wait for the M0 PR, do not
-overlap with that session); Stream 0 bugs found on the way went to that session (R-1 gzip, T-4), never patched here;
-after the M0 squash-merge the branch synced with `main` keeping its own side (trees verified equal). (2) A replaced refresh
-token used within 60 s gets an access cookie only — no second rotation — so concurrent refreshes cannot drop the newest
-token and fake a `reuse` (auth spec v2). (3) The page guard calls E02 with `Origin` = the request's origin and forwards
-the visitor's `X-Forwarded-For` and `User-Agent`, so limits and the change log see the real device; `TRUST_PROXY_HOPS`
-defaults to 0 (one shared bucket, fails closed) and is 1 on the D-018 server. (4) Auth owns the unlisted files
-`lib/env.ts`, `.env.example`, `package.json`, `lib/http.ts`, `client.ts`, `queryClient.ts` (user decision). Rejected:
-waiting for the M0 PR (idle hours), rotating again inside the grace (cookie-order race), a new `APP_ORIGIN` frontend env var.
+(1) Built stacked on the unmerged Stream 0 branch (user); Stream 0 bugs went to that session; synced with `main` after the
+squash. (2) A refresh token replaced within 60 s gets an access cookie only, no second rotation. (3) The page guard forwards the
+visitor's `Origin`, `X-Forwarded-For` and `User-Agent` to E02; `TRUST_PROXY_HOPS` is 0 (fails closed), 1 on the D-018 server.
+(4) Auth owns the unlisted `lib/env.ts`, `.env.example`, `package.json`, `lib/http.ts`, `client.ts`, `queryClient.ts` (user).
+Why: found while building. Rejected: waiting for the M0 PR, re-rotating inside the grace (cookie-order race), a new `APP_ORIGIN`
+env var. Details: auth.md v2 changelog.
 
 **D-021 · 2026-10-04 · member-records members (Stream B) build choices: own settings read, per-member row lock, join-date rule, lazy sheets, tests grouped by surface.**
-(1) The members repository reads `gym_settings` (time zone, `expiry_lead_days`) per request itself, so Stream B does not depend on
-Stream C's code. (2) Period writes (E22, E23) and a changed join date (E19) take `select … for update` on the member row first,
-then check overlap / join date: parallel renewals cannot overlap (BR-REC-09; there is no database constraint, data-model v2).
-(3) E19 refuses a join date after any membership start only when the join date changes (keeps BR-REC-50/55 true both ways).
-(4) E16 name order uses `lower(full_name) COLLATE "C"` (word by word); Stream 0's name index does not serve it, fine for ~1,000
-members, to be measured by `bench` in Stream G. (5) The member page lists every membership, also a single one, so a typo in
-the first plan can be corrected. (6) Renew / edit sheet and archive confirm load on demand (own `sheetLoader` + `useLazySheet`, one `import()` per sheet,
-retry after a failed load) to stay under the bundle budget (tactic 4); server-side data start (tactic 1) is decided once for all streams in Stream G (#20). (7) Admin
-"today" = the device's time zone (gym and phones share one); the server stays authoritative.
-Why: found while building; each keeps the spec's rules true without a shared-file change. Rejected: a database exclusion
-constraint (hand SQL, D-019), caching settings (breaks a lead-days change), Stream-B-only HydrationBoundary (inconsistent).
+(1) Own `gym_settings` read, no dependency on Stream C. (2) E22, E23 and a changed join date (E19) lock the member row first,
+then check overlap / join date. (3) E19 refuses a join date after any membership start only when the join date changes. (4) E16
+name order is `lower(full_name) COLLATE "C"`, no name index (`bench` in G). (5) The member page lists every membership, also a
+single one. (6) Renew / edit and archive sheets load on demand; server-side data start is decided in G (#20). (7) Admin "today"
+= the device's time zone (server stays authoritative). Why: found while building. Rejected: a DB exclusion constraint (hand SQL,
+D-019), caching settings, a Stream-B-only HydrationBoundary. Details: members.md changelog.
 
 **D-022 · 2026-10-04 · member-records progress (Stream F) build choices: no server cache, live reads, streamed CSV by member pages, own print styles, segmental as its own section.**
-(1) No server cache for gym progress and leaderboards (user decision: keep the MVP light): BR-REC-110 is met by reading the
-database on every call and by `staleTime: 0` in the admin; progress v2, performance BR-REC-147 loses "50 ms cached", tactic 19
-dropped. The writes that would have to clear a cache live in streams B and D (other sessions' files). Measured on the perf seed
-(1,000 members, 336,640 values): E35 ≈ 50 ms, E36 80–140 ms, E37 ≈ 110 ms, E38 ≈ 60 ms warm, all inside the budgets.
-(2) E36 is one grouped query (count, first and latest per member) joined to members and their latest period; E37 ranks the
-whole list with the pure `rankLeaderboard` and then cuts the page, so ranks continue across pages; E38 uses the pure
-`membershipStatus` (no second copy of the rule in SQL).
-(3) E39 sends the headers and the first chunk before any row is read, then reads keyset pages of members (measurements: 10
-members per batch) into a pull-based stream; no DB cursor (may not survive the Supabase transaction pooler) and no keyset on
-measurement rows (no index serves the CSV order).
-(4) The print layout is an inline `@media print` style that ships only with S12 and hides the shell by its `data-slot` marks:
-no edit of shared shell files or `globals.css`.
-(5) The segmental table is its own S12 section after the assessments (E35 carries no assessment id), not inside "Body
-composition" as the sketch draws it.
-(6) Build clarifications P2–P14 are in the progress spec (v2); the owner confirmed them 2026-10-04.
-(7) Owner decision O-1 (2026-10-04): the CSV formula guard applies to text only; real numbers are written plain (a negative Flexibility value stays a number in Excel), and a text that is exactly a negative number literal (the `display` "-0.5") is written as is (P9).
-Why: each keeps the spec's rules true without a shared-file change. Rejected: guarding numbers too (breaks sums and charts for negative values), a fingerprint cache or write hooks (touch other
-streams' code), a chart library (BR-REC-146), per-row CSV from one big query (re-sorts the table per batch).
+(1) No server cache for gym progress and leaderboards (user: MVP light): live reads meet BR-REC-110; BR-REC-147 loses "cached",
+tactic 19 dropped. (2) E36 is one grouped query; E37 ranks the whole list with pure `rankLeaderboard`, then pages; E38 uses
+`membershipStatus`. (3) E39 streams keyset pages of 10 members; no DB cursor. (4) Print layout = inline `@media print` style
+with S12. (5) The segmental table is its own S12 section. (6) P2–P14 confirmed by the owner. (7) Owner O-1: the CSV formula
+guard is for text only; numbers stay plain (P9). Why: no shared-file change. Rejected: guarding numbers (breaks sums), a cache
+with write hooks, a chart library. Details: progress.md Build clarifications.
 
-**D-022 · 2026-10-04 · member-records due-list (Stream E) build choices: overrides end on read, one date per measurement, rows built in memory, optimistic writes.**
-(1) "Assess soon" / "Remind me later" end when a save of that member + assessment is newer than the override and dated on/after the
-day it was set; worked out when reading (`due_overrides` row stays), so the assessments stream's save code need not touch it — but
-it must write `assessments.updated_at` on every save and edit (#24). (2) Each measurement has its own due date (latest value +
-effective interval, never recorded → join date); a row = one member + one assessment holding the measurements due within the Due
-soon window; the pure engine `computeDue` + `dueListRows` + `memberDueItems` + `isListedInDueList` takes `today` and the lead days as
-arguments. (3) E31 loads members, catalog, latest `measured_on` per member + measurement and overrides in 5 parallel queries, runs the
-pure functions and pages the sorted list in memory (measured on the 1,000-member perf seed: p95 ≈ 157 ms vs the 300 ms budget).
-(4) E33 / E34 take the member row lock, check 404 → `until` rules, write one change-log row each (`due_override.set` / `.clear`); E34 with
-nothing set still answers 200. (5) Admin writes are optimistic with undo (performance tactic 8); the row sheet is lazy-loaded and
-"Remind me later" is a second step inside the same sheet (no nested sheets, #18); admin "today" stays the device zone (D-021 7).
-(6) On the member page "Never recorded" wins over "Overdue 34 days" (owner, Q5).
-Why: keeps Stream D untouched in code, stays within the budget without a summary table, and keeps the spec's examples true.
-Rejected: storing a "done" flag on the override (a second write in D's transaction), per-member due table (stale on interval changes, BR-REC-15).
-**D-022 · 2026-10-04 · member-records assessments (Stream D) build choices: own settings read, changed-fields-only edits, reducer form, shared field fixes here, E29 API-only.**
-(1) The assessments repository reads `gym_settings` (time zone) itself, like members (D-021). (2) `NO_VALUES` means the save would leave the
-assessment with no stored value (spec D2 amended in review): an edit may send only the changed fields or an empty list (About-only), and the form
-sends only fields the trainer changed, so an untouched stored value is never re-rounded when setup changes decimals (setup C9). (3) The Record
-form is a pure reducer plus `buildSaveValues`, not React Hook Form + Zod (`nextjs-standards.md` §14): a Number is text until Save, drafts, the
-saved-assessment offer and the leave guard need one state machine. (4) User decision: the shared `NumberField` (`allowNegative`, #21) and
-`DurationField` (`status`, #19) fixes are made in this stream; setup's own callers still need to adopt them (comments on #19, #21). (5) E29 (move a
-date) is built as an API only; its screen is issue #32 (MVP light). (6) Unsaved results live in the browser's `localStorage` per member + assessment
-+ date for 7 days (values only). (7) The `/assess` page JS is 35–37 KB gzip without and 49–51 KB with the two shared base-ui chunks against
-BR-REC-146's 40 KB: Stream G decides how the budget is measured.
-Why: found while building; each keeps the spec's rules true without a shared-file change except (4). Rejected: resending every field on edit (silently
-re-rounds history), a wrapper field in the screens (duplicates shared code), building the move-date screen now.
+**D-023 · 2026-10-04 · member-records due-list (Stream E) build choices: overrides end on read, one date per measurement, rows built in memory, optimistic writes.**
+(1) "Assess soon" / "Remind me later" end on read, when a later save of that member + assessment is dated on/after the day they
+were set; D must write `assessments.updated_at` on every save (#24). (2) Each measurement has its own due date; a row = one
+member + one assessment; the pure engine takes `today`. (3) E31 runs 5 parallel queries, pages in memory (p95 ≈ 157 ms). (4) E33
+/ E34 lock the member row, one change-log row each. (5) Optimistic writes with undo; "Remind me later" is a second step in the
+same sheet (#18); admin "today" = device zone (D-021 7). (6) Member page: "Never recorded" wins over "Overdue" (owner Q5). Why:
+Stream D untouched. Rejected: a "done" flag on the override, a per-member due table. Details: due-list.md C1–C13.
 
+**D-024 · 2026-10-04 · member-records assessments (Stream D) build choices: own settings read, changed-fields-only edits, reducer form, shared field fixes here, E29 API-only.**
+(1) Own read of `gym_settings` (time zone), like members (D-021). (2) `NO_VALUES` = the save leaves no stored value; an edit
+sends only changed fields, so nothing is re-rounded (D2, setup C9). (3) The Record form is a pure reducer, not RHF + Zod: drafts
+and the leave guard need one state machine. (4) User: the shared `NumberField` (#21) and `DurationField` (#19) fixes are made
+here. (5) E29 (move a date) is API only; its screen is #32. (6) Unsaved results live in `localStorage` for 7 days. (7) `/assess`
+JS is 35–37 KB gzip vs the 40 KB budget (BR-REC-146): G decides how to measure. Why: found while building. Rejected: resending
+every field on edit, a wrapper field in screens, the move-date screen now. Details: assessments.md Build clarifications D1–D21.
+
+**D-025 · 2026-10-04 · Docs after parallel streams: stream PRs never edit shared docs; the coordinator updates them after the merge.**
+A stream PR edits only its own sub-spec, its own sub-map and `.pipeline/<feature>/`. STATUS, `decisions.md`, the spec index and
+the module index are updated by the coordinator in ONE docs commit after the merge, which also assigns the next D-NNN. Why: six
+parallel stream PRs conflicted in STATUS, the index, the map and decisions (and three entries got the same number).
+Rejected: a shared integration branch. Detail: `docs/KNOWLEDGE.md` → Parallel streams.
+
+**D-026 · 2026-10-04 · `seed:demo` (BR-REC-176): a curated, today-relative demo data set, in addition to `seed:perf`.**
+25 named members whose dates are today plus fixed offsets, so every screen and every manual checklist starts from known rows
+after `db:reset`. Why: `seed:perf` is random, leaves hundreds overdue and has no due overrides. Rejected: SQL snippets pasted in
+the checklists. Detail: data-model.md v3.
