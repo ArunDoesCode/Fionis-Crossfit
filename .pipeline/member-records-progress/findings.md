@@ -30,3 +30,9 @@ file names, BOM, CRLF and row counts (1,000 / 4,128 / 336,640) are right.
 | O-1 | owner | CSV | P9 guards numbers too: the 1,088 negative Flexibility values in the perf seed export as text (`'-0.5`), which breaks sums and charts in Excel | **ask the owner at hand-over** (A keep P9 / B leave real numbers alone, guard text only) |
 
 Fix round 1 (R-1, R-6, L-1, L-2) done; no blocker or major open. Process note: another session's pattern kill (`pkill -f "bun src/index.ts"`) stopped this session's API once; backend-dev did the same to others earlier. Use ports or PIDs.
+
+## O-1 — owner decision 2026-10-04 (answer A): real numbers are not formula-guarded
+Spec P9 (progress.md v2) now says: the guard applies to text; numbers are written plain (a negative value stays a number); a text cell that is exactly a
+negative number literal (e.g. the `display` "-0.5") is written as is; everything else that starts with `=`, `+`, `-`, `@` or a tab is still prefixed with `'`.
+Affected: backend `csv.test.ts` and `e39-export.test.ts` (guard of numbers and negative values) and the checklist section 10 (negative-value and guarded cells).
+Owner also confirmed P1–P14 (answer yes).

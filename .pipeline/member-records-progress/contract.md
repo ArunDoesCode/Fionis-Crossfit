@@ -88,8 +88,10 @@ countActiveByPlan(members: { plan: Plan; status: "active" | "expiring" | "expire
 CSV_BOM = "﻿"
 CSV_HEADERS: Record<ExportFile, readonly string[]>   // P8 column names, in order
 csvCell(value: string | number | boolean | null): string
-  // null → ""; boolean → "yes" / "no"; number → plain decimal (String(n), e.g. 94.5, 122, -1.5);
-  // then the guard (P9): text starting with = + - @ or a tab gets a leading '  ("-1.5" → "'-1.5", "+9198…" → "'+9198…");
+  // null → ""; boolean → "yes" / "no"; number → plain decimal (String(n), e.g. 94.5, 122, -1.5), NEVER guarded (O-1);
+  // text: the guard (P9): text starting with = + - @ or a tab gets a leading '  ("+9198…" → "'+9198…", "=HYPERLINK(…)" → "'=HYPERLINK(…)"),
+  //   EXCEPT a text that is exactly a negative number literal /^-\d+(\.\d+)?$/ ("-0.5", "-12"), which is written as is;
+  //   "-1+2", "-A1", "-" and "- 5" are still guarded;
   // then quoting: text with a comma, ", CR or LF → wrapped in "…" with inner " doubled ("a,b" → "\"a,b\"").
 csvLine(cells: (string | number | boolean | null)[]): string   // cells through csvCell, joined by ",", plus "\r\n"
 displayValue(value: number, datatype: "number" | "duration", decimals: 0 | 1 | 2): string   // 122 duration → "2:02"; 3930 duration → "1:05:30" (P13, formatDuration); 94 @1 → "94.0"
