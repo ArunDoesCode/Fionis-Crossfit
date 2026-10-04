@@ -102,12 +102,12 @@ export default function MeasurementTable({ type, today }: MeasurementTableProps)
     <table className="hidden w-full table-fixed border-collapse text-sm lg:table print:table print:text-[9pt] print:leading-tight">
       <caption className="sr-only">{type.name}</caption>
       <colgroup>
-        <col className="w-[21%]" />
-        <col className="w-[16%]" />
-        <col className="w-[16%]" />
-        <col className="w-[16%]" />
-        <col className="w-[20%]" />
-        <col className="w-[11%]" />
+        <col className="w-[21%] print:w-[28%]" />
+        <col className="w-[16%] print:w-[15%]" />
+        <col className="w-[16%] print:w-[15%]" />
+        <col className="w-[16%] print:w-[14.5%]" />
+        <col className="w-[20%] print:w-[17%]" />
+        <col className="w-[11%] print:w-[10.5%]" />
       </colgroup>
       <thead>
         <tr className="border-b text-left text-muted-foreground">

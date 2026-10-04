@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
@@ -31,8 +30,7 @@ const TABS: { value: Sex; label: string }[] = [
   { value: 'female', label: text.female },
 ];
 
-const ROW =
-  'grid min-h-14 grid-cols-[2rem_minmax(0,1fr)_auto_5rem] items-center gap-3 px-4 py-2 outline-none hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50';
+const ROW = 'grid min-h-14 grid-cols-[2rem_minmax(0,1fr)_auto_5rem] items-center gap-3 px-4 py-2';
 
 function Rows({
   metricId,
@@ -63,14 +61,14 @@ function Rows({
       <ol className="divide-y overflow-hidden rounded-2xl border bg-card">
         {items.map((item) => (
           <li key={item.memberId}>
-            <Link href={`/admin/members/${item.memberId}`} className={ROW}>
+            <div className={ROW}>
               <span className="font-mono text-base text-muted-foreground">{item.rank}</span>
               <span className="truncate text-base font-medium">{item.fullName}</span>
               <span className="font-mono text-base">{valueText(item.value, metric)}</span>
               <span className="text-right text-sm text-muted-foreground">
                 {formatDay(item.on, today)}
               </span>
-            </Link>
+            </div>
           </li>
         ))}
       </ol>
