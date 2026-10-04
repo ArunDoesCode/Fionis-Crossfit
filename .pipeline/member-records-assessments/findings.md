@@ -16,3 +16,14 @@ Review round 1 (reviewer a8ab…, test-runner aa52…): 0 blocker, 4 major, 7 mi
 | R-9 | minor | docs | form is a reducer, not RHF + Zod | **decision** D-022 at hand-over |
 | R-10 | minor | docs | contract.md says handlers answer 501 | **fix** |
 | R-11 | minor | backend perf | E26 ≈ 8 sequential round trips | **later** — measure with Stream G's bench (map gap) |
+
+## Round 2 (fix iteration 1 verified; reviewer a3bc…) — 0 blocker, 1 major, 5 minor. R-1, R-4 split, R-5, R-6, R-8 confirmed fixed
+Backend full suite 2185 pass, frontend 2333 pass, typecheck, lint, contract, fixtures green (run alone on `gym_assess_test`).
+| # | Sev | Finding | Decision |
+|---|---|---|---|
+| R2-1 | major | no tests for `leavesNoValue`, `isUnchangedField`, `storedNumberText`, `settled` | **fix (iteration 2)** — test-writer extension, then dev (export `settled`) |
+| R2-2 | minor | D19 said a date change counts; code (and a test) say a date move does not | **fixed in spec** (55e0db1) |
+| R2-3 | minor | Save with nothing changed sent E26 `values: []` and wrote an identical change-log row | **fix (iteration 2)** — skip the request, exit; spec D2 line |
+| R2-4 | minor | `sameInput` compares raw text: "95,55" / trailing space over "95.55" counted as a change and was re-rounded | **fix (iteration 2)** — compare trimmed, "," = "." |
+| R2-5 | minor | untouched stored value still shows the inline "Please check" line computed on the rounded text (display only, nothing sent) | **accept** — noted in the map |
+| R2-6 | minor | /assess number not recorded | **recorded**: `/assess`-only chunks 36.8 KB gzip (reviewer, `route-bundle-stats.json`) / 35.0 KB (dev: page chunks minus admin shell and the 2 base-ui chunks), 49–51.5 KB counting the two chunks shared by 8–10 routes; `/assessments` 29.4 KB. BR-REC-146 (40 KB per screen) holds only if the shared chunks are not counted — Stream G decides the method |
