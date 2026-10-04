@@ -6,7 +6,7 @@ Permission for every screen below: the shared login (any signed-in visitor; the 
 
 ### S5 Members — `/admin/members`
 - Header: title "Members"; main action **+ Add member** (right of the header from 1024 px; bar above the tabs on phones) → S6.
-- **Search members** field (250 ms after the last key, clear button). Under 2 letters (after trimming) nothing is searched and the normal list shows (BR-REC-07). 2+ letters → `q`.
+- **Search members** field (250 ms after the last key, clear button). Under 2 letters (after trimming) nothing is searched and the normal list shows (BR-REC-07). 2+ letters → `q`. Over 100 characters (a long paste, or `?q=` typed into the address by hand; also on Home search): the first 100 are searched, never an error (fix round 2, R-10).
 - Chips **All · Active · Ends soon · Ended · Archived** (one is always chosen, All at start). Search text and chip are in the URL (`?q=sur&status=archived`): Back from a member returns to the same list. Search under **Archived** finds only archived members.
 - Rows (whole row opens `/admin/members/<id>`, 64 px, never a table): name; detail line `98450 12345 · Last 12 Sep` or `98450 12345 · Never assessed`; badge at the right (words + icon + colour): **Active**, **Ends in 4 days** / **Ends tomorrow** / **Ends today**, **Ended**, **Archived**.
   - Under the **Archived** chip the detail line reads `Archived 2 Jun · Ended 31 May` (`Ends 31 Dec` while the membership still runs) and the badge says **Archived**.
@@ -49,7 +49,7 @@ Permission for every screen below: the shared login (any signed-in visitor; the 
 ### S7 Member page slots — `/admin/members/[memberId]` (`MemberHeader`, `MembershipBlock`)
 - **MemberHeader** (first block): banner (BR-REC-172) → name → `44 y · Male · Joined 1 Jun 2025` → phone as a tap-to-call link (`tel:`, with a phone icon, spoken "(call)") → **Archive (hide)** button (only while not archived).
   - Banner words: ended, not archived → `Membership ended 31 May 2026`; archived, still running → `Archived 2 Jun 2026 · Membership ends 31 Dec 2026` + **Restore**; archived and ended → `Archived 2 Jun 2026 · Membership ended 31 May 2026` + **Restore**. Running and not archived → no banner. Dates always with the year; the archive day is the device's day.
-  - **Archive (hide)** → confirm sheet (bottom sheet on phones, centred dialog from 1024 px): "Archive Surya Pratap?" / "They'll be hidden from search and Home. You can restore them later." [Cancel] [Archive]. Success → toast "<Name> archived.", the banner appears, the Archive button goes, **Restore** appears.
+  - **Archive (hide)** → confirm sheet (bottom sheet on phones, centred dialog from 1024 px): "Archive Surya Pratap?" / "They'll be hidden from search and Home. You can restore them later." [Cancel] [Archive]. Success → toast "<Name> archived.", the banner appears, the Archive button goes, **Restore** appears. The sheet's code loads like S9's (below): the first open slides up like every later one; if the code cannot load → toast "Couldn't load this. Try again.", nothing opens, the next tap tries again (fix round 2, R-8, R-9).
   - **Restore** (no question) → toast "<Name> is back on the list.", banner loses its archived part.
   - Loading: grey name and two lines. Failed: "Couldn't load this." [Try again]; unknown id: "We couldn't find that. It may have been removed." (no retry).
   - **Edit** is the frame's button in the page header (not repeated here).
@@ -70,6 +70,7 @@ Opened from: member page `/admin/members/[memberId]` (**Renew** button in the me
 - Server refusals under **Starts on** (the sheet stays open, button usable again): `PERIOD_OVERLAP` "This overlaps another membership. Change the start date."; `START_BEFORE_JOIN` "Membership can't start before the join date. Pick a later start date."; `VALIDATION_ERROR` under the field it names. Anything else (`RATE_LIMITED`, `IDEMPOTENCY_KEY_REUSED`, offline "Couldn't save. Check your connection and try again.") a toast.
 - Renew sends an `Idempotency-Key`: Renew tapped again with the same plan/start after a lost answer reuses the key (one membership, not two); changed details get a new key.
 - The sheet's code (and the Archive confirm sheet's) loads on the first touch of Renew / a history row / Archive, not with the page (fix round 1, R-1): it must open the same as before, also the very first time and on a slow connection (grey shapes inside the sheet; no extra tap).
+  - Fix round 2 (R-8, R-9): the very first open also slides up / fades in like every later one (the sheet is mounted closed and opened one frame later). On Home and S4 a touch on a row's Renew also starts loading that member (E18), so the sheet usually shows the form at once. If the sheet's code cannot load → toast "Couldn't load this. Try again.", nothing opens, Renew / the history row stays usable and the next tap tries the load again.
 
 ### S7 member page — MembershipBlock (changed)
 - Card: `Annual · [Active] 241 days left`, then `Ends 31 May 2026` with **Renew** at the right (secondary button).

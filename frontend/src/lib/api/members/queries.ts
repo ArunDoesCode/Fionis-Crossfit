@@ -1,6 +1,7 @@
 import {
   infiniteQueryOptions,
   keepPreviousData,
+  type QueryClient,
   queryOptions,
   useInfiniteQuery,
   useMutation,
@@ -39,7 +40,7 @@ export const MEMBER_PAGE_SIZE = 25;
 export const HOME_PREVIEW_SIZE = 5;
 
 export interface MemberListFilters {
-  /** Already checked with `isSearchReady`: 2+ characters, trimmed. */
+  /** Already checked with `isSearchReady` and trimmed, then `clampSearchText`: 2–100 characters (E16). */
   q?: string;
   status?: MemberStatusFilter;
 }
@@ -128,6 +129,14 @@ export const useMemberList = (filters: MemberListFilters, enabled = true) =>
  */
 export const useMember = (memberId: string | null, enabled = true) =>
   useQuery({ ...memberQueries.detail(memberId ?? ''), enabled: enabled && memberId !== null });
+
+/**
+ * Start E18 before the Renew sheet is open (pointer-down or focus on a list row's Renew): the member is
+ * then on its way while the sheet's code loads, and `useMember` finds it in the cache (same key). A repeat
+ * inside the stale time asks nothing; an error is not thrown (the sheet shows its own retry).
+ */
+export const prefetchMember = (queryClient: QueryClient, memberId: string) =>
+  queryClient.prefetchQuery(memberQueries.detail(memberId));
 
 /** E24 for S4 (BR-REC-08, 53, 57): "Ends soon" (`expiring`) or "Ended" (`expired`), 25 at a time. */
 export const useEndingList = (status: EndingStatus) =>

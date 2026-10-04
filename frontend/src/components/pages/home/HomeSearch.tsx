@@ -5,7 +5,7 @@ import EmptyState from '@/components/common/EmptyState';
 import SearchField from '@/components/common/SearchField';
 import MemberResults from '@/components/pages/members/MemberResults';
 import { useMemberList } from '@/lib/api/members/queries';
-import { isSearchReady } from '@/lib/members/search';
+import { clampSearchText, isSearchReady } from '@/lib/members/search';
 import { UI_TEXT } from '@/lib/messages/words';
 
 // SLOT owned by members (Stream B): the Home search (BR-REC-07, 140): type 2 letters, the matching members
@@ -14,7 +14,9 @@ import { UI_TEXT } from '@/lib/messages/words';
 export default function HomeSearch() {
   const [q, setQ] = useState('');
   const ready = isSearchReady(q);
-  const query = useMemberList({ q: q.trim() }, ready);
+  // E16 takes 2–100 characters: a long paste searches its first 100 (R-10), never a 400.
+  const text = clampSearchText(q.trim());
+  const query = useMemberList({ q: text }, ready);
 
   return (
     <div className="flex flex-col gap-3">
@@ -23,7 +25,7 @@ export default function HomeSearch() {
         <MemberResults
           query={query}
           skeletonRows={3}
-          empty={<EmptyState compact title={`No member matches "${q.trim()}".`} />}
+          empty={<EmptyState compact title={`No member matches "${text}".`} />}
         />
       )}
     </div>

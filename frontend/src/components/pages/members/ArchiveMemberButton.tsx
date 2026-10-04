@@ -1,20 +1,20 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useArchiveMember } from '@/lib/api/members/queries';
-import { useEverOpened } from '@/lib/members/useEverOpened';
+import { sheetLoader, useLazySheet } from '@/lib/members/useLazySheet';
 import { WORDS } from '@/lib/messages/words';
 
 // The confirm sheet (drawer, dialog) only shows after a tap, so it loads on demand and not with the member
 // page (BR-REC-146, performance tactic 4). The button starts the load on pointer-down and focus; the sheet
-// is mounted on the first tap and then stays mounted for its exit animation.
-const loadConfirmSheet = () => import('@/components/common/ConfirmSheet');
-const ConfirmSheet = dynamic(loadConfirmSheet, { ssr: false });
+// is mounted when the first tap has loaded it and then stays mounted for its exit animation (see
+// `useLazySheet`: opens after the mount so the first open animates; a failed load toasts and the next tap
+// loads again). This is the only `import()` of the sheet here.
+const loadConfirmSheet = sheetLoader(() => import('@/components/common/ConfirmSheet'));
 
 function preloadConfirmSheet() {
-  // A failed preload is not an error: the tap loads it again through `dynamic`.
+  // A failed preload is not an error: the tap loads it again (and says so if that fails too).
   loadConfirmSheet().catch(() => undefined);
 }
 
@@ -27,7 +27,7 @@ interface ArchiveMemberButtonProps {
 // search and Home, nothing is deleted, and Restore brings them back.
 export default function ArchiveMemberButton({ memberId, fullName }: ArchiveMemberButtonProps) {
   const [open, setOpen] = useState(false);
-  const mounted = useEverOpened(open);
+  const { Sheet, open: sheetOpen } = useLazySheet(loadConfirmSheet, open, setOpen);
   const { mutate, isPending } = useArchiveMember(memberId);
 
   return (
@@ -43,9 +43,9 @@ export default function ArchiveMemberButton({ memberId, fullName }: ArchiveMembe
       >
         {WORDS.archive}
       </Button>
-      {mounted && (
-        <ConfirmSheet
-          open={open}
+      {Sheet && (
+        <Sheet
+          open={sheetOpen}
           onOpenChange={setOpen}
           title={`Archive ${fullName}?`}
           description="They'll be hidden from search and Home. You can restore them later."

@@ -14,7 +14,7 @@ import {
   type MemberFilter,
   memberListParams,
 } from '@/lib/members/listParams';
-import { isSearchReady } from '@/lib/members/search';
+import { clampSearchText, isSearchReady } from '@/lib/members/search';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
 
 const FILTER_LABELS: Record<MemberFilter, string> = {
@@ -39,8 +39,11 @@ const NOTHING_IN_FILTER: Record<Exclude<MemberFilter, 'all'>, string> = {
 export default function MemberListPanel() {
   const [{ q, status }, setParams] = useQueryStates(memberListParams);
   const searching = isSearchReady(q);
+  // `q` may come from the address (`?q=` typed by hand): E16 takes 2–100 characters, so only the first 100
+  // are searched (R-10), never a 400.
+  const text = clampSearchText(q.trim());
   const query = useMemberList({
-    q: searching ? q.trim() : undefined,
+    q: searching ? text : undefined,
     status: filterToStatus(status),
   });
   const setQ = useCallback((value: string) => void setParams({ q: value }), [setParams]);
@@ -49,7 +52,7 @@ export default function MemberListPanel() {
   let empty: React.ReactNode;
   if (searching) {
     const who = status === 'archived' ? 'No archived member' : 'No member';
-    empty = <EmptyState title={`${who} matches "${q.trim()}".`} />;
+    empty = <EmptyState title={`${who} matches "${text}".`} />;
   } else if (status === 'all') {
     empty = (
       <EmptyState
