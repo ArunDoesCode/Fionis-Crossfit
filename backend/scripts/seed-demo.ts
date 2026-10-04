@@ -188,8 +188,10 @@ export type DemoSummary = {
 };
 
 /**
- * `seedDemo` that also says what it wrote. Everything is checked before the first write (the buckets
- * of BR-REC-176 are counted on the rows with the app's own rules); a failure leaves nothing behind.
+ * `seedDemo` that also says what it wrote. The buckets of BR-REC-176 are counted on the rows (with the
+ * app's own rules) before the first write, so a data set that does not hold writes nothing. After that
+ * there are two transactions: if the second or the final check fails, the first stays committed
+ * (`db:reset` starts over).
  */
 export async function seedDemoWithSummary(
   options: { today?: IsoDate } = {},
@@ -232,13 +234,16 @@ export async function seedDemoWithSummary(
       tx.insert(measurements).values(chunk),
     );
   });
-  // A second transaction on purpose: an override ends when an assessment was saved after it
-  // (`updated_at >= created_at`, BR-REC-98); in one transaction both would carry the same `now()`.
+  // The overrides go in a second transaction, after the first has committed, so their `created_at` is
+  // later than every assessment's `updated_at`. That is a precaution only: an override also needs an
+  // assessment dated on or after its `set_on` to end (BR-REC-98), and no assessment of a held member
+  // and type is (the data is built that way).
   if (rows.overrides.length > 0) {
     await db.transaction(async (tx) => {
       await tx.insert(dueOverrides).values(rows.overrides);
     });
   }
+  // Belt and braces: no entry may be ended by the rows just written.
   const ended = Array.from(
     await db.execute(sql`
       select count(*)::int as n from due_overrides o

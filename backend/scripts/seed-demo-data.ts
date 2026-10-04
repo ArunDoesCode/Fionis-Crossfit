@@ -47,6 +47,8 @@ import type {
   Plan,
   Sex,
 } from "../src/lib/enums";
+import { RECENTLY_ENDED_DAYS } from "../src/service/membershipsRules";
+import { cleanPhone, phoneDigits } from "../src/types/members.types";
 import { type CatalogMetric, createRandom, profileOf } from "./seed-perf";
 
 export const BODY_COMPOSITION = "Body composition";
@@ -60,8 +62,6 @@ export const DEMO_MEMBER_IDS: readonly string[] = Array.from(
 );
 
 const RANDOM_SEED = 176;
-/** BR-REC-53: "ended in the last 30 days" */
-const RECENT_DAYS = 30;
 
 // ─── the catalog, as `seed` made it ─────────────────────────────────────────
 
@@ -138,7 +138,7 @@ type Spec = {
   };
 };
 
-/** `90000 1xxxx`, some with +91 (BR-REC-46). */
+/** `90000 1xxxx`, some with +91; typed with spaces here, stored cleaned like the members service does (BR-REC-46). */
 const ph = (nn: number, intl = false): string =>
   `${intl ? "+91 " : ""}90000 1${String(nn).padStart(4, "0")}`;
 
@@ -815,8 +815,8 @@ export function buildDemoRows(today: IsoDate, types: DemoType[]): DemoRows {
     rows.members.push({
       id,
       fullName: spec.name,
-      phone: spec.phone,
-      phoneDigits: spec.phone.replace(/\D/g, ""),
+      phone: cleanPhone(spec.phone),
+      phoneDigits: phoneDigits(cleanPhone(spec.phone)),
       email: spec.email ?? null,
       // born 10-289 days before the day `age` years ago, so the age is the same on neighbouring days
       dateOfBirth: addDays(
@@ -1017,10 +1017,10 @@ export function demoBuckets(
     active: states.filter((s) => s?.status === "active").length,
     expiring: states.filter((s) => s?.status === "expiring").length,
     recentlyEnded: states.filter(
-      (s) => s?.status === "expired" && s.daysLeft >= -RECENT_DAYS,
+      (s) => s?.status === "expired" && s.daysLeft >= -RECENTLY_ENDED_DAYS,
     ).length,
     endedLongAgo: states.filter(
-      (s) => s?.status === "expired" && s.daysLeft < -RECENT_DAYS,
+      (s) => s?.status === "expired" && s.daysLeft < -RECENTLY_ENDED_DAYS,
     ).length,
     overdue: distinct(
       shown.filter(
