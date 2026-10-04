@@ -167,3 +167,16 @@ composition" as the sketch draws it.
 (7) Owner decision O-1 (2026-10-04): the CSV formula guard applies to text only; real numbers are written plain (a negative Flexibility value stays a number in Excel), and a text that is exactly a negative number literal (the `display` "-0.5") is written as is (P9).
 Why: each keeps the spec's rules true without a shared-file change. Rejected: guarding numbers too (breaks sums and charts for negative values), a fingerprint cache or write hooks (touch other
 streams' code), a chart library (BR-REC-146), per-row CSV from one big query (re-sorts the table per batch).
+**D-022 · 2026-10-04 · member-records assessments (Stream D) build choices: own settings read, changed-fields-only edits, reducer form, shared field fixes here, E29 API-only.**
+(1) The assessments repository reads `gym_settings` (time zone) itself, like members (D-021). (2) `NO_VALUES` means the save would leave the
+assessment with no stored value (spec D2 amended in review): an edit may send only the changed fields or an empty list (About-only), and the form
+sends only fields the trainer changed, so an untouched stored value is never re-rounded when setup changes decimals (setup C9). (3) The Record
+form is a pure reducer plus `buildSaveValues`, not React Hook Form + Zod (`nextjs-standards.md` §14): a Number is text until Save, drafts, the
+saved-assessment offer and the leave guard need one state machine. (4) User decision: the shared `NumberField` (`allowNegative`, #21) and
+`DurationField` (`status`, #19) fixes are made in this stream; setup's own callers still need to adopt them (comments on #19, #21). (5) E29 (move a
+date) is built as an API only; its screen is issue #32 (MVP light). (6) Unsaved results live in the browser's `localStorage` per member + assessment
++ date for 7 days (values only). (7) The `/assess` page JS is 35–37 KB gzip without and 49–51 KB with the two shared base-ui chunks against
+BR-REC-146's 40 KB: Stream G decides how the budget is measured.
+Why: found while building; each keeps the spec's rules true without a shared-file change except (4). Rejected: resending every field on edit (silently
+re-rounds history), a wrapper field in the screens (duplicates shared code), building the move-date screen now.
+
