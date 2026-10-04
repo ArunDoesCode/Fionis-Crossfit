@@ -43,6 +43,10 @@ export const UI_TEXT = {
   clearSearch: 'Clear search',
   minutes: 'min',
   seconds: 'sec',
+  makeNegative: 'Make negative', // NumberField ± button, text has no minus
+  makePositive: 'Make positive', // NumberField ± button, text starts with a minus
+  minutesRange: 'Enter minutes from 0 to 599', // DurationField, minutes box out of range (BR-REC-75)
+  secondsRange: 'Enter seconds from 0 to 59', // DurationField, seconds box out of range (BR-REC-75)
   offline: "You're offline — changes can't be saved right now",
   placeholderScreen: 'This screen is not built yet.',
   sections: {
