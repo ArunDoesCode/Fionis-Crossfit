@@ -12,6 +12,11 @@ export interface SaveField {
   input: string | number | null;
   /** The saved assessment holds a value for this measurement (so emptying the field removes it). */
   hadValue: boolean;
+  /**
+   * An opened saved assessment whose box still holds what it held: the field is skipped entirely (not in
+   * `values`, not counted), so a stored value is never sent again or re-rounded (D2, setup C9).
+   */
+  unchanged?: boolean;
 }
 
 export type SaveValuesResult =
@@ -34,8 +39,8 @@ function read(field: SaveField): Reading {
 
 /**
  * Filled fields send their value; a blank field that had a saved value sends `null` (removes it, counted in
- * `removed`); a blank field with nothing saved is left out. A bad number is a problem (all of them are
- * listed, in field order). `filled === 0` is the screen's "Enter at least one value" case.
+ * `removed`); a blank field with nothing saved is left out; an `unchanged` field is not looked at. A bad
+ * number is a problem (all of them are listed, in field order).
  */
 export function buildSaveValues(fields: SaveField[]): SaveValuesResult {
   const values: { metricId: string; value: number | null }[] = [];
@@ -44,6 +49,7 @@ export function buildSaveValues(fields: SaveField[]): SaveValuesResult {
   let removed = 0;
 
   for (const field of fields) {
+    if (field.unchanged) continue;
     const reading = read(field);
     if (reading.kind === 'invalid') {
       problems.push({ metricId: field.metricId, message: ASSESSMENT_TEXT.numberError });
@@ -56,4 +62,20 @@ export function buildSaveValues(fields: SaveField[]): SaveValuesResult {
     }
   }
   return problems.length > 0 ? { ok: false, problems } : { ok: true, values, filled, removed };
+}
+
+/**
+ * The screen's "Enter at least one value" case (BR-REC-78, D2): no value would be left after the save. A new
+ * assessment: nothing filled. A saved one: every stored value cleared and nothing filled; a save that only
+ * changes some fields, or only About, leaves values and is allowed.
+ */
+export function leavesNoValue(
+  fields: SaveField[],
+  built: { values: { metricId: string; value: number | null }[]; removed: number },
+): boolean {
+  const stored = new Set(fields.filter((field) => field.hadValue).map((field) => field.metricId));
+  const added = built.values.filter(
+    ({ metricId, value }) => value !== null && !stored.has(metricId),
+  ).length;
+  return stored.size - built.removed + added === 0;
 }

@@ -10,11 +10,8 @@ import { RowSkeletons } from '@/components/common/Skeletons';
 import DeleteConfirmFooter from '@/components/pages/assessments/DeleteConfirmFooter';
 import SheetBody from '@/components/pages/setup/SheetBody';
 import { Button } from '@/components/ui/button';
-import {
-  assessmentQueries,
-  invalidateAssessmentData,
-  useDeleteAssessment,
-} from '@/lib/api/assessments/queries';
+import { assessmentQueries, useDeleteAssessment } from '@/lib/api/assessments/listQueries';
+import { invalidateAssessmentData } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
 import { assessmentDateLabel, resultCountLabel } from '@/lib/assessments/labels';
 import { afterHistorySettles } from '@/lib/assessments/leave';

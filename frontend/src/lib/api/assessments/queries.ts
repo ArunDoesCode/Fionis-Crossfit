@@ -1,26 +1,18 @@
 import {
-  infiniteQueryOptions,
   type QueryClient,
   type QueryKey,
   queryOptions,
-  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { memberKeys } from '@/lib/api/members/queries';
 import { savedMessage } from '@/lib/assessments/labels';
-import type { UpdateAssessmentBody } from '@/lib/assessments/types';
-import {
-  deleteAssessment,
-  getAssessment,
-  getEntryForm,
-  getMemberDue,
-  listAssessments,
-  saveAssessment,
-  updateAssessment,
-} from './fetchers';
+import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
+import { getEntryForm, getMemberDue, saveAssessment } from './fetchers';
+
+// What Record assessment (S10) needs: the keys, the entry form (E25), Save (E26) and the due words (E32). The
+// list, detail, update and delete code is in `listQueries.ts`, so this page does not load it (BR-REC-146).
 
 /** BR-REC-89: "All assessments" asks 25 at a time and adds the next page under "Show more". */
 export const ASSESSMENT_PAGE_SIZE = 25;
@@ -49,6 +41,12 @@ export const assessmentKeys = {
  * refreshes Home and the member page at once (BR-REC-88). The member's own status (E32) lives under it too.
  */
 const DUE_ROOT = ['due'] as const;
+/**
+ * The key root of every member read (`memberKeys.all()` in `lib/api/members/queries.ts`): a save changes a
+ * member's `lastAssessedOn`. Written here, not imported, because that module's lists, search and member
+ * writes would load with the Record assessment page (BR-REC-146).
+ */
+const MEMBERS_ROOT = ['members'] as const;
 const memberDueKey = (memberId: string) => [...DUE_ROOT, 'member', memberId] as const;
 
 /** For `useIsMutating`: the Save buttons follow the form's own request. */
@@ -76,7 +74,7 @@ export async function invalidateAssessmentData(
 ): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
-    queryClient.invalidateQueries({ queryKey: memberKeys.all() }),
+    queryClient.invalidateQueries({ queryKey: MEMBERS_ROOT }),
     queryClient.invalidateQueries({ queryKey: DUE_ROOT }),
   ]);
 }
@@ -114,81 +112,10 @@ export function useSaveAssessment(memberName: string) {
     mutationKey: assessmentMutationKeys.save(),
     mutationFn: saveAssessment,
     onSuccess: (result) => {
-      toast.success(savedMessage(result.saved, memberName));
-      void invalidateAssessmentData(queryClient);
-    },
-  });
-}
-
-export const assessmentQueries = {
-  /** S11: 25 at a time, "Show more" adds the next 25 (BR-REC-89). */
-  list: (filter: AssessmentListFilter) =>
-    infiniteQueryOptions({
-      queryKey: assessmentKeys.list(filter),
-      queryFn: ({ pageParam, signal }) =>
-        listAssessments(
-          {
-            memberId: filter.memberId,
-            typeId: filter.typeId,
-            page: pageParam,
-            pageSize: ASSESSMENT_PAGE_SIZE,
-          },
-          signal,
-        ),
-      initialPageParam: 1,
-      getNextPageParam: ({ meta }) => (meta.page < meta.totalPages ? meta.page + 1 : undefined),
-    }),
-  /** The member page's Recent block: the latest 3 (D18). */
-  recent: (memberId: string) =>
-    queryOptions({
-      queryKey: assessmentKeys.recent(memberId),
-      queryFn: ({ signal }) =>
-        listAssessments({ memberId, page: 1, pageSize: RECENT_SIZE }, signal),
-    }),
-  detail: (assessmentId: string) =>
-    queryOptions({
-      queryKey: assessmentKeys.detail(assessmentId),
-      queryFn: () => getAssessment(assessmentId),
-    }),
-};
-
-/** E27 as pages that append ("Show more"). */
-export const useAssessmentList = (filter: AssessmentListFilter) =>
-  useInfiniteQuery(assessmentQueries.list(filter));
-
-/** E27 with `pageSize=3`. */
-export const useRecentAssessments = (memberId: string) =>
-  useQuery(assessmentQueries.recent(memberId));
-
-/** E28; `assessmentId` is null until a row is chosen. */
-export const useAssessment = (assessmentId: string | null) =>
-  useQuery({
-    ...assessmentQueries.detail(assessmentId ?? ''),
-    enabled: assessmentId !== null,
-  });
-
-/**
- * E29: move the date and/or change About (BR-REC-87). `ASSESSMENT_DATE_TAKEN` (409) is the caller's to show
- * as the BR-REC-87 sentence; a success refreshes every read (BR-REC-88).
- */
-export function useUpdateAssessment(assessmentId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (body: UpdateAssessmentBody) => updateAssessment(assessmentId, body),
-    onSuccess: () => {
-      toast.success('Saved.');
-      void invalidateAssessmentData(queryClient);
-    },
-  });
-}
-
-/** E30: the caller's confirm step comes first (BR-REC-88, 133). */
-export function useDeleteAssessment(assessmentId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => deleteAssessment(assessmentId),
-    onSuccess: () => {
-      toast.success('Deleted.');
+      // About changed and no value written (an edit that touches nothing else): there is no count to say.
+      toast.success(
+        result.saved === 0 ? ASSESSMENT_TEXT.saved : savedMessage(result.saved, memberName),
+      );
       void invalidateAssessmentData(queryClient);
     },
   });

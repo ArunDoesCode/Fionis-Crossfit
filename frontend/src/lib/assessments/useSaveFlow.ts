@@ -3,11 +3,11 @@
 import { type Dispatch, useRef, useState } from 'react';
 import { useSaveAssessment } from '@/lib/api/assessments/queries';
 import { browserDraftStorage, clearDraft, draftKey } from './draft';
-import type { EntryAction, EntryState } from './entryState';
+import { type EntryAction, type EntryState, isUnchangedField } from './entryState';
 import { type FlaggedField, flaggedFields } from './fieldView';
 import { dateDomId, fieldDomId, focusField } from './focusField';
 import { entryDateIssue } from './labels';
-import { buildSaveValues, type SaveField } from './saveBody';
+import { buildSaveValues, leavesNoValue, type SaveField } from './saveBody';
 import { saveFailureText } from './saveError';
 import { ASSESSMENT_TEXT } from './text';
 import { asDecimals, type EntryMetric } from './types';
@@ -48,9 +48,11 @@ interface Prepared {
 
 /**
  * Save and "Save & next date" (BR-REC-19, 76–78, 82–84, 86). Order of the checks: a date is picked and not
- * in the future, no Time box out of range, every number readable, at least one value (BR-REC-78), then the
- * one "Check these values" sheet when any value looks odd (BR-REC-82). A failed Save keeps everything and
- * says so next to the bar; saving again is the same E26 upsert, never a second assessment (BR-REC-86).
+ * in the future, no Time box out of range, every number readable, the assessment would still hold a value
+ * (BR-REC-78, D2), then the one "Check these values" sheet when a value being sent looks odd (BR-REC-82).
+ * A saved assessment sends only the boxes that changed (D2): an untouched value is never rewritten. A
+ * failed Save keeps everything and says so next to the bar; saving again is the same E26 upsert, never a
+ * second assessment (BR-REC-86).
  */
 export function useSaveFlow(input: SaveFlowInput): SaveFlow {
   const { memberId, typeId, member, today, formId, metrics, state, dispatch, exitToStart } = input;
@@ -115,6 +117,7 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
       decimals: asDecimals(metric.decimals),
       input: state.inputs[metric.id] ?? null,
       hadValue: metric.id in state.baseline,
+      unchanged: isUnchangedField(state, metric.id),
     }));
     const built = buildSaveValues(fields);
     if (!built.ok) {
@@ -122,13 +125,14 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
       if (first) focusField(fieldDomId(formId, first.metricId));
       return;
     }
-    if (built.filled === 0) {
+    if (leavesNoValue(fields, built)) {
       setStatus(ASSESSMENT_TEXT.noValues);
       return;
     }
 
     prepared.current = { values: built.values, next };
-    const odd = flaggedFields(metrics, state.inputs);
+    const sent = metrics.filter((metric) => !isUnchangedField(state, metric.id));
+    const odd = flaggedFields(sent, state.inputs);
     if (odd.length > 0) {
       setCheckLines(odd);
       setCheckOpen(true);

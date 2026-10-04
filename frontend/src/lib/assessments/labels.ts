@@ -1,6 +1,7 @@
 import { isIsoDate } from '@/lib/domain/dates';
 import { formatDay } from '@/lib/format';
 import { messageForCode } from '@/lib/messages/errors';
+import { ASSESSMENT_TEXT } from './text';
 
 // The words around dates and counts on the assessment screens (BR-REC-80, 83, 84, 89). Pure.
 
@@ -37,16 +38,15 @@ export function entryDateIssue(input: {
     const day = formatDay(joinedOn, today);
     return {
       kind: 'before_join',
-      message: `This is before ${firstWord(memberName)} joined (${day})`,
+      message: ASSESSMENT_TEXT.beforeJoin(firstWord(memberName), day),
     };
   }
   return { kind: null, message: null };
 }
 
 /** "15 results" / "1 result". */
-export const resultCountLabel = (count: number): string =>
-  `${count} ${count === 1 ? 'result' : 'results'}`;
+export const resultCountLabel = (count: number): string => ASSESSMENT_TEXT.resultCount(count);
 
 /** "Saved 9 results for Surya" (the first word of the member's name, BR-REC-84). */
 export const savedMessage = (count: number, memberName: string): string =>
-  `Saved ${resultCountLabel(count)} for ${firstWord(memberName)}`;
+  ASSESSMENT_TEXT.savedResults(resultCountLabel(count), firstWord(memberName));

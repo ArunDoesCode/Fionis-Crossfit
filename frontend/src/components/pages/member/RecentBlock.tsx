@@ -6,7 +6,7 @@ import { RowList } from '@/components/common/ListRow';
 import Section from '@/components/common/Section';
 import AssessmentRow from '@/components/pages/assessments/AssessmentRow';
 import type { MemberSlotProps } from '@/components/pages/member/slotProps';
-import { useRecentAssessments } from '@/lib/api/assessments/queries';
+import { useRecentAssessments } from '@/lib/api/assessments/listQueries';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import { useToday } from '@/lib/members/useToday';
 import { UI_TEXT } from '@/lib/messages/words';

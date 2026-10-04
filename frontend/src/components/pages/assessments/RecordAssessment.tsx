@@ -1,10 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useQueryStates } from 'nuqs';
-import ChooseGate from '@/components/pages/assessments/ChooseGate';
+import EntryLoading from '@/components/pages/assessments/EntryLoading';
 import EntryScreen from '@/components/pages/assessments/EntryScreen';
 import { dateFromParam, entryParams, typeFromParam } from '@/lib/assessments/entryParams';
 import { useToday } from '@/lib/members/useToday';
+
+// Only `/assess` without `type` shows it, and it brings the member and assessment-list reads: loaded when
+// needed, so the form itself stays light (BR-REC-146). The browser draws this screen only, so no server pass.
+const ChooseGate = dynamic(() => import('@/components/pages/assessments/ChooseGate'), {
+  ssr: false,
+  loading: () => <EntryLoading />,
+});
 
 interface RecordAssessmentProps {
   memberId: string;

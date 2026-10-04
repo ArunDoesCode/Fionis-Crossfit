@@ -1,5 +1,6 @@
 import { formatDuration } from '@/lib/domain/duration';
 import { formatValue } from '@/lib/format';
+import { ASSESSMENT_TEXT } from './text';
 import type { Decimals } from './types';
 
 // The change line next to a field (BR-REC-81, D15): arrow, signed amount, and "better"/"worse" by the
@@ -22,7 +23,7 @@ export interface Change {
   verdict: 'better' | 'worse' | null;
 }
 
-export const NO_CHANGE = 'No change';
+export const NO_CHANGE = ASSESSMENT_TEXT.noChange;
 
 // Thousandths are whole numbers (values hold at most 3 decimals), so the difference has no float noise
 // (0.3 − 0.1 is 0.19999999999999998 as a float, 300 − 100 is 200).

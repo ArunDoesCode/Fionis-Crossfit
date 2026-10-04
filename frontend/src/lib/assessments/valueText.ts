@@ -13,15 +13,26 @@ const placesOf = (value: number): number => {
 };
 
 /**
- * `decimals` is the measurement's current setting (setup), when known. Stored values were rounded with the
- * setting of their day and a later change never touches them (setup C9), so a value that carries more digits
- * than today's setting keeps them; the most ever stored is two.
+ * A stored Number with its unit (the unit may be empty). `decimals` is the measurement's current setting
+ * (setup), when known. Stored values were rounded with the setting of their day and a later change never
+ * touches them (setup C9), so a value that carries more digits than today's setting keeps them; the most
+ * ever stored is two. The edit form's boxes use this too, so an untouched value is never shown (or sent)
+ * rounder than it is stored.
  */
+export function storedNumberText(
+  value: number,
+  unit: string,
+  decimals: number | undefined,
+): string {
+  const digits = Math.min(2, Math.max(decimals ?? 0, placesOf(value)));
+  return formatValue(value, asDecimals(digits), unit);
+}
+
 export function storedValueText(
   result: { datatype: 'number' | 'duration'; value: number; unit: string },
   decimals: number | undefined,
 ): string {
-  if (result.datatype === 'duration') return formatDuration(result.value);
-  const digits = Math.min(2, Math.max(decimals ?? 0, placesOf(result.value)));
-  return formatValue(result.value, asDecimals(digits), result.unit);
+  return result.datatype === 'duration'
+    ? formatDuration(result.value)
+    : storedNumberText(result.value, result.unit, decimals);
 }

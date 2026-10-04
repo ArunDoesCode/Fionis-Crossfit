@@ -1,13 +1,7 @@
 import type { DurationStatus } from '@/lib/durationStatus';
-import { formatValue } from '@/lib/format';
 import type { Draft } from './draft';
-import {
-  asDecimals,
-  type EntryMetric,
-  type ExistingAssessment,
-  type FieldInput,
-  type Inputs,
-} from './types';
+import type { EntryMetric, ExistingAssessment, FieldInput, Inputs } from './types';
+import { storedNumberText } from './valueText';
 
 // The state of one Record assessment form (S10) as a pure reducer: what is typed, the date, About, which
 // saved assessment is open, and the questions waiting for an answer (restore a draft, open the saved one).
@@ -75,24 +69,34 @@ export const emptyEntry = (date: string): EntryState => ({
   loadedFor: null,
 });
 
+const sameInput = (a: FieldInput | undefined, b: FieldInput | undefined): boolean =>
+  (isBlank(a) && isBlank(b)) || a === b;
+
 const sameInputs = (a: Inputs, b: Inputs): boolean =>
-  [...new Set([...Object.keys(a), ...Object.keys(b)])].every(
-    (id) => (isBlank(a[id]) && isBlank(b[id])) || a[id] === b[id],
-  );
+  [...new Set([...Object.keys(a), ...Object.keys(b)])].every((id) => sameInput(a[id], b[id]));
 
 /**
- * Something differs from what was opened (D19, BR-REC-85): a value is typed (or a Time box is out of range),
- * or, for a saved assessment, a box no longer holds what it held. Only then the leave question and the
- * draft matter; an assessment opened and left alone is neither.
+ * Something differs from what was opened (D19, BR-REC-85, 90): a value is typed (or a Time box is out of
+ * range), or, for a saved assessment, a box no longer holds what it held or About was flipped. Moving a saved
+ * assessment's form to another date leaves it (the other date has nothing typed, so nothing is unsaved
+ * here). Only a difference makes the leave question and the draft matter; an assessment opened and left
+ * alone is neither.
  */
 export const isChanged = (state: EntryState): boolean =>
-  Object.keys(state.timeProblems).length > 0 || !sameInputs(state.inputs, state.initial);
+  Object.keys(state.timeProblems).length > 0 ||
+  !sameInputs(state.inputs, state.initial) ||
+  (state.opened !== null && state.isEstimated !== state.opened.isEstimated);
 
-/** The typed form of a stored value: a Number as text with its decimals ("94.0"), a Time as seconds. */
+/**
+ * An opened saved assessment whose box still holds what it held when it was opened. Save does not send such a
+ * field, so a stored value is never rewritten or re-rounded (D2).
+ */
+export const isUnchangedField = (state: EntryState, metricId: string): boolean =>
+  state.opened !== null && sameInput(state.inputs[metricId], state.initial[metricId]);
+
+/** The typed form of a stored value: a Number as text with every digit it was stored with (never fewer), a Time as seconds. */
 function inputFromStored(metric: EntryMetric, value: number): FieldInput {
-  return metric.datatype === 'duration'
-    ? value
-    : formatValue(value, asDecimals(metric.decimals), '');
+  return metric.datatype === 'duration' ? value : storedNumberText(value, '', metric.decimals);
 }
 
 function openSaved(

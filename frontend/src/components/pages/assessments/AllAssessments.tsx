@@ -13,7 +13,7 @@ import AssessmentSheetLazy, {
 } from '@/components/pages/assessments/AssessmentSheetLazy';
 import PagedRows from '@/components/pages/members/PagedRows';
 import { useSheetTarget } from '@/components/pages/setup/useSheetTarget';
-import { useAssessmentList } from '@/lib/api/assessments/queries';
+import { useAssessmentList } from '@/lib/api/assessments/listQueries';
 import { isApiError } from '@/lib/api/errors';
 import { useMember } from '@/lib/api/members/queries';
 import { useAssessmentTypes } from '@/lib/api/setup/queries';

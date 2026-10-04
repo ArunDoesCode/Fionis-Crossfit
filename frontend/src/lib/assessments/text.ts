@@ -70,4 +70,20 @@ export const ASSESSMENT_TEXT = {
   deleteBody: (results: string) => `${results} will be removed.`,
   deleting: 'Deleting…',
   notDeleted: 'Not deleted — check the connection and try again.',
+
+  // Toasts, counts and status lines built in code (R-8): every word of the screens lives here
+  saved: 'Saved.',
+  deleted: 'Deleted.',
+  savedResults: (results: string, name: string) => `Saved ${results} for ${name}`,
+  resultCount: (count: number) => `${count} ${count === 1 ? 'result' : 'results'}`,
+  noChange: 'No change',
+  beforeJoin: (name: string, day: string) => `This is before ${name} joined (${day})`,
+  dayCount: (count: number) => `${count} ${count === 1 ? 'day' : 'days'}`,
+  overdue: (days: string) => `Overdue ${days}`,
+  dueToday: 'Due today',
+  dueTomorrow: 'Due tomorrow',
+  dueIn: (days: string) => `Due in ${days}`,
+  nextDue: (day: string) => `Next due ${day}`,
+  neverRecorded: 'Never recorded',
+  reminderOn: (day: string) => `Reminder on ${day}`,
 } as const;
