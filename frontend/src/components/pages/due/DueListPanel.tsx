@@ -18,6 +18,8 @@ const ALL = 'all';
 // setup order, and the rows. The tab and the filter are in the URL (`?tab=overdue|soon&type=<id>`), so the
 // Home "See all" links land on the right tab and Back from Record assessment returns to the same list. The
 // catalog is read-only here; while it loads (or fails) only "All" shows. One row sheet serves both tabs.
+// A chip change keeps the old rows on screen (dimmed) until the new ones arrive; a tab switch mounts that
+// tab's own list, which shows grey rows (or its cached rows) because the other tab's panel is unmounted.
 export default function DueListPanel() {
   const [{ tab, type }, setParams] = useQueryStates(dueListSearchParams);
   const sheet = useDueSheet();

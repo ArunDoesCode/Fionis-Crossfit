@@ -89,8 +89,10 @@ export const useDuePreview = (status: DueListStatus) =>
   useQuery(dueListQueryOptions(status, null, DUE_PREVIEW_SIZE));
 
 /**
- * S3 (BR-REC-104): 25 rows a page for one tab and one assessment (or all). While the tab or the chip
- * changes, the old rows stay on screen (dimmed) instead of flashing grey shapes.
+ * S3 (BR-REC-104): 25 rows a page for one tab and one assessment (or all). While the chip changes, the old
+ * rows stay on screen (dimmed) instead of flashing grey shapes. A tab switch mounts that tab's own list
+ * (the other tab's panel is unmounted), so it shows grey rows until its first page arrives, or its cached
+ * rows when it was opened before.
  */
 export const useDueList = (status: DueListStatus, typeId: string | null) =>
   useInfiniteQuery({
