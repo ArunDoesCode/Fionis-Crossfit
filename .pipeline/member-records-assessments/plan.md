@@ -24,7 +24,7 @@ Tests: `backend/tests/assessments/**`, `frontend/tests/assessments/**` (test-wri
 As setup/members: one contract step for E25–E30 + admin interfaces, then red tests (backend and frontend test-writers on
 disjoint folders, in parallel), then backend-dev ∥ frontend-dev; slices below are the checkpoints.
 
-- [ ] **0. Contract** — field rules in `types/assessments.types.ts`, `contract:generate`, `types:api`, `contract.md` (+ admin interfaces)
+- [x] **0. Contract** — field rules in `types/assessments.types.ts`, `contract:generate`, `types:api`, `contract.md` (+ admin interfaces)
 - [ ] **Red tests** — backend `tests/assessments/**`, frontend `tests/assessments/**`
 - [ ] **1. Save** — BR-REC-19, 76 (server rounding), 77, 78, 83, 86, 92 (save part)
   - backend: E26 upsert on (member, type, date) under a member-row lock; `created` / `saved` / `removed`; `NO_VALUES`,
