@@ -1,5 +1,6 @@
 import ListRow from '@/components/common/ListRow';
 import StatusBadge from '@/components/common/StatusBadge';
+import { preloadPeriodSheet } from '@/components/pages/members/PeriodSheetLazy';
 import { Button } from '@/components/ui/button';
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatPhone } from '@/lib/format';
@@ -33,6 +34,8 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
             type="button"
             variant="secondary"
             aria-label={`Renew ${item.fullName}`}
+            onPointerDown={preloadPeriodSheet}
+            onFocus={preloadPeriodSheet}
             onClick={() => onRenew(item.memberId)}
           >
             Renew

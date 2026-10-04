@@ -2,7 +2,7 @@
 
 import { useQueryState } from 'nuqs';
 import EndingList from '@/components/pages/members/EndingList';
-import PeriodSheet from '@/components/pages/members/PeriodSheet';
+import PeriodSheet from '@/components/pages/members/PeriodSheetLazy';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { endingTabParser, isEndingTab } from '@/lib/members/endingParams';
 import { useRenewTarget } from '@/lib/members/useRenewTarget';

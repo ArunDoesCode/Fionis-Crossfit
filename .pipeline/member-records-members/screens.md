@@ -69,10 +69,11 @@ Opened from: member page `/admin/members/[memberId]` (**Renew** button in the me
 - Success: sheet closes; toast `Anita Rao renewed.` (Renew) / `Saved.` (Edit) / `Anita Rao is back on the list.` (instead, when the save brought an archived member back). The member page, the lists and both Home sections refresh.
 - Server refusals under **Starts on** (the sheet stays open, button usable again): `PERIOD_OVERLAP` "This overlaps another membership. Change the start date."; `START_BEFORE_JOIN` "Membership can't start before the join date. Pick a later start date."; `VALIDATION_ERROR` under the field it names. Anything else (`RATE_LIMITED`, `IDEMPOTENCY_KEY_REUSED`, offline "Couldn't save. Check your connection and try again.") a toast.
 - Renew sends an `Idempotency-Key`: Renew tapped again with the same plan/start after a lost answer reuses the key (one membership, not two); changed details get a new key.
+- The sheet's code (and the Archive confirm sheet's) loads on the first touch of Renew / a history row / Archive, not with the page (fix round 1, R-1): it must open the same as before, also the very first time and on a slow connection (grey shapes inside the sheet; no extra tap).
 
 ### S7 member page — MembershipBlock (changed)
 - Card: `Annual · [Active] 241 days left`, then `Ends 31 May 2026` with **Renew** at the right (secondary button).
-- **Membership history** (title above a list) only when the member has MORE THAN ONE membership, newest first: each row `Annual` / `1 Jun 2025 – 31 May 2026` (plan, then dates with the year, `>` at the right); tap → Edit membership.
+- **Membership history** (title above a list) always shown, from ONE membership up (fix round 1, R-2), newest first: each row `Annual` / `1 Jun 2025 – 31 May 2026` (plan, then dates with the year, `>` at the right); tap → Edit membership. With a single membership this row is the only way to Edit it (a typo in the first plan or start can be fixed).
 - Loading: grey card (no Renew yet). Failed: "Couldn't load this." [Try again].
 
 ### S4 Memberships ending — `/admin/memberships?tab=ending|ended`

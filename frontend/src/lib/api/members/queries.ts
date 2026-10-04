@@ -77,8 +77,8 @@ export const memberQueries = {
   list: (filters: MemberListFilters) =>
     infiniteQueryOptions({
       queryKey: memberKeys.list(filters),
-      queryFn: ({ pageParam }) =>
-        listMembers({ ...filters, page: pageParam, pageSize: MEMBER_PAGE_SIZE }),
+      queryFn: ({ pageParam, signal }) =>
+        listMembers({ ...filters, page: pageParam, pageSize: MEMBER_PAGE_SIZE }, signal),
       initialPageParam: 1,
       getNextPageParam: ({ meta }) => (meta.page < meta.totalPages ? meta.page + 1 : undefined),
     }),
@@ -88,7 +88,7 @@ export const memberQueries = {
   duplicates: (phone: string) =>
     queryOptions({
       queryKey: memberKeys.duplicates(phone),
-      queryFn: () => listMembers({ phone, status: 'any', page: 1, pageSize: 10 }),
+      queryFn: ({ signal }) => listMembers({ phone, status: 'any', page: 1, pageSize: 10 }, signal),
     }),
 };
 
@@ -97,8 +97,8 @@ export const membershipQueries = {
   list: (status: EndingStatus) =>
     infiniteQueryOptions({
       queryKey: membershipKeys.list(status),
-      queryFn: ({ pageParam }) =>
-        listEndingMemberships({ status, page: pageParam, pageSize: MEMBER_PAGE_SIZE }),
+      queryFn: ({ pageParam, signal }) =>
+        listEndingMemberships({ status, page: pageParam, pageSize: MEMBER_PAGE_SIZE }, signal),
       initialPageParam: 1,
       getNextPageParam: ({ meta }) => (meta.page < meta.totalPages ? meta.page + 1 : undefined),
     }),
@@ -106,7 +106,8 @@ export const membershipQueries = {
   preview: (status: EndingStatus) =>
     queryOptions({
       queryKey: membershipKeys.preview(status),
-      queryFn: () => listEndingMemberships({ status, page: 1, pageSize: HOME_PREVIEW_SIZE }),
+      queryFn: ({ signal }) =>
+        listEndingMemberships({ status, page: 1, pageSize: HOME_PREVIEW_SIZE }, signal),
     }),
 };
 
@@ -157,7 +158,7 @@ function saveFailed(err: unknown, fallback: string) {
 }
 const SAVE_FAILED = "Couldn't save. Check your connection and try again.";
 
-/** After any write every member list, warning and Memberships ending list may have changed. */
+/** After a period write the member's own detail changed too (status, ends on, periods): invalidate it all. */
 function useInvalidateMembers() {
   const queryClient = useQueryClient();
   return () => {
@@ -166,13 +167,17 @@ function useInvalidateMembers() {
   };
 }
 
-/** After a write the member is in the cache as the server saved it; every list and warning is stale. */
+/**
+ * After a write the member is in the cache as the server saved it (so its detail is not asked again); every
+ * list, duplicate warning and Memberships ending list is stale.
+ */
 function useRefreshMembers() {
   const queryClient = useQueryClient();
-  const invalidate = useInvalidateMembers();
   return (member: MemberDetail) => {
     queryClient.setQueryData(memberKeys.detail(member.id), member);
-    invalidate();
+    void queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
+    void queryClient.invalidateQueries({ queryKey: memberKeys.duplicatesAll() });
+    void queryClient.invalidateQueries({ queryKey: membershipKeys.all() });
   };
 }
 

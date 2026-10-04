@@ -1,7 +1,7 @@
 'use client';
 
 import EndingSection from '@/components/pages/members/EndingSection';
-import PeriodSheet from '@/components/pages/members/PeriodSheet';
+import PeriodSheet from '@/components/pages/members/PeriodSheetLazy';
 import { useRenewTarget } from '@/lib/members/useRenewTarget';
 
 // SLOT owned by members (Stream B): "Memberships ending" then "Recently ended" (BR-REC-101, 53). Each shows

@@ -16,9 +16,15 @@ import type {
 // Success is `{ success: true, data }`; the fetchers hand back `data` (lists: `{ data, meta }`).
 // Failures throw ApiError (code + details for the form to show next to a field).
 
-/** E16: one page of members. `q` needs 2+ characters (the API answers 400 below that, BR-REC-07). */
-export async function listMembers(query: MemberListQuery): Promise<MemberListPage> {
-  return api.get<MemberListPage>(API_ROUTES.MEMBERS.LIST, { query });
+/**
+ * E16: one page of members. `q` needs 2+ characters (the API answers 400 below that, BR-REC-07). `signal`
+ * is the query's own: a newer search cancels the older request (performance tactic 9).
+ */
+export async function listMembers(
+  query: MemberListQuery,
+  signal?: AbortSignal,
+): Promise<MemberListPage> {
+  return api.get<MemberListPage>(API_ROUTES.MEMBERS.LIST, { query, signal });
 }
 
 /** E18: the whole member: details, membership and every period. Archived members too. */
@@ -104,6 +110,9 @@ export async function updatePeriod(
 }
 
 /** E24: members whose membership ends soon (`expiring`) or ended in the last 30 days (`expired`). */
-export async function listEndingMemberships(query: EndingQuery): Promise<EndingPage> {
-  return api.get<EndingPage>(API_ROUTES.MEMBERSHIPS.ENDING, { query });
+export async function listEndingMemberships(
+  query: EndingQuery,
+  signal?: AbortSignal,
+): Promise<EndingPage> {
+  return api.get<EndingPage>(API_ROUTES.MEMBERSHIPS.ENDING, { query, signal });
 }
