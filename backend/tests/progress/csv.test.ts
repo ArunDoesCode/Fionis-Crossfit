@@ -10,8 +10,10 @@ import {
 } from "../../src/service/progressCsv";
 
 // BR-REC-117 (UTF-8 with BOM, comma separated, `value` and `display`, archived column), BR-REC-118
-// and P9 (a cell starting with = + - @ or a tab is written as text with a leading '), BR-REC-119
-// (file names), P8 (header rows and cell rules). Pure functions: no database.
+// and P9 as changed by owner decision O-1 (the guard is for text: a text cell starting with = + - @
+// or a tab gets a leading '; a real number is never prefixed; a text that is exactly a negative
+// number literal is written as is), P14 (ASCII guard characters), BR-REC-119 (file names), P8
+// (header rows and cell rules). Pure functions: no database.
 
 describe("BR-REC-117 / P8 the byte order mark and the header rows", () => {
   test("BR-REC-117 the BOM is U+FEFF", () => {
@@ -83,6 +85,11 @@ describe("BR-REC-117 / P8 one cell", () => {
     [0, "0"],
     [0.001, "0.001"],
     [1234567.891, "1234567.891"],
+    // O-1 / P9: a real number is a plain decimal, a negative one too
+    [-1.5, "-1.5"],
+    [-122, "-122"],
+    [-0.001, "-0.001"],
+    [-1234567.891, "-1234567.891"],
   ];
   for (const [value, text] of numbers) {
     test(`a number is a plain decimal: ${value} -> ${text}`, () => {
@@ -132,7 +139,7 @@ describe("BR-REC-118 / P9 the formula guard", () => {
       '"\'=HYPERLINK(""http://x"",""y"")"',
     ],
     ["plus", "+919876543210", "'+919876543210"],
-    ["minus", "-1.5", "'-1.5"],
+    ["minus", "-A1", "'-A1"],
     ["at sign", "@SUM(A1:A2)", "'@SUM(A1:A2)"],
     ["tab", "\tcmd", "'\tcmd"],
     ["equals, simple", "=1+1", "'=1+1"],
@@ -147,9 +154,66 @@ describe("BR-REC-118 / P9 the formula guard", () => {
     expect(csvCell("=HYPERLINK(1)")).toBe("'=HYPERLINK(1)");
   });
 
-  test("P9 the guard also covers numbers: a negative value exports as text", () => {
-    expect(csvCell(-1.5)).toBe("'-1.5");
-    expect(csvCell(-0.001)).toBe("'-0.001");
+  test("O-1 / P9 real numbers are never prefixed: a negative number stays a plain decimal", () => {
+    expect(csvCell(-1.5)).toBe("-1.5");
+    expect(csvCell(-0.001)).toBe("-0.001");
+    expect(csvCell(-122)).toBe("-122");
+  });
+
+  test("O-1 / P9 a real number is not a text: the number -5 is not guarded but the text '-5 reps' is", () => {
+    expect(csvCell(-5)).toBe("-5");
+    expect(csvCell("-5 reps")).toBe("'-5 reps");
+  });
+
+  const negativeLiterals: [string, string][] = [
+    ["spec example: the display -0.5", "-0.5"],
+    ["a whole negative number", "-12"],
+    ["a negative zero literal", "-0"],
+    ["a long decimal part", "-1234.5678"],
+    ["a decimal under one", "-0.05"],
+  ];
+  for (const [label, input] of negativeLiterals) {
+    test(`O-1 / P9 a text that is exactly a negative number literal is written as is: ${label} (${input})`, () => {
+      expect(csvCell(input)).toBe(input);
+    });
+  }
+
+  const stillGuarded: [string, string, string][] = [
+    ["a sum after the digits", "-1+2", "'-1+2"],
+    ["a cell reference", "-A1", "'-A1"],
+    ["a formula start", "=1+1", "'=1+1"],
+    ["a minus alone has no digits", "-", "'-"],
+    ["a space after the minus", "- 5", "'- 5"],
+    ["two decimal points", "-1.2.3", "'-1.2.3"],
+    ["a second minus", "--5", "'--5"],
+    ["a number followed by a letter", "-5x", "'-5x"],
+    ["an exponent is not digits and one point", "-1e5", "'-1e5"],
+    ["a trailing space (not exactly a literal)", "-5 ", "'-5 "],
+  ];
+  for (const [label, input, expected] of stillGuarded) {
+    test(`O-1 / P9 not a negative number literal, so the rules above apply: ${label} (${JSON.stringify(input)})`, () => {
+      expect(csvCell(input)).toBe(expected);
+    });
+  }
+
+  test("O-1 / P9 a minus text with a comma is guarded, then quoted (not a number literal)", () => {
+    expect(csvCell("-1,5")).toBe('"\'-1,5"');
+  });
+
+  test("O-1 / P9 a positive number text stays guarded: only negative literals are the exception", () => {
+    expect(csvCell("+5")).toBe("'+5");
+    expect(csvCell("+0.5")).toBe("'+0.5");
+  });
+
+  test("O-1 / P9 text that is only digits (no sign) is not changed", () => {
+    expect(csvCell("12")).toBe("12");
+    expect(csvCell("0.5")).toBe("0.5");
+  });
+
+  test("P14 the guard characters are ASCII: a text starting with U+2212 (the typographic minus) is left alone", () => {
+    expect(csvCell("\u22125")).toBe("\u22125");
+    expect(csvCell("\u22121+2")).toBe("\u22121+2");
+    expect(csvCell("\u2212A1")).toBe("\u2212A1");
   });
 
   test("P9 the guard runs before the quoting: a guarded cell with a comma is then wrapped", () => {
@@ -187,6 +251,12 @@ describe("BR-REC-117 / P8 one line", () => {
     );
   });
 
+  test("O-1 / P9 a line with a real negative number, a negative-literal text and a guarded minus text", () => {
+    expect(csvLine(["id", -1.5, "-0.5", "-A1", "-5 reps"])).toBe(
+      "id,-1.5,-0.5,'-A1,'-5 reps\r\n",
+    );
+  });
+
   test("a single empty cell is just the line end", () => {
     expect(csvLine([null])).toBe("\r\n");
   });
@@ -212,6 +282,15 @@ describe("BR-REC-117 / P8 display text", () => {
     ["a number with 0 decimals: 3 -> 3", 3, "number", 0, "3"],
     ["a number with 2 decimals: 7 -> 7.00", 7, "number", 2, "7.00"],
     ["a number with 2 decimals: 7.456 -> 7.46", 7.456, "number", 2, "7.46"],
+    [
+      "a negative number: -0.5 -> -0.5 (O-1 example)",
+      -0.5,
+      "number",
+      1,
+      "-0.5",
+    ],
+    ["a negative number with 1 decimal: -5 -> -5.0", -5, "number", 1, "-5.0"],
+    ["a negative number with 0 decimals: -12 -> -12", -12, "number", 0, "-12"],
   ];
   for (const [label, value, datatype, decimals, expected] of cases) {
     test(`BR-REC-117 ${label}`, () => {
@@ -221,6 +300,18 @@ describe("BR-REC-117 / P8 display text", () => {
 
   test("BR-REC-117 the display has no unit", () => {
     expect(displayValue(94, "number", 1)).not.toContain("kg");
+  });
+
+  test("O-1 / P9 the display of a negative number is a text that is exactly a negative number literal, so the file writes it as is", () => {
+    expect(csvCell(displayValue(-0.5, "number", 1))).toBe("-0.5");
+    expect(csvCell(displayValue(-5, "number", 1))).toBe("-5.0");
+    expect(csvCell(displayValue(-12, "number", 0))).toBe("-12");
+  });
+
+  test("O-1 / P9 value and display of one negative reading agree: both written without a leading '", () => {
+    expect(csvLine([-0.5, displayValue(-0.5, "number", 1)])).toBe(
+      "-0.5,-0.5\r\n",
+    );
   });
 });
 

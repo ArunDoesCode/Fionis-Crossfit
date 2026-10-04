@@ -20,8 +20,10 @@ import {
 
 // E39 GET /api/exports/:file: BR-REC-24 (everything exportable, one row per value), BR-REC-117
 // (UTF-8 with BOM, comma separated, dates YYYY-MM-DD, columns, value and display, archived column),
-// BR-REC-118 / P9 (formula guard), BR-REC-119 (file name, starts at once and streams) and P8 / P10
-// of the progress spec. The files hold every member in the database, so each test looks only at
+// BR-REC-118 / P9 as changed by owner decision O-1 (the formula guard is for text: real numbers are
+// never prefixed, a negative value stays a number; a text that is exactly a negative number literal,
+// like the display "-0.5", is written as is), BR-REC-119 (file name, starts at once and streams) and
+// P8 / P10 of the progress spec. The files hold every member in the database, so each test looks only at
 // the rows of the members it made (by member id / the TEST_progress name mark).
 
 const s = useProgressSuite();
@@ -437,8 +439,9 @@ describe("BR-REC-24 / 117 / P8 measurements.csv", () => {
       row(alice, body, weight, D1(), "yes", "94.5", "94.5", "no"),
       row(alice, body, weight, D2(), "no", "94", "94.0", "no"),
       row(alice, body, height, D2(), "no", "172.5", "172.5", "no"),
-      // a negative value is guarded like any cell: it exports as text (P9)
-      row(alice, body, delta, D2(), "no", "'-1.5", "'-1.5", "no"),
+      // a negative value is a real number: written plain, not guarded (O-1 / P9); its display
+      // "-1.5" is a text that is exactly a negative number literal, so it is written as is too
+      row(alice, body, delta, D2(), "no", "-1.5", "-1.5", "no"),
       // Plank 122 s -> value 122, display 2:02 (BR-REC-117 example)
       row(alice, fit, plank, D2(), "no", "122", "2:02", "no"),
       row(alice, fit, pullUps, D2(), "no", "12", "12", "no"),
@@ -489,6 +492,71 @@ describe("BR-REC-24 / 117 / P8 measurements.csv", () => {
     for (const r of golden(rows)) {
       expect(r[5]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
+  });
+});
+
+describe("O-1 / P9 negative values in measurements.csv stay numbers", () => {
+  test("O-1 / P9 a negative stored value: value is a plain number, display is the number with its decimals, neither is prefixed", async () => {
+    const type = await s.makeType({ label: "negative" });
+    const flex1 = await s.makeMetric(type.id, {
+      name: "Flex one",
+      unit: "cm",
+      decimals: 1,
+      better: "higher",
+    });
+    const flex0 = await s.makeMetric(type.id, {
+      name: "Flex zero",
+      unit: "cm",
+      decimals: 0,
+      better: "higher",
+    });
+    const flex2 = await s.makeMetric(type.id, {
+      name: "Flex two",
+      unit: "cm",
+      decimals: 2,
+      better: "higher",
+    });
+    const plus = await s.makeMetric(type.id, {
+      name: "Flex plus",
+      unit: "cm",
+      decimals: 1,
+      better: "higher",
+    });
+    const member = await s.makeMember({ name: "Flexible Negative" });
+    await s.record(member.id, type.id, s.day(-5), [
+      [flex1, -5],
+      [flex0, -12],
+      [flex2, -0.25],
+      [plus, 7.5],
+    ]);
+    const { rows } = await s.exportCsv("measurements.csv");
+    const mine = rows
+      .filter((r) => r[0] === member.id)
+      .map((r) => ({ metric: r[3], value: r[7], display: r[8] }));
+    expect(mine).toEqual([
+      { metric: "Flex one", value: "-5", display: "-5.0" },
+      { metric: "Flex zero", value: "-12", display: "-12" },
+      { metric: "Flex two", value: "-0.25", display: "-0.25" },
+      { metric: "Flex plus", value: "7.5", display: "7.5" },
+    ]);
+  });
+
+  test("O-1 / P9 the raw bytes of a negative value carry no apostrophe in front of the minus sign", async () => {
+    const type = await s.makeType({ label: "rawneg" });
+    const flex = await s.makeMetric(type.id, {
+      name: "Raw flex",
+      unit: "cm",
+      decimals: 1,
+      better: "higher",
+    });
+    const member = await s.makeMember({ name: "Raw Negative" });
+    await s.record(member.id, type.id, s.day(-5), [[flex, -3]]);
+    const { text } = await s.exportCsv("measurements.csv");
+    const line = text
+      .split("\r\n")
+      .find((l) => l.startsWith(`${member.id},`)) as string;
+    expect(line.endsWith(",-3,-3.0,no")).toBe(true);
+    expect(line).not.toContain("'");
   });
 });
 
@@ -593,6 +661,40 @@ describe("BR-REC-118 / P9 the formula guard in a file", () => {
     expect(byId(e.id)[8]).toBe("'+1 later");
     // the guarded formula with commas and quotes is also quoted properly
     expect(text).toContain(`"'=HYPERLINK(""http://x"",""y"")"`);
+  });
+
+  test("O-1 / P9 a text cell that is exactly a negative number literal is written as is; other minus texts are still guarded", async () => {
+    const whole = await s.makeMember({ name: "Literal Whole", notes: "-12" });
+    const decimal = await s.makeMember({
+      name: "Literal Decimal",
+      notes: "-0.5",
+    });
+    const sum = await s.makeMember({ name: "Sum Guard", notes: "-1+2" });
+    const ref = await s.makeMember({ name: "Ref Guard", notes: "-A1" });
+    const eq = await s.makeMember({ name: "Eq Guard", notes: "=1+1" });
+    const lone = await s.makeMember({ name: "Lone Minus", notes: "-" });
+    const { rows } = await s.exportCsv("members.csv");
+    const notesOf = (m: MadeMember) =>
+      (rows.find((r) => r[0] === m.id) as string[])[8];
+    expect(notesOf(whole)).toBe("-12");
+    expect(notesOf(decimal)).toBe("-0.5");
+    expect(notesOf(sum)).toBe("'-1+2");
+    expect(notesOf(ref)).toBe("'-A1");
+    expect(notesOf(eq)).toBe("'=1+1");
+    expect(notesOf(lone)).toBe("'-");
+  });
+
+  test("O-1 / P9 a phone starting with + stays guarded (text), a digits-only phone does not", async () => {
+    const plus = await s.makeMember({
+      name: "Plus Phone",
+      phone: "+91 98450 12345",
+    });
+    const plain = await s.makeMember({ name: "Plain Phone" });
+    const { rows } = await s.exportCsv("members.csv");
+    const phoneOf = (m: MadeMember) =>
+      (rows.find((r) => r[0] === m.id) as string[])[2];
+    expect(phoneOf(plus)).toBe("'+91 98450 12345");
+    expect(phoneOf(plain)).not.toMatch(/^'/);
   });
 
   test("BR-REC-118 a cell that merely contains = + - @ later is left alone", async () => {
