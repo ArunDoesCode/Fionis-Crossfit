@@ -52,18 +52,28 @@ export type CsvValue = string | number | boolean | null;
 
 /** P14: ASCII `=`, `+`, `-` (hyphen-minus), `@` and tab start a formula in a spreadsheet. */
 const FORMULA_START = /^[=+\-@\t]/;
+/** P9: a text that is only a minus sign, digits and at most one decimal point part cannot run as a formula. */
+const NEGATIVE_NUMBER_LITERAL = /^-\d+(\.\d+)?$/;
 const NEEDS_QUOTES = /[",\r\n]/;
 
 /**
- * One cell (P8, P9): `null` is empty, a boolean is `yes` / `no`, a number is its plain decimal;
- * text starting with `= + - @` or a tab gets a leading `'` (numbers included, so `-1.5` becomes
- * `'-1.5`); then a cell with a comma, quote, CR or LF is wrapped in quotes with inner quotes doubled.
+ * One cell (P8, P9): `null` is empty, a boolean is `yes` / `no`, a number is its plain decimal and is
+ * never guarded (owner decision O-1: a negative `value` must stay a number in Excel). The formula guard
+ * applies to text only: text starting with `= + - @` or a tab gets a leading `'`, except a text that is
+ * exactly a negative number literal (the `display` "-0.5"), which is written as is. Then a cell with a
+ * comma, quote, CR or LF is wrapped in quotes with inner quotes doubled.
  */
 export function csvCell(value: CsvValue): string {
   if (value === null) return "";
-  let text =
-    typeof value === "boolean" ? (value ? "yes" : "no") : String(value);
-  if (FORMULA_START.test(text)) text = `'${text}`;
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  let text = String(value);
+  if (
+    typeof value === "string" &&
+    FORMULA_START.test(text) &&
+    !NEGATIVE_NUMBER_LITERAL.test(text)
+  ) {
+    text = `'${text}`;
+  }
   return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
