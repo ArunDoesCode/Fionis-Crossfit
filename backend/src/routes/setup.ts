@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import { setupController } from "../controller/setupController";
+import { asyncHandler } from "../lib/async-handler";
 import { etagMiddleware } from "../lib/etag";
 import {
   badRequestResponse,
@@ -27,9 +29,9 @@ import {
   updateSettingsBodySchema,
 } from "../types/setup.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import { ANY_AUTHENTICATED, notImplemented, routeMounter } from "./mount-route";
+import { ANY_AUTHENTICATED, routeMounter } from "./mount-route";
 
-// Owner: setup stream. E07-E15. Handlers answer 501 until Stream C builds them.
+// Owner: setup stream. E07-E15.
 const setupRouter = new Hono<AppEnv>();
 const route = routeMounter(setupRouter, MAIN_ROUTES.setup);
 const EP = END_POINTS.setup;
@@ -61,7 +63,7 @@ route(
     },
     notes: [ETAG_NOTE],
   },
-  notImplemented,
+  asyncHandler(setupController.getSettings),
   [etagMiddleware()],
 );
 
@@ -83,7 +85,7 @@ route(
       "`gymName` is trimmed first, then 2-60 characters. `timezone` must be an IANA name the server knows, e.g. Asia/Kolkata; unknown names and offsets such as +05:30 are 400 VALIDATION_ERROR (not visible in the schema). Lead days are whole numbers within their range (C1).",
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.updateSettings),
 );
 
 route(
@@ -107,7 +109,7 @@ route(
       ETAG_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.listCatalog),
   [etagMiddleware()],
 );
 
@@ -127,7 +129,7 @@ route(
     },
     notes: [TRIM_NOTE, "Added last, On, with no measurements (C7)."],
   },
-  notImplemented,
+  asyncHandler(setupController.createType),
 );
 
 // Static `/assessment-types/order` is declared before the `:typeId` routes.
@@ -149,7 +151,7 @@ route(
       ORDER_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.reorderTypes),
 );
 
 route(
@@ -177,7 +179,7 @@ route(
       "The answer lists all of the assessment's measurements, on and off, in setup order, each with its own `isActive`; `includeInactive` belongs to E09 only.",
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.updateType),
 );
 
 route(
@@ -202,7 +204,7 @@ route(
       "Added last and On. Defaults when omitted: unit empty, decimals 1 (0 for a duration), no check range, no own repeat, no report-table place.",
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.createMetric),
 );
 
 route(
@@ -224,7 +226,7 @@ route(
       ORDER_NOTE,
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.reorderMetrics),
 );
 
 route(
@@ -252,7 +254,7 @@ route(
       "METRIC_LOCKED: datatype and unit cannot change once any value exists (BR-REC-11). Only a real change counts; sending the stored value again is fine (C4).",
     ],
   },
-  notImplemented,
+  asyncHandler(setupController.updateMetric),
 );
 
 export { setupRouter as setupRoutes };
