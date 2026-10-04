@@ -1,7 +1,7 @@
 # member-records/setup · manual test checklist
 
 Spec: `docs/specs/member-records/setup.md` v2 (BR-REC-10, 11, 13, 14, 60…72 + build clarifications C1…C13) + `ux.md` v1 (BR-REC-120…140 on S14, S15, S16).
-Written from the spec rules and `screens.md` (URLs, words and roles only). The server rules (E07…E15, limits, locks, races, change log) have automated tests;
+Written from the spec rules and the build's screen notes (URLs, words and roles only). The server rules (E07…E15, limits, locks, races, change log) have automated tests;
 this list is for what no test reaches: the three screens, the two edit sheets, the two confirmations, locked fields, widths, themes, zoom and screen readers
 (no DOM test library yet, #9, so every sheet and layout rule is manual).
 Tags: `[G]` golden path · `[N]` negative path · `[API]` a `curl` check of the same rule · `[slow]` needs real waiting · `[note]` the spec is silent, tell the owner, not a fail ·

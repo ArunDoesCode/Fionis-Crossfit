@@ -161,7 +161,7 @@ every field on edit, a wrapper field in screens, the move-date screen now. Detai
 A stream PR edits only its own sub-spec, its own sub-map and `.pipeline/<feature>/`. STATUS, `decisions.md`, the spec index and
 the module index are updated by the coordinator in ONE docs commit after the merge, which also assigns the next D-NNN. Why: six
 parallel stream PRs conflicted in STATUS, the index, the map and decisions (and three entries got the same number).
-Rejected: a shared integration branch. Detail: `docs/KNOWLEDGE.md` → Parallel streams.
+Rejected: a shared integration branch. Detail: `docs/KNOWLEDGE.md` → Parallel streams. Also on 2026-10-04: D-019…D-024 were condensed to decision + why + rejected (the long build-choice lists live in the specs' Build clarifications; the full original text is in git at `9d78023`).
 
 **D-026 · 2026-10-04 · `seed:demo` (BR-REC-176): a curated, today-relative demo data set, in addition to `seed:perf`.**
 25 named members whose dates are today plus fixed offsets, so every screen and every manual checklist starts from known rows

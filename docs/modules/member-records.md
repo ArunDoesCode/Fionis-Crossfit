@@ -19,9 +19,9 @@ Decisions: D-012 scope, D-016 split, D-017 streams, D-018 hosting, D-019…D-024
 Run notes live in git history (Streams table), not in the tree.
 
 ## Streams
-Run notes: `git show <sha>:.pipeline/member-records-<x>/{plan,contract,findings,screens,checklist}.md` (due-list has no findings.md).
+Run notes (deleted in `c412f08`, checklists kept): `git show c412f08^:.pipeline/member-records-<x>/{plan,contract,findings,screens}.md` (due-list has no findings.md); the squash commit per stream is in the last column.
 Spec and sub-map share the file name (`docs/specs/member-records/<x>.md`, `docs/modules/member-records/<x>.md`).
-| Stream | Sub-spec / sub-map | PR | Decisions | Run notes `<sha>` (`<x>`) |
+| Stream | Sub-spec / sub-map | PR | Decisions | Squash commit (`<x>` = folder suffix) |
 |---|---|---|---|---|
 | 0 foundation | data-model, api-contract, ux / this file | #10 | D-019 | `2b4ef5b` (`foundation`) |
 | A auth | `auth.md` | #11 | D-020 | `ad6a486` (`auth`) |
@@ -44,7 +44,7 @@ Spec and sub-map share the file name (`docs/specs/member-records/<x>.md`, `docs/
 | middleware | `backend/src/lib/{origin-check,idempotency,etag,server-timing,response-headers,validate}.ts` | `originCheck`, `idempotency` (+ `pruneIdempotencyKeys`), `etagMiddleware`, `serverTiming`, `dataResponseHeaders` |
 | change log | `backend/src/lib/audit.ts` | `writeAudit(tx, entry)`, `diffChangedFields` (redacts /password\|token\|secret\|hash/i) |
 | domain | `backend/src/lib/domain/{dates,duration,membership}.ts` = `frontend/src/lib/domain/*` | `addMonths`, `gymToday`, `parseDuration`/`formatDuration`, `membershipEnd`, `membershipStatus` |
-| seeds | `backend/scripts/{seed,seed-perf,db-reset}.ts` | `seed()` (`CATALOG` const), `seedPerf({ memberCount })`, `assertLocalDatabase` |
+| seeds | `backend/scripts/{seed,seed-perf,seed-demo,seed-demo-data,db-reset}.ts` | `seed()` (`CATALOG` const), `seedPerf({ memberCount })`, `assertLocalDatabase` |
 | frontend http | `frontend/src/lib/api/{client,server,routes,errors}.ts`, `lib/queryClient.ts` | `api` (ETag cache, refresh once), `serverApi`, `API_ROUTES` (all 41) + `apiPath` |
 | frontend shared | `frontend/src/lib/{format.ts,messages/errors.ts,messages/words.ts,hooks/*}` | `formatDay`, `formatValue`, `messageForCode`, `UI_TEXT`, `useBackToClose` |
 | shell | `frontend/src/components/shells/*`, `app/(app)/admin/layout.tsx` | `AppShell`, `BottomTabBar` (< 1024 px), `SideNav`, `SignOutButton` |
@@ -78,7 +78,7 @@ api-contract.md; shapes `cd backend && bun run contract:query "<METHOD /path>"`.
 - `PageHeader`'s `action` is drawn twice (desktop header / phone `ActionBar`); `ActionBar form` hides the tab bar. Sticky elements under the offline banner use `top-[var(--offline-h,0px)]`.
 - Dark `--primary` fails 4.5:1 as text: no `text-primary` / `variant="link"`. 48 px controls and 44 px hit areas are unlayered CSS in `globals.css` (shadcn files are never edited). Biome a11y bans `onBlur` / `onPointerDown` on a div: listen natively through a ref (`focusout`).
 
-- `seed:demo`: leaderboards need exactly 11 non-archived members per sex with a result (changing sex, archived or never-recorded members needs a re-check); Surya Pratap is 34 days overdue on any day except dates on the 29th–31st, where the earlier month is shorter (the buckets still hold); noise uses a constant seed, history dates are fixed-day offsets and only each member's newest visit and latest period use month maths. Re-seed (`db:reset`, `seed:demo`, `bootstrap-admin`) the morning of a demo.
+- `seed:demo`: leaderboards need exactly 11 non-archived members per sex with a result (changing sex, archived or never-recorded members needs a re-check); Surya Pratap is 34 days overdue on any run day except when today minus a month lands on the 29th–31st (e.g. run on 4 May: 33 days) because the newest visit and latest period are placed by month maths (the buckets still hold); noise uses a constant seed, history dates are fixed-day offsets and only each member's newest visit and latest period use month maths. Re-seed (`db:reset`, `seed:demo`, `bootstrap-admin`) the morning of a demo.
 
 ## Gaps (no GitHub issue; open issues: `gh issue list --label mod:member-records`)
 - `SignOutSection` (auth) imports `ConfirmSheet` statically (bundle on `/admin/settings/account`) — G.
@@ -88,7 +88,7 @@ api-contract.md; shapes `cd backend && bun run contract:query "<METHOD /path>"`.
 ## Tests
 | Area | Directory | BR |
 |---|---|---|
-| schema, seeds | `backend/tests/db/`, `backend/tests/scripts/` | 10, 13, 65, 68, 163, 164, 168–170, 175 |
+| schema, seeds | `backend/tests/db/`, `backend/tests/scripts/` | 10, 13, 65, 68, 163, 164, 168–170, 175, 176 |
 | contract | `backend/tests/routes/`, `frontend/tests/lib/api/routes.test.ts` | 153, 155, 157, 159 |
 | middleware, change log | `backend/tests/lib/*.test.ts`, `backend/tests/app.test.ts` | 36, 37, 43, 147, 156, 158, 160, 161 |
 | domain | `{backend,frontend}/tests/lib/domain/` + golden `duration-cases.json`, `membership-end-cases.json` (`bash scripts/check-fixtures.sh`) | 03, 12, 51, 52, 75, 93, 94, 105 |
@@ -120,3 +120,4 @@ No DOM test library (#9): screen wiring is covered by the manual checklists.
 | 2026-10-04 | #33 | Stream E: due-list E31–E34, `computeDue`, Home due sections, S3; D-023 |
 | 2026-10-04 | #34 | Stream F: progress E35–E39, S12, S13, S18; D-022 |
 | 2026-10-04 | — | Map split into this index + one sub-map per stream; verified at `9d78023` |
+| 2026-10-04 | work/mvp-demo-prep | `seed:demo` (BR-REC-176, data-model v3): 25 named, today-relative demo members; D-026 |

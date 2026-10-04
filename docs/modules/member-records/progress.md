@@ -41,3 +41,4 @@ Open issues: [#26](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/26) mo
 
 ## History
 2026-10-04 · #34 (`9d78023`) · Stream F built: E35–E39, S12, S13, S18, pure `report.ts`, streamed CSV, no server cache; progress.md v2 (P1–P14, owner decision O-1); D-022.
+Measured on the 1,000-member perf seed (336,640 values) in the Stream F build: E35 ≈ 50 ms, E36 80–140 ms, E37 ≈ 110 ms, E38 ≈ 60 ms (budget BR-REC-147; re-measure with `bench` in Stream G).

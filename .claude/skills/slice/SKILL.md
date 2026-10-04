@@ -49,6 +49,6 @@ Run **reviewer** (module + BRs) and, if you want a package-only check, **hono-re
 re-run. Minor findings → mention to user.
 
 ## 7. Close
-- In the spec's "Implementation status" table, mark each BR `done` with the test file.
+- Name the BR in each test title (`BR-REC-NN …`) so `git grep -l 'BR-REC-NN' -- '*/tests/*'` finds it; no status table in the spec.
 - Tell the user the manual click-through to do (golden path + one negative path, which role to log in as).
 - Suggest a commit message. Suggest `/wrap` if the session is long.

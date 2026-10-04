@@ -39,7 +39,7 @@ report card, gym progress, CSV · mobile-first UI · speed budgets · installabl
 ## Sub-specs
 | Sub-spec | What it decides | Rules | Endpoints | Tables | Screens |
 |---|---|---|---|---|---|
-| [data-model](member-records/data-model.md) | every table, constraint, index, seed command | 9 | — | all 13 | — |
+| [data-model](member-records/data-model.md) | every table, constraint, index, seed commands | 10 | — | all 13 | — |
 | [api-contract](member-records/api-contract.md) | conventions, the 40-endpoint table, error codes | 10 | all (list) | — | — |
 | [ux](member-records/ux.md) | shell, navigation, words, fonts, components, a11y, tap budgets, screen index | 21 | — | — | shell |
 | [performance](member-records/performance.md) | speed budgets, fonts budget, CI checks, installable app | 14 | E40 | — | — |
@@ -157,3 +157,4 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
   rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
 - 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.
 - 2026-10-04 v2 — progress v2 during the Stream F build (user: keep the MVP light): BR-REC-110 computed live, no server cache; performance BR-REC-147 / tactic 19 follow; build clarifications P1–P14 in progress.md.
+- 2026-10-04 v2 — data-model v3: new BR-REC-176 (`seed:demo`, MVP demo; next free ID BR-REC-177); ownership table: `metric-value.ts` → C setup; "Implementation status" replaced by one status paragraph (duplicate BR→test tables dropped, D-025)

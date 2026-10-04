@@ -1,7 +1,7 @@
 # member-records/progress · manual test checklist
 
 Spec: `docs/specs/member-records/progress.md` v2 (BR-REC-22…24, 106…119 + build clarifications P1…P14) + `ux.md` v1 (BR-REC-120…140 on S12, S13, S18).
-Written from the spec rules and `screens.md` (URLs, words and roles only). The server rules (E35…E39 numbers, ranks, CSV cells, row counts) have automated tests;
+Written from the spec rules and the build's screen notes (URLs, words and roles only). The server rules (E35…E39 numbers, ranks, CSV cells, row counts) have automated tests;
 this list is for what no test reaches: the three screens, print on paper, the phone and desktop layouts, bookmarkable filters, the real download, themes, zoom and screen readers.
 Tags: `[G]` golden path · `[N]` negative path · `[API]` a `curl` check of the same rule · `[slow]` needs real waiting or the 1,000-member data set · `[note]` the spec is silent, tell the owner, not a fail · `[later]` belongs to another stream's screen, do it when that stream is merged.
 Time (estimate): sections 1…4 about 35 minutes (Desktop + real phone), 5…9 about 45 minutes, 10 about 20 minutes, 11 about 15 minutes, 12 about 40 minutes with real devices.
@@ -198,7 +198,7 @@ put "Fred, Formula" "Fitness test" 2026-09-10 f "Flexibility=-5.0"
 - [ ] **4.4** [G] Table layout on paper whatever the screen: on the **phone** (or a 360 px window) tap Print → the preview shows the **table** (First · Latest · Best · Change · Trend), not 29 cards. (BR-REC-109, 135)
 - [ ] **4.5** [G] **30 rows**: Settings → Assessments → Fitness test → **Add measurement** `Burpees 1 min`, Number, Unit `reps`, Higher → Save; then `put "Surya Pratap" "Fitness test" 2026-09-15 f "Burpees 1 min=40"`. Reopen the card: 30 rows, Print preview still **1 page**. (BR-REC-109: up to 30 measurements)
 - [ ] **4.6** [G] Chrome on a real Android phone: Print → destination **Save as PDF** → open the PDF: 1 page, A4, readable text. (BR-REC-109)
-- [ ] **4.7** [G] After closing the print preview, the screen looks as before (side bar / tabs are back; no stuck print styles on Members or Settings). (`screens.md`: the print rules exist only while the card is open)
+- [ ] **4.7** [G] After closing the print preview, the screen looks as before (side bar / tabs are back; no stuck print styles on Members or Settings). (the screen notes: the print rules exist only while the card is open)
 - [ ] **4.8** [N] Print preview on another screen (Members list) is unchanged by this feature: still the normal page, not the report card styles.
 
 ## 5. S13 Gym progress — open, defaults, filters, address (BR-REC-111; who: the shared login)
