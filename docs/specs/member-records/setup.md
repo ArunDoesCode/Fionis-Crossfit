@@ -134,6 +134,7 @@ S16 Reminders & gym (`/admin/settings/general`): gym name, time zone, "Due soon"
 | C8 | 62 | On E14 the "please check" pair and the two both-or-neither pairs (own repeat; report group + part) are checked against the stored values when only one side is sent → 400 `VALIDATION_ERROR`; this includes clearing one side alone (`intervalUnit: null`, `tableGroup: null` or `tablePart: null` while the other stays stored). |
 | C9 | 64 | Setup ships the pure rounding function (`backend/src/lib/domain/metric-value.ts`): numbers round half away from zero to the measurement's decimals (95.56 → 95.6, −2.25 → −2.3), Time to whole seconds. The assessments stream calls it when saving (BR-REC-76). Changing decimals (E14) never rewrites stored values. |
 | C11 | 61, 62, 67 | Two writes racing on the same name end with one success and 409 `NAME_TAKEN` (never a 500); two parallel adds get different sort orders. |
+| C12 | 62 | The measurement sheet keeps the flat order of the wireframe (name, kind, unit, decimals, better, check range, repeat, report table, On); the "More details" grouping of BR-REC-134 is not used here because every field is a setup choice. Theme (S14) is three choices System / Light / Dark. An assessment's Edit sits in the detail screen header. |
 | C10 | 158 | Change-log actions: `settings.update`, `assessment_type.create`, `assessment_type.update`, `assessment_type.reorder`, `metric.create`, `metric.update`, `metric.reorder`. |
 
 ## Not now
@@ -156,7 +157,7 @@ Custom membership plans, editable warning % (30%) and "no change" % (1%) — fix
 - 2026-10-03 v0 — answers folded: all as recommended, no rule changes
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-04 v2 — clarified during build (Stream C; owner to confirm at merge; no change of intent): section
-  "Build clarifications" C1–C11 (gym name 2–60, IANA time zone, trimmed names, Time = `min:sec` + 0 decimals,
+  "Build clarifications" C1–C12 (gym name 2–60, IANA time zone, trimmed names, Time = `min:sec` + 0 decimals,
   lock only on a real change, off assessment hides without cascading, `hasValues`, full order lists, pair checks on
   edit, rounding function for the assessments stream, change-log action names); BR-REC-11 example changed from Fran
-  (a Time measurement, whose unit is always `min:sec`) to Deadlift kg → lb; C8 also covers clearing one side alone; C11 name races → 409
+  (a Time measurement, whose unit is always `min:sec`) to Deadlift kg → lb; C8 also covers clearing one side alone; C11 name races → 409; C12 sheet layout, theme choice and Edit placement
