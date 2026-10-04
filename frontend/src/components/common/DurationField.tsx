@@ -5,6 +5,7 @@ import { FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { durationFromParts, durationToParts, parseDuration } from '@/lib/domain/duration';
+import { type DurationStatus, durationStatus } from '@/lib/durationStatus';
 import { UI_TEXT } from '@/lib/messages/words';
 import { cn } from '@/lib/utils';
 
@@ -14,12 +15,16 @@ interface DurationFieldProps {
   required?: boolean;
   /** Total seconds, or `null` while empty or not a valid time. */
   value: number | null;
-  onChange: (seconds: number | null) => void;
+  /** `seconds` is `null` for both empty and invalid; `status` tells them apart (the typed boxes are kept). */
+  onChange: (seconds: number | null, status: DurationStatus) => void;
   onBlur?: () => void;
   /** Same two lines as NumberField: last value (left) and live change (right), mono font. */
   previous?: React.ReactNode;
   change?: React.ReactNode;
+  /** Replaces the field's own "Enter seconds from 0 to 59" / "Enter minutes from 0 to 599" line. */
   error?: string;
+  /** Key label of the seconds box on the phone keyboard (the minutes box always says "next", BR-REC-91). */
+  enterKeyHint?: 'next' | 'done';
   className?: string;
 }
 
@@ -43,7 +48,8 @@ function splitWholeTime(raw: string): { minText: string; secText: string } | nul
 }
 
 // "Time (min:sec)" typed in two boxes, minutes and seconds, each with the number keypad (BR-REC-75).
-// Blank seconds count as 0; seconds above 59 or minutes above 599 give `null` (the screen shows its error).
+// Blank seconds count as 0; seconds above 59 or minutes above 599 give `null` with status "invalid", the typed
+// boxes stay, and the field says what is wrong itself unless the screen passes its own `error`.
 export default function DurationField({
   id,
   label,
@@ -53,7 +59,8 @@ export default function DurationField({
   onBlur,
   previous,
   change,
-  error,
+  error: errorProp,
+  enterKeyHint = 'next',
   className,
 }: DurationFieldProps) {
   const [texts, setTexts] = useState(() => toTexts(value));
@@ -67,12 +74,13 @@ export default function DurationField({
 
   function update(next: { minText: string; secText: string }) {
     setTexts(next);
+    const status = durationStatus(next.minText, next.secText);
     const seconds =
-      next.minText === '' && next.secText === ''
-        ? null
-        : durationFromParts(Number(next.minText || '0'), Number(next.secText || '0'));
+      status === 'valid'
+        ? durationFromParts(Number(next.minText || '0'), Number(next.secText || '0'))
+        : null;
     setEmitted(seconds);
-    onChange(seconds);
+    onChange(seconds, status);
   }
 
   // True when `raw` held a whole time and both boxes were filled from it.
@@ -98,6 +106,15 @@ export default function DurationField({
     );
   }
 
+  // Two digits of seconds or three of minutes are the most a box takes, so an invalid time never gets fixed
+  // by typing more: the line can show at once.
+  const ownError =
+    durationStatus(texts.minText, texts.secText) === 'invalid'
+      ? durationFromParts(Number(texts.minText || '0'), 0) === null
+        ? UI_TEXT.minutesRange
+        : UI_TEXT.secondsRange
+      : undefined;
+  const error = errorProp ?? ownError;
   const metaId = `${id}-meta`;
   const errorId = `${id}-error`;
   const hasMeta = previous !== undefined || change !== undefined;
@@ -113,16 +130,17 @@ export default function DurationField({
       <div className="flex items-center gap-3">
         {(
           [
-            { part: 'min', unit: UI_TEXT.minutes, text: texts.minText, max: 3 },
-            { part: 'sec', unit: UI_TEXT.seconds, text: texts.secText, max: 2 },
+            { part: 'min', unit: UI_TEXT.minutes, text: texts.minText, max: 3, hint: 'next' },
+            { part: 'sec', unit: UI_TEXT.seconds, text: texts.secText, max: 2, hint: enterKeyHint },
           ] as const
-        ).map(({ part, unit, text, max }) => (
+        ).map(({ part, unit, text, max, hint }) => (
           <div key={part} className="relative w-32">
             <Input
               id={`${id}-${part}`}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
+              enterKeyHint={hint}
               autoComplete="off"
               value={text}
               aria-labelledby={`${legendId} ${id}-${part}-unit`}

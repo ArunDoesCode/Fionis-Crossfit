@@ -12,7 +12,7 @@
           "assessments"
         ],
         "summary": "E25 Entry form: measurements with previous values and any saved assessment",
-        "description": "`previous` is the latest value dated before `date` (BR-REC-81). Durations are seconds.",
+        "description": "`previous` is the stored value with the latest date strictly before `date`, from any assessment of the member; `previous.isEstimated` is that assessment's flag (BR-REC-81, D5). Durations are seconds.\n`metrics`: the type's turned-on measurements in setup order (none while the assessment is off) plus any measurement, on or off, that holds a value in `existing`. Works for a turned-off assessment and an archived member (D4).\nOnly the shape of `date` is checked: a future date just returns a form (D1). Unknown member or type: 404.",
         "parameters": [
           {
             "name": "memberId",
@@ -377,7 +377,7 @@
           "assessments"
         ],
         "summary": "E26 Save an assessment (creates, or edits the one for member + type + date)",
-        "description": "Upsert: always 200; `created` says whether a new assessment was made. `value: null` removes a saved value; at most 60 values.",
+        "description": "Upsert: always 200; `created` says whether a new assessment was made. A measurement left out of `values` is untouched; `value: n` sets it; `value: null` removes the stored value (nothing happens when none is stored). `isEstimated` always replaces the stored flag (D2).\n`saved` = non-null entries written; `removed` = stored values deleted by `null` entries. 400 `NO_VALUES` when the save would leave the assessment with no stored value at all, and nothing is written: a new assessment with no non-null value, or an edit whose `null` entries remove every remaining value (remove a whole assessment with E30). An edit may send only the changed fields, or `values: []` when only `isEstimated` changes (200, `saved` 0, `removed` 0, `created` false, one change-log row); a stored value that is not sent stays exactly as stored, never re-rounded (D2).\nShape limits (400 `VALIDATION_ERROR`, `details.issues[{ path, message }]`): at most 60 values; a measurement id at most once (path `values.<i>.metricId`); `value` present, a finite number, absolute value at most 999,999,999.999 (path `values.<i>.value`); `date` a real `YYYY-MM-DD` day. Not visible in the schema: the service also refuses a Time (duration) value outside 0 to 35,999 seconds, and a value whose rounded form leaves its limit (D3).\nEach value is rounded before it is stored: Number to the measurement's decimals, Time to whole seconds (BR-REC-76, D3). `METRIC_NOT_IN_TYPE`: a measurement id of another type or unknown; on or off measurements of the given type are accepted (D4).\nError order: 404 (unknown member or type) -> 400 `DATE_IN_FUTURE` (later than gym today; no lower bound, D1) -> 400 `METRIC_NOT_IN_TYPE` -> 400 `VALIDATION_ERROR` (Time or rounded limit) -> 400 `NO_VALUES`. Shape errors come before all of them. Archived members work. No `Idempotency-Key`: a retry is the same upsert (D6).",
         "requestBody": {
           "required": true,
           "content": {
@@ -414,9 +414,15 @@
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
                         },
                         "value": {
-                          "type": [
-                            "number",
-                            "null"
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": -999999999.999,
+                              "maximum": 999999999.999
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         }
                       },
@@ -624,7 +630,7 @@
           "assessments"
         ],
         "summary": "E27 A member's assessments, newest first",
-        "description": "Sorted by date then id; only `sortDir` is selectable (default `desc`).",
+        "description": "Sorted by date then id; only `sortDir` is selectable (default `desc`); there is no `sortBy`. `typeId` filters by assessment.\nA member with nothing, or an unknown `memberId` / `typeId`, gives an empty list (no 404); `valueCount` = stored values (D10).",
         "parameters": [
           {
             "name": "page",
@@ -873,6 +879,7 @@
           "assessments"
         ],
         "summary": "E28 One assessment with its values",
+        "description": "`values` holds every stored value, on or off measurements, in setup order; durations in seconds (D9).",
         "parameters": [
           {
             "name": "assessmentId",
@@ -1114,7 +1121,7 @@
           "assessments"
         ],
         "summary": "E29 Move an assessment's date or mark it estimated",
-        "description": "Unknown fields rejected; at least one field. Moving the date moves its values.",
+        "description": "Unknown fields rejected; at least one field. Moving the date moves its values in the same transaction (D8).\nError order: 404 -> 400 `DATE_IN_FUTURE` (later than gym today) -> 409 `ASSESSMENT_DATE_TAKEN` (another assessment of this member + type already has that date; the date it already has is not taken). Shape errors come first.",
         "parameters": [
           {
             "name": "assessmentId",
@@ -1416,7 +1423,7 @@
           "assessments"
         ],
         "summary": "E30 Delete an assessment with its values",
-        "description": "The one hard delete besides sign-ins and idempotency keys (BR-REC-165).",
+        "description": "The one hard delete besides sign-ins and idempotency keys (BR-REC-165). `removed` = how many values went with it (D9); deleting again is 404.",
         "parameters": [
           {
             "name": "assessmentId",
