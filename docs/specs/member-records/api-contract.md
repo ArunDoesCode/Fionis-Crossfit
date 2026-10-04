@@ -130,3 +130,4 @@ Cursor/keyset pagination (performance.md), public API keys, webhooks, a change-l
   first byte; the HTTPS front may compress). No rule changed.
 - 2026-10-04 v1 — clarified during build (Stream B; no rule changed): E19 can answer 400 `START_BEFORE_JOIN` (changed join date
   after a membership start); E16 `q` is 2–100 characters; E16 `sortBy` defaults to `name`.
+- 2026-10-04 v1 — clarified during build (Stream F; no rule changed): E35 measurements carry `id` and `decimals`, types carry `id`, segmental groups are `{ name, unit, decimals }`; E36–E38 are computed live (progress v2).

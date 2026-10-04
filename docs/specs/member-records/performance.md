@@ -38,7 +38,7 @@ meets BR-REC-150 and 174 (fonts) in the root layout.
 | BR-REC-144 | Every tap answers within 200 ms; typing in Record assessment updates the change line within 50 ms on the test phone. | Type "94" → "v 1.5 kg better" appears at once | INP field data + manual check |
 | BR-REC-145 | A repeat open (installed or recently used) shows the Home frame within 1.0 s and Home data within 1.5 s on gym Wi-Fi. | Open from the home-screen icon → frame first, rows right after | Lighthouse repeat view |
 | BR-REC-146 | First-load JavaScript is at most 150 KB gzip shared plus 40 KB per screen; CI fails above it; no chart, date-picker or whole-icon-pack library ever ships. | Adding a chart library → CI red | CI bundle check |
-| BR-REC-147 | API p95 server time (warm, perf seed): lists and search 150 ms, member page 100 ms, entry form 120 ms, save assessment 200 ms, due list 300 ms, report card 300 ms, gym progress 500 ms first / 50 ms cached, CSV first byte 1 s. | Search "sur" on 1,000 members → 40 ms | `bench` script, 200 runs per endpoint, reads `Server-Timing` |
+| BR-REC-147 | API p95 server time (warm, perf seed): lists and search 150 ms, member page 100 ms, entry form 120 ms, save assessment 200 ms, due list 300 ms, report card 300 ms, gym progress 500 ms (no cache, progress v2), CSV first byte 1 s. | Search "sur" on 1,000 members → 40 ms | `bench` script, 200 runs per endpoint, reads `Server-Timing` |
 | BR-REC-148 | Response sizes (gzip): a 25-row list page ≤ 10 KB, entry form ≤ 8 KB, report card ≤ 30 KB, catalog ≤ 10 KB. | Members page 1 → 4 KB | `bench` records sizes |
 | BR-REC-149 | A screen loads with one page request and at most 4 API calls, all started together; no call waits for another. | Home = 4 parallel calls from the server | Network waterfall review |
 | BR-REC-150 | Three self-hosted fonts, Latin letters only, each showing text at once in a size-matched fallback and swapping in without a jump: Outfit (all text) is the only one preloaded; Raleway (titles) and Geist Mono (number columns) download only when the screen shows them. | Open Login → Outfit preloaded, Raleway fetched for the title, Geist Mono never requested | Network review per screen; CLS check of BR-REC-143 |
@@ -71,7 +71,7 @@ MVP = each stream builds it with its screens · Pass = performance stream, last 
 | 16 | ETag 304s for catalog and settings; `/_next/static` cached for a year (Next default); API `private, no-store` | MVP | Stream 0 |
 | 17 | Keep-alive connections browser → Next → API (same machine); one Postgres pool per process (max 10) | MVP | Stream 0 |
 | 18 | One server in Mumbai (ap-south-1) next to Supabase (D-018): Next → API is a local hop, API → database ≤ 5 ms | Pass | deploy |
-| 19 | Gym progress cached in memory by filters, cleared on every write (BR-REC-110) | MVP | progress |
+| 19 | ~~Gym progress cached in memory by filters, cleared on every write~~ — dropped: computed live (progress v2, BR-REC-110) | — | progress |
 | 20 | Pre-computed per-member summary table for progress and leaderboards | Later | — |
 | 21 | Virtualised lists — only if a screen ever renders more than 100 rows | Later | — |
 | 22 | Fonts via `next/font/google` (downloaded at build, served from our server): `subsets: ['latin']`, `display: 'swap'`, `adjustFontFallback` on; Outfit variable with `preload: true`; Raleway weight 600 only and Geist Mono variable with `preload: false`. Estimate ≈ 100–130 KB for all three; Stream 0 writes the real sizes in the map | MVP | Stream 0 |
@@ -105,3 +105,4 @@ Edge rendering, a CDN for API responses, offline saving with background sync, im
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-03 v1 — tactic 11 follows data-model v2 (no trigram or exclusion indexes); no rule changed
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-174 counts the `latin` font files (measured: Outfit 31.5 KB, all three 71.5 KB); `next/font/google` emits every unicode subset (166 KB in total) but only `latin` is ever fetched; no rule changed
+- 2026-10-04 v1 — user decision during the Stream F build (progress v2): no server cache for gym progress — BR-REC-147 drops "50 ms cached" (500 ms stays), tactic 19 dropped
