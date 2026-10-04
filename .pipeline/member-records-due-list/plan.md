@@ -29,17 +29,17 @@ test-writers on disjoint folders, in parallel), then backend-dev ∥ frontend-de
   Decisions taken with the contract: engine = `computeDue` + `dueListRows` + `memberDueItems` + `isListedInDueList` (C3 unit-testable);
   last tie-break `memberId`; E31 unknown/off `typeId` → empty page; no settings row → Asia/Kolkata, 7; E34 with nothing set still logs
   `due_override.clear`; error order schema 400 → 404 → `until` checks.
-- [ ] **Red tests** — backend `tests/due/**`, frontend `tests/due/**`
-- [ ] **1. Due engine** — BR-REC-15, 16, 93, 94, 95, 96, 105 (C1, C2; due examples 1–9, 14)
+- [x] **Red tests** — backend `tests/due/**`, frontend `tests/due/**`
+- [x] **1. Due engine** — BR-REC-15, 16, 93, 94, 95, 96, 105 (C1, C2; due examples 1–9, 14)
   - backend: `lib/domain/due.ts` `computeDue` (pure, `today` + lead days as arguments)
-- [ ] **2. Home and Due list** — BR-REC-16, 17, 97, 101, 102, 104 (C3, C5, C11, C12; cases 10, 11, 16)
+- [x] **2. Home and Due list** — BR-REC-16, 17, 97, 101, 102, 104 (C3, C5, C11, C12; cases 10, 11, 16)
   - backend: E31 (3 queries + `computeDue`, sort, page in memory; archived/Ended left out)
   - admin: Home Overdue + Due soon sections (count, 5 rows, See all, empty line), S3 `/admin/due` (tabs, filter chips, 25/page,
     Show more), row tap → S10, row "⋯" sheet
-- [ ] **3. Assess soon / Remind me later** — BR-REC-18, 98, 99, 100 (C4, C6–C9; cases 12, 13, 15)
+- [x] **3. Assess soon / Remind me later** — BR-REC-18, 98, 99, 100 (C4, C6–C9; cases 12, 13, 15)
   - backend: E33 (upsert, `SNOOZE_TOO_FAR`, change log), E34 (delete, change log), override ending worked out on read
   - admin: row sheet actions (1 week, 2 weeks, 1 month, Pick a date), optimistic update + undo toast
-- [ ] **4. Member page block** — BR-REC-103, 100 (C10)
+- [x] **4. Member page block** — BR-REC-103, 100 (C10)
   - backend: E32
   - admin: `DueBlock` lines with status, Record / Assess soon / Remind me later / remove per line
 
