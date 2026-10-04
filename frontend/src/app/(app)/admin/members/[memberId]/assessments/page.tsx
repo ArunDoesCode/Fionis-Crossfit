@@ -1,18 +1,12 @@
-import PlaceholderScreen from '@/components/common/PlaceholderScreen';
-import { UI_TEXT } from '@/lib/messages/words';
+import AllAssessmentsView from '@/components/views/assessments/AllAssessmentsView';
 
-// Placeholder until the owning stream builds this screen.
+// S11. The id is runtime data: the route's loading.tsx is the boundary while it resolves; `?type=` and
+// `?open=` are read by the client leaf (nuqs), so the page itself stays static around it.
 export default async function AllAssessmentsPage({
   params,
 }: {
   params: Promise<{ memberId: string }>;
 }) {
   const { memberId } = await params;
-  return (
-    <PlaceholderScreen
-      title={UI_TEXT.screens.allAssessments}
-      width="narrow"
-      backHref={`/admin/members/${memberId}`}
-    />
-  );
+  return <AllAssessmentsView memberId={memberId} />;
 }

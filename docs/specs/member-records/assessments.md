@@ -2,7 +2,7 @@
 module: member-records/assessments
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 1
+version: 2
 frozen_on: 2026-10-03
 owner: Arun
 depends_on: [member-records/setup, member-records/members, member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -104,6 +104,48 @@ S11 All assessments (`/admin/members/[memberId]/assessments`):
 +--------------------------------+
 ```
 
+## Build clarifications (v2, Stream D coordinator, 2026-10-04 — owner to confirm at merge; no change of intent)
+
+| # | Rule | Clarification |
+|---|---|---|
+| D1 | 19, 83 | E26 refuses a `date` later than gym "today" (time zone from `gym_settings`, read by this stream's repository itself, D-021) with 400 `DATE_IN_FUTURE`; there is no lower bound (before the join date saves). E25 only checks the date's shape: a future date just returns a form. |
+| D2 | 19, 77, 78, 92 | E26 `values`: a measurement left out is not touched; `{ value: n }` sets it; `{ value: null }` removes the stored value (no-op when none is stored). A save that would leave the assessment with no stored value at all → 400 `NO_VALUES` and nothing is written: a new assessment with no non-null value, or an edit that removes every remaining value (remove a whole assessment with E30). An edit may send only the changed fields, or an empty list when only `isEstimated` changes. `saved` = non-null entries written; `removed` = stored values deleted by `null` entries; `created` = a new assessment row was made. The body's `isEstimated` always replaces the stored flag. The admin form sends only the fields the trainer changed when it edits a saved assessment, so an untouched value is never re-rounded (setup C9: changing decimals never rewrites stored values). |
+| D3 | 12, 76, 164 | Limits on E26 values (else 400 `VALIDATION_ERROR`): a metric id at most once per body; Number: finite, absolute value ≤ 999,999,999.999; Time: 0 to 35,999 seconds (599:59). Each value is rounded with `roundMetricValue` before it is stored (Number to the measurement's decimals, Time to whole seconds); a Number whose rounded form would pass ±999,999,999.999 is refused with 400 `VALIDATION_ERROR` (never a database error). The Time limit applies to the value as sent (`35999.5` and `-0.4` are refused). |
+| D4 | 11, 66, 77 | E25 lists the type's turned-on measurements in setup order (none while the assessment is off) plus any measurement, on or off, that holds a value in `existing`, so an old record stays editable. E25 and E26 work for a turned-off assessment (history stays editable); E26 accepts any measurement of the given type, on or off; one from another type → 400 `METRIC_NOT_IN_TYPE`. The choose sheet and Home offer only turned-on assessments. |
+| D5 | 20, 81 | `previous` = the stored value of that measurement with the latest date strictly before the form's date, from any assessment of the member (later data never matters; archived members too); `previous.isEstimated` is its assessment's flag. |
+| D6 | 19, 86 | Unknown member or assessment type → 404 `NOT_FOUND`; archived members work. Every E26 and E29 write takes `select … for update` on the member row first (as members, D-021), so two saves racing on one member + assessment + date end as one row (the second answers `created: false`). E26 takes no `Idempotency-Key`: a retry is the same upsert (BR-REC-156 lists E17 and E22 only). |
+| D7 | 92, 158 | Every E26 (create or edit), E29 and E30 writes one change-log row in its transaction: entity `assessment` (id = the assessment), actions `assessment.save`, `assessment.move`, `assessment.delete`; before/after hold `date`, `isEstimated` and the values by measurement id (a create has no before; a delete has no after). |
+| D8 | 87, 166 | E29 changes `date` and/or `isEstimated`; moving also moves every value's `measured_on` in the same transaction; the same date it already has is not "taken"; a future date → 400 `DATE_IN_FUTURE`; a date that already holds this assessment for the member → 409 `ASSESSMENT_DATE_TAKEN`. |
+| D9 | 88, 165 | E30 deletes the assessment and its values (the only hard delete in the module, BR-REC-165); `removed` = how many values went. E28 returns every stored value (on or off measurements) in setup order. |
+| D10 | 89, 155 | E27 sorts by date (`sortDir`, default `desc`) then id; a member with nothing, or an unknown id, gives an empty list (no 404, as the api-contract table); `valueCount` = stored values. |
+| D11 | 73 | The status words in the choose sheet and the "due" tags on fields come from E32 (due-list stream). While E32 still answers 501 the sheet lists the turned-on assessments without a status and the fields carry no tag; no error is shown. `/assess` without `type` opens the choose sheet; `date` defaults to today. |
+| D12 | 84 | "Back to where the entry started" = the history entry before the form; opened directly (nothing before it) → the member page. "Save & next date" keeps member and assessment, empties date and values (the date field takes focus), clears that date's draft. An edit that writes no value (only About changed) says "Saved." instead of the count. |
+| D13 | 85 | Draft key = member + assessment + date, stored in the browser's `localStorage` as `assess-draft:v1:<memberId>:<typeId>:<date>` with the save moment; values only (the typed text of Number fields, seconds of Time fields) and the About flag. A draft with every value empty is not kept. Drafts older than 7 days are dropped whenever a form opens; restore is offered once on open. |
+| D14 | 21, 82 | "Please check": the jump is strictly over 30% (exactly 30% is fine), or the value is below the measurement's min / above its max when those are set; both can apply. One line under the field; the "Check these values" sheet lists every flagged field. |
+| D15 | 81 | Change line = arrow (▲ up, ▼ down, none when equal) + signed amount with unit ("−1.5 kg", "+0.5 %", Time as "+0:12" / "−1:05", h:mm:ss from one hour) + the word "better" or "worse" by the measurement's direction; no word for "No direction"; equal → "No change". The difference is rounded to the measurement's decimals. |
+| D16 | 79 | Chips Q1–Q4 = join date + 0 / 3 / 6 / 9 calendar months (`addMonths`, month-end clamp) and tick "About". A date that lands in the future is flagged like any future date (BR-REC-83). |
+| D17 | 75, 76, 91 | Shared fields get small fixes in this stream (user decision 2026-10-04): `DurationField` reports an out-of-range box (seconds above 59, minutes above 599) as invalid instead of empty and says "Enter seconds from 0 to 59" / "Enter minutes from 0 to 599" itself (#19); `NumberField` gets `allowNegative` (a ± button next to the decimal keypad, #21), used when the measurement has no lower check limit or one below 0 (Flexibility); both get `enterKeyHint` ("next", "done" on the last field). |
+| D18 | 89 | The member page "Recent" block shows the latest 3 assessments (E27, `pageSize=3`) as rows "12 Sep 2026 · Body composition · 15 results" (≈ when estimated), empty → "No assessments yet."; a row opens that assessment on S11. S11 shows the tapped assessment in one sheet (values, Edit → S10 at that date, Delete as a confirm step inside the same sheet, no second sheet, #18); the assessment filter is kept in the URL (`?type=`). |
+| D19 | 90 | The leave question appears (when anything differs from what was opened: a typed value, or on a saved assessment a changed value or About; moving to another date leaves the opened assessment, and what was typed stays in that date's draft) for the header close button, the browser Back button and, as the browser's own prompt, closing the tab; the draft stays in every case. |
+| D20 | 160 | E25 sends no `ETag` (BR-REC-160 names E07 and E09 only); its example "re-open entry form → 304" is read as the catalog request the form makes. E25 `metrics` is one list in setup order (`sort_order`, then id) holding the turned-on measurements and the off ones that hold a value; an unknown `typeId` on E27 gives an empty list like an unknown `memberId`. |
+| D21 | 87 | E29 (move a saved assessment to another date) is built as an API only: v1 has no screen that moves an assessment (S11's sheet offers Edit and Delete; Edit reopens S10 at that date). The BR-REC-87 sentence is therefore not shown anywhere yet; the move screen is a GitHub issue. |
+
+## Implementation status (2026-10-04, branch `claude/member-record-assessment-696977`)
+
+All 24 rules built (E29 API-only, D21). Backend tests: `backend/tests/assessments/`; admin tests: `frontend/tests/assessments/` + `frontend/tests/lib/{numberText,durationStatus}.test.ts`; manual: `.pipeline/member-records-assessments/checklist.md`.
+| BR-REC | Test file(s) |
+|---|---|
+| 12, 19, 76, 77, 78 | `assessments/{save,save-values,save-errors,save-concurrency}.test.ts`; `frontend/tests/assessments/{parse-number,save-body}.test.ts` |
+| 20, 74, 81 | `assessments/entry-form.test.ts`; `frontend/tests/assessments/{change,field-view,entry-state}.test.ts` (offer UI manual) |
+| 21, 82 | `frontend/tests/assessments/{plausibility,field-view}.test.ts` (sheet manual) |
+| 75, 91 | `frontend/tests/lib/durationStatus.test.ts`, `frontend/tests/assessments/field-options.test.ts` (keypad on a phone manual) |
+| 79, 80, 83, 84 | `frontend/tests/assessments/{paper-columns,labels}.test.ts`, `assessments/{save-errors,move}.test.ts` |
+| 85 | `frontend/tests/assessments/{draft,entry-state}.test.ts` (restore UI manual) |
+| 86 | `assessments/{save,save-concurrency}.test.ts`; `frontend/tests/assessments/save-error.test.ts` |
+| 87 | `assessments/move.test.ts` (API only; no screen, D21, #32) |
+| 88, 89, 92 | `assessments/{delete,list,detail,change-log}.test.ts`; `frontend/tests/assessments/{queries,query-options}.test.ts` |
+| 73, 90 | manual (choose sheet needs E32 from the due-list stream; leave guard) |
+
 ## Not now
 
 Saving while offline and syncing later (only drafts are kept), photos of paper sheets, members entering their
@@ -125,3 +167,8 @@ own results, two trainers editing the same assessment at once (last save wins), 
 - 2026-10-03 v0 — answers folded: all as recommended; archived members can be recorded for (members Q6 = B)
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-12 `parseDuration` accepts only m:ss / h:mm:ss; a bare number ("95") is not a time → null; no rule changed
+- 2026-10-04 v2 — clarified during build (Stream D): D1–D21 (E25/E26 details, off measurements, change log, draft key, change-line text, shared field fixes #19/#21, Recent block); no rule changed
+- 2026-10-04 v2 — review round 1 (Stream D): D2 amended (NO_VALUES = the save would leave no value at all; edits send only changed fields, so an untouched value is never re-rounded) and D21 (E29 API-only, move screen deferred); no rule changed
+- 2026-10-04 v2 — D19 clarified (review R-5, R2-2): flipping About on a saved assessment counts as an unsaved change; a date move does not (the typed values go to that date's draft); no rule changed
+- 2026-10-04 v2 — D12 clarified (review round 1): an About-only edit toasts "Saved."; no rule changed
+- 2026-10-04 v2 — D2 clarified (review round 2, R2-3): Save on a saved assessment with nothing changed sends no request; no rule changed

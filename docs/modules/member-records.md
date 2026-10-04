@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: 1dd728c
+last_verified_commit: f639041
 last_verified_on: 2026-10-04
 depends_on: []
 ---
@@ -22,6 +22,8 @@ Stream B (members) is built: E16–E24, S4–S9, Home search + membership sectio
 banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 Assessment setup, S16 Reminders & gym; run notes
 `.pipeline/member-records-setup/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec setup.md v2 (C1–C13).
+Stream D (assessments) is built: E25–E30, S10 Record assessment (+ choose and check-values sheets, drafts, leave guard), S11 All assessments (+ detail sheet), the member-page Recent block, shared field fixes (#19, #21); choices D-022; run notes
+`.pipeline/member-records-assessments/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec assessments.md v2 (D1–D21).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -49,6 +51,8 @@ Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 
 | setup (C) backend | `backend/src/{routes/setup,controller/setupController,service/setupService,service/setupRules,repository/setupRepository}.ts` | `setupService.{getSettings,updateSettings,listCatalog,createType,updateType,reorderTypes,createMetric,updateMetric,reorderMetrics}`; pure rules `setupRules.ts`: `newMetricFields`, `editedMetricFields` (C3), `metricIssues` (C8), `changesKindOrUnit` (C4), `listsEveryIdOnce` (C7) |
 | domain (C) | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)` — half away from zero on the decimal digits; the assessments stream (D) calls it when saving (BR-REC-76) |
 | setup (C) admin | `frontend/src/{lib/validators/setup.ts,lib/setup/{describe,text,form,timezones}.ts,lib/api/setup/{fetchers,queries}.ts,components/{views,pages}/setup/*}`, `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `setupKeys`, `settingsQueryOptions`/`assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`), `SetupSheet` (edit sheet + confirm step), `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
+| assessments (D) backend | `backend/src/{routes/assessments,controller/assessmentsController,service/assessmentsService,service/assessmentsRules,repository/assessmentsRepository}.ts` | `assessmentsService.{entryForm,save,list,get,update,remove}(…, now)`; pure rules in `assessmentsRules.ts`: `hasForeignMetric`, `valueIssues` (D3: Time as sent, Number after rounding), `roundEntries`, `planSave` (set / leave / remove, `saved`, `removed`, `after`), `leavesNoValues(plan)` (D2), `listedMetrics` (D4/D20), `assessmentSnapshot`; repository: `readTimezone`, `lockMember`, `findStored`, `previousValues`, `memberIdOf`, `listValues`, `dateTaken`, `listAssessments`, `upsertValues`, `moveValues` |
+| assessments (D) admin | `frontend/src/{lib/assessments/**,lib/api/assessments/{fetchers,queries,listQueries}.ts,components/{views,pages}/assessments/**}`, routes `app/(app)/admin/members/[memberId]/{assess,assessments}/**`, slot `pages/member/RecentBlock.tsx` | pure: `parseNumberText`/`exactNumber`, `checkPlausibility`, `describeChange`, `paperColumnDate`, `assessmentDateLabel`, `entryDateIssue`, `buildSaveValues` (+ `unchanged`, `leavesNoValue`), draft store (`draftKey`, `saveDraft`, `loadDraft`, `dropExpiredDrafts`), `entryReducer`/`isChanged`/`isUnchangedField` (`entryState.ts`), `fieldView`, `dueStatusText`, `storedNumberText`, `settled`; hooks `useSaveFlow`, `useLeaveGuard`, `useEntryLoader`, `useDraftAutosave`, `useDeferredDate`; API `assessmentKeys` `['assessments']`, `entryFormQueryOptions` (`staleTime: 0`), `invalidateAssessmentData` (also `['members']`, `['due']`), `useEntryForm`, `useSaveAssessment`; S11 side in `listQueries.ts` (`useAssessmentList`, `useRecentAssessments`, `useAssessment`, `useDeleteAssessment`, `useUpdateAssessment` — dead until #32); words in `ASSESSMENT_TEXT` |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
@@ -61,7 +65,7 @@ Dev/test/CI use `db:push`; production gets a generated migration at deploy (Stre
 (local only, adds 1,000 members; run `db:reset` first) · `bun run db:reset` (push + seed) · `SEED_PERF_FULL=1 bun test tests/scripts/seed-perf.test.ts` (full 1,000 run; default tests use 100).
 
 ## Starting a stream session (D-017)
-Remaining streams, in order: setup (M2; members built) → assessments, due-list, progress (M3) → performance (M4). Each is
+Remaining streams, in order: due-list, progress (M3; assessments built) → performance (M4). Each is
 one new desktop-app session on this repo with the worktree option on and Opus, started from fresh `main` once the
 previous merge point is merged (check `docs/specs/member-records/` exists in the new session).
 Before: Postgres is started once (`docker compose up -d` in `backend/`, never from a second worktree); create
@@ -116,6 +120,17 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Members (B) admin: sheets not needed at first paint (`PeriodSheet`, `ConfirmSheet` in Archive) load through `lib/members/useLazySheet.ts`: `sheetLoader(() => import(…))` = ONE `import()` site per sheet (a second site makes Turbopack emit a second chunk copy) with a cache that resets on failure (`React.lazy`/`next/dynamic` keep a rejected load forever); the sheet mounts CLOSED and opens one frame later (Base UI skips the open animation for a sheet that mounts open), stays mounted (unmounting calls `history.back()` via `useBackToClose` and loses the exit animation); a failed load toasts "Couldn't load this. Try again." and the next tap retries. Keep `useForm` inside the sheet children. Renew pointer-down/focus preloads the chunk and `prefetchMember`s the detail. Biome rejects `onPointerDown` on a div: native listeners via ref (`MembershipHistory`).
 - Members (B) admin: list/search requests forward the abort signal; idempotency key reused only while the JSON body is identical (a changed body with the same key is 422); `crypto.randomUUID` needs a secure page, so `newIdempotencyKey` falls back to `getRandomValues`.
 
+- Assessments (D) backend: the repository does its own `gym_settings` read (`readTimezone`, fallback Asia/Kolkata); it does not import Stream B's `readGymClock`. "Today" is needed only for `DATE_IN_FUTURE` (E26, E29).
+- Assessments (D) backend: E26 and E29 take `select … for update` on the member row first (D6); E29 and E30 get the member id with `memberIdOf` first. Never lock an assessment row before the member row (deadlock order).
+- Assessments (D) backend: `NO_VALUES` is `leavesNoValues(plan)` after `planSave`: it looks at the stored state after the save, not at the body (D2). `save` writes only the entries sent: an untouched stored value is never re-rounded (setup C9: decimals changes never rewrite stored values). Do not widen `writes` to every stored value.
+- Assessments (D) backend: the service lower-cases every measurement id of a body; change-log rows hold full snapshots `{ date, isEstimated, values }` (not a diff); a repeat save still writes a row. `ASSESSMENT_DATE_TAKEN` and `METRIC_NOT_IN_TYPE` carry no `details`; `DATE_IN_FUTURE` has `details.field = "date"`. The Number-limit text exists twice (`assessmentsRules.ts` and `VALUE_MESSAGE` in the types file): change both. E27 `valueCount` is a correlated sub-select (cheap for the Recent block's 3 rows).
+- Assessments (D) backend: an off assessment's E25 lists only measurements that hold a value in `existing`; rule `(assessmentOn && metricOn) || holdsValueInExisting`. API says `date`, columns are `assessed_on` / `measured_on`.
+- Assessments (D) admin: the form is a pure reducer (`entryState.ts`), not RHF + Zod (D-022): a Number is text until Save and `buildSaveValues` validates. Editing a saved assessment sends only changed fields (`unchanged` flag): never "send everything"; stored Numbers show every stored digit (`storedNumberText`); Save with nothing changed sends no request (all in `useSaveFlow.finish`).
+- Assessments (D) admin: query keys under `['assessments']`; every write calls `invalidateAssessmentData`, which also invalidates `['members']` (E16 `lastAssessedOn`) and `['due']` — the due-list stream (E) must root its query keys at `'due'` (BR-REC-88). `queries.ts` must not import `members/queries` or `listQueries` (bundle: `/assess`); `MEMBERS_ROOT` duplicates `memberKeys.all()`.
+- Assessments (D) admin: history — `ResponsiveSheet` keeps an extra entry (`useBackToClose`): choosing in the chooser or leaving after Save waits for it (`afterHistorySettles`); the leave question is an `AlertDialog` (no history entry) and the guard keeps one sentinel entry while dirty. `canGoBackInApp()` uses the Navigation API, else `history.length` (Safari fallback). Draft clearing and exit live only in `finish`: a new success path must call it.
+- Assessments (D) admin: `Route` types exist only after `bunx next typegen`/build (a plain `tsc` can pass while `next build` fails: hrefs with a query string need `as Route`); Biome a11y bans `onBlur` on a div: `useDeferredDate` listens for `focusout` on a ref; `placeholderData` keep-previous must compare key positions exactly; cached entry-form data must not count as loaded (`!isFetching && !isPlaceholderData`); E27 answers an empty list for an unknown member (only E18 can say "not found"); E28 values have no `decimals` (take them from the E09 catalog).
+- Assessments (D) admin: E32 (due-list) feeds the choose sheet words and the "due" tags; while E32 answers 501 (stream E not merged) they are simply absent, no error. `/assess` page JS: 49–51.5 KB gzip counting the two shared base-ui chunks, 35–36.8 KB without them (BR-REC-146 says 40 KB per screen: Stream G decides the method). A stored value with more digits than the measurement's current decimals still shows the inline "Please check" line computed on the rounded text (display only, nothing is sent).
+
 ## Gaps (Stream 0 closed 1, 5, 6, 8, 9, 11, 12, 14, 15 of the f6000ae list; auth closed 2, 3, 4, 7, 10)
 | # | Gap | Owner |
 |---|---|---|
@@ -132,8 +147,11 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | — | Server-Timing `db` accuracy + test (R2-2, R2-3) | [#5](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/5) (G) |
 | — | DurationField paste table test; offline banner under the notch (R2-5, R2-6) | [#6](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/6) (D, G) |
 | — | ResponsiveSheet desktop dialog does not scroll; `useBackToClose` not stack-aware | [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18) (shared) |
-| — | DurationField reads an out-of-range box as empty | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) (shared) |
-| — | NumberField cannot type a minus on iOS (needed by setup ranges and Stream D results) | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (shared, before D) |
+| — | DurationField reads an out-of-range box as empty: fixed in Stream D (`status` argument), setup not yet | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) |
+| — | NumberField cannot type a minus on iOS: shared field fixed in Stream D (`allowNegative`), setup not yet | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) |
+| — | E29 (move an assessment to another date) has no screen; the BR-REC-87 sentence is not shown | [#32](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/32) (D) |
+| — | setup's `DurationControl` ignores the new `status`, `NumberControl` has no `allowNegative` (shared fixes done in Stream D) | comments on [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19), [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (C files) |
+| — | `/assess` page JS vs BR-REC-146 (49 KB with shared chunks, 35 KB without); E26 ≈ 8 round trips vs 200 ms p95 | measure with Stream G's bench / bundle check (G) |
 
 ## Tech notes
 - Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
@@ -185,6 +203,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | setup backend | `backend/tests/setup/{metric-value,settings,assessment-types,metrics,change-log,gates}.test.ts` (+ `settings-empty` for C13) | 10, 11, 13, 14, 60–67, 69, 72, 158, 159, 160 |
 | setup admin | `frontend/tests/setup/{validators,describe,text,queries}.test.ts` | 10, 13, 14, 60–67, 69–72, 126 (UI wiring of 70, 71 is manual: no DOM test library, #9) |
 | manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
+| assessments backend | `backend/tests/assessments/{entry-form,save,save-values,save-errors,save-concurrency,list,detail,move,delete,change-log,http}.test.ts` (+ `support/suite.ts`) | 12, 19, 20, 74, 76–78, 81, 83, 86–89, 92, 154–159, 161, 163–166 |
+| assessments admin | `frontend/tests/assessments/{parse-number,plausibility,change,paper-columns,labels,save-body,draft,field-options,text,queries,query-options,entry-state,field-view,due-status,value-text,params,save-error,deferred-date}.test.ts`, `frontend/tests/lib/{numberText,durationStatus}.test.ts` | 12, 19–21, 75–83, 85, 86, 91, D2, D13–D17 (UI wiring of 73, 74, 84, 85, 87, 90 is manual: no DOM test library, #9) |
+| manual | `.pipeline/member-records-assessments/checklist.md` | S10, S11, Recent block; keypad, history/Back, drafts, leave guard on a phone |
 
 ## History
 | Date | PR / commit | Change |
@@ -195,3 +216,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
 | 2026-10-04 | members branch `claude/member-records-feature-8fca5b` | Stream B built (from `main` 9244b2c): E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds, 2 fix rounds (2 major fixed: lazy sheets −58…−68 KB gz, history from one period; 9 minor fixed, 1 → #20); D-021; issues #16, #17, #20 |
 | 2026-10-04 | setup branch `claude/member-records-setup-8ce4cb` | Stream C built (from `main` after M1): E07–E15, `roundMetricValue`, S14–S16; setup spec v2 (C1–C13); 2 review rounds (1 major fixed, minors fixed or filed), issues #18, #19, #21; 541 backend + 334 admin tests |
+| 2026-10-04 | assessments branch `claude/member-record-assessment-696977` | Stream D built (from `main` after M2): E25–E30, S10, S11, Recent block, shared field fixes (#19, #21); spec assessments v2 (D1–D21); 2 review rounds + 2 fix iterations (R-1 untouched values re-rounded, R-4 bundle split, R-5/6/8, R2-1…4 fixed; E29 UI → #32); D-022; 2185 backend + 2430 admin tests |
