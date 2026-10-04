@@ -1,5 +1,8 @@
 import { Hono } from "hono";
 
+import { membersController } from "../controller/membersController";
+import { membershipsController } from "../controller/membershipsController";
+import { asyncHandler } from "../lib/async-handler";
 import { idempotency } from "../lib/idempotency";
 import {
   badRequestResponse,
@@ -26,9 +29,9 @@ import {
   updatePeriodBodySchema,
 } from "../types/members.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import { ANY_AUTHENTICATED, notImplemented, routeMounter } from "./mount-route";
+import { ANY_AUTHENTICATED, routeMounter } from "./mount-route";
 
-// Owner: members stream. E16-E24. Handlers answer 501 until Stream B builds them.
+// Owner: members stream. E16-E24.
 const membersRouter = new Hono<AppEnv>();
 const route = routeMounter(membersRouter, MAIN_ROUTES.members);
 const EP = END_POINTS.members;
@@ -74,7 +77,7 @@ route(
       "Item: `membership` is from the latest period by start; `lastAssessedOn` is the latest assessment day, null = never assessed; `phone` is the cleaned form.",
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.list),
 );
 
 route(
@@ -101,7 +104,7 @@ route(
       `201. ${MEMBER_DATA_NOTE} Change log, same transaction: \`member.create\` (entity \`member\`) and \`membership.create\` (entity \`membership_period\`) for the first period.`,
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.create),
   [idempotency()],
 );
 
@@ -123,7 +126,7 @@ route(
       "Works for archived members. `membership` is the latest period by start (with its `startOn`); `daysLeft` 0 = ends today, negative = ended; `age` on the gym's today; `periods` newest first (`startOn` descending); `archivedAt` null = not archived (BR-REC-59, 172).",
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.get),
 );
 
 route(
@@ -152,7 +155,7 @@ route(
       `200. ${MEMBER_DATA_NOTE} Change log: \`member.update\` with the changed fields only; a request that changes nothing writes no row.`,
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.update),
 );
 
 route(
@@ -173,7 +176,7 @@ route(
       `Sets \`archivedAt\` to now. Already archived: 200 unchanged (the first \`archivedAt\` is kept, no change-log row). ${MEMBER_DATA_NOTE} Change log: \`member.archive\`.`,
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.archive),
 );
 
 route(
@@ -194,7 +197,7 @@ route(
       `Clears \`archivedAt\`. Not archived: 200 unchanged, no change-log row. ${MEMBER_DATA_NOTE} Change log: \`member.restore\`.`,
     ],
   },
-  notImplemented,
+  asyncHandler(membersController.restore),
 );
 
 route(
@@ -227,7 +230,7 @@ route(
       "201. Change log: `membership.create` (entity `membership_period`), plus `member.restore` when the member was restored.",
     ],
   },
-  notImplemented,
+  asyncHandler(membershipsController.add),
   [idempotency()],
 );
 
@@ -253,7 +256,7 @@ route(
       "A save that changes nothing is 200 and writes no `membership.update` row; the restore rule still applies. Change log: `membership.update` with the changed fields (`endOn` included), plus `member.restore` when the member was restored.",
     ],
   },
-  notImplemented,
+  asyncHandler(membershipsController.update),
 );
 
 route(
@@ -277,7 +280,7 @@ route(
       "`daysLeft` as in E16: 0 = ends today, negative = ended.",
     ],
   },
-  notImplemented,
+  asyncHandler(membershipsController.ending),
 );
 
 export { membersRouter as membersRoutes };
