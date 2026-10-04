@@ -3,7 +3,7 @@
 > Entry point for "where are we and what's next". Updated by `/status`, `/wrap` and, after each merge, by the coordinator in one docs commit (D-025).
 
 **Updated:** 2026-10-04 · **Milestone:** member-records: Streams 0, A–F merged to `main` (M0–M3); Stream G (performance, M4) still open
-**Next action:** run the manual checklists on a phone (start from `seed:demo` once it lands), then build Stream G.
+**Next action:** run the manual checklists on a phone (start: `cd backend && bun run db:reset && bun run seed:demo && bun run bootstrap-admin`), then build Stream G.
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
@@ -27,7 +27,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
-| docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | in progress | not opened | — |
+| docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | built; DB tests not yet run (no env files in this worktree) | not opened | owner creates the env files, then tests + PR |
 
 ## Waiting on you
 - [ ] Run the manual checklists `.pipeline/member-records-*/checklist.md` on a phone (progress: also the print check, BR-REC-109).

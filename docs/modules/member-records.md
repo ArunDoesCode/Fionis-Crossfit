@@ -55,7 +55,7 @@ Spec and sub-map share the file name (`docs/specs/member-records/<x>.md`, `docs/
 Tables: data-model.md (no hand SQL, no extensions, no exclusion constraint: overlap is the BR-REC-09 service check). Endpoints:
 api-contract.md; shapes `cd backend && bun run contract:query "<METHOD /path>"`. Dev/test use `db:push`; production gets a generated migration at deploy (G).
 `bun run seed` (idempotent: settings, `login_attempts` row, catalog when empty) · `seed:perf` (local only, +1,000 members; after `db:reset`) ·
-`db:reset` (push + seed) · `seed:demo` (planned, BR-REC-176: 25 named demo members, dates relative to today) ·
+`db:reset` (push + seed) · `seed:demo` (BR-REC-176, after `db:reset`: 25 named demo members, every date = today + a fixed offset, fixed ids `…0001`–`…0025`, refuses a non-local or `*_test` database and a non-empty `members`; no login: run `bootstrap-admin`; code `backend/scripts/seed-demo{,-data}.ts`, buckets self-checked with the due and membership domain functions) ·
 `SEED_PERF_FULL=1 bun test tests/scripts/seed-perf.test.ts` (full 1,000 run; default tests use 100).
 
 ## Invariants & gotchas (apply to more than one stream; per-stream traps are in the sub-maps)
@@ -77,6 +77,8 @@ api-contract.md; shapes `cd backend && bun run contract:query "<METHOD /path>"`.
 - `API_ROUTES` leaves are manifest paths with `:param`; `apiPath(template, params)` fills them. `next.config.ts` rewrites are baked at build time (`API_URL` needed for `next build`). `Route` types exist only after `bunx next typegen` / build: run it after adding pages; hrefs with a query string need `as Route` (plain `tsc` can pass while `next build` fails).
 - `PageHeader`'s `action` is drawn twice (desktop header / phone `ActionBar`); `ActionBar form` hides the tab bar. Sticky elements under the offline banner use `top-[var(--offline-h,0px)]`.
 - Dark `--primary` fails 4.5:1 as text: no `text-primary` / `variant="link"`. 48 px controls and 44 px hit areas are unlayered CSS in `globals.css` (shadcn files are never edited). Biome a11y bans `onBlur` / `onPointerDown` on a div: listen natively through a ref (`focusout`).
+
+- `seed:demo`: leaderboards need exactly 11 non-archived members per sex with a result (changing sex, archived or never-recorded members needs a re-check); Surya Pratap is 34 days overdue on any day except dates on the 29th–31st, where the earlier month is shorter (the buckets still hold); noise uses a constant seed, history dates are fixed-day offsets and only each member's newest visit and latest period use month maths. Re-seed (`db:reset`, `seed:demo`, `bootstrap-admin`) the morning of a demo.
 
 ## Gaps (no GitHub issue; open issues: `gh issue list --label mod:member-records`)
 - `SignOutSection` (auth) imports `ConfirmSheet` statically (bundle on `/admin/settings/account`) — G.
