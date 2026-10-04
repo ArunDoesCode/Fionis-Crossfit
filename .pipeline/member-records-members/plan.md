@@ -46,3 +46,4 @@ All green: backend typecheck, lint, `bun test` 809 pass, `contract:check` (41 ro
 `check-fixtures.sh`. Own DBs: dev `gym_members`, test `gym_members_test`; API port 4002, web 3002 (setup stream runs next to us).
 
 ## Notes
+- 2026-10-04: red tests committed (frontend dc43c54 pure-logic 305 tests, backend f8766f7 459 tests, 307 red). Backend-dev builds all five slices (E16–E24) in one round and one `feat(` commit (one agent, tests run per step) — wall-clock saving, deviation from the two-round plan. Admin: round A (slices 1–3 + the 8 pure modules) running, round B (slices 4–5) next.
