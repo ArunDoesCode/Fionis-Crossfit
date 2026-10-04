@@ -21,7 +21,7 @@ import type {
 import {
   assessmentSnapshot,
   hasForeignMetric,
-  hasNoValues,
+  leavesNoValues,
   listedMetrics,
   type MetricKind,
   planSave,
@@ -147,9 +147,11 @@ export const assessmentsService = {
   /**
    * E26. Under the member's row lock, refusals come in this order: unknown member or assessment
    * (404), a date after the gym's today (DATE_IN_FUTURE), a measurement of another assessment
-   * (METRIC_NOT_IN_TYPE), a Time or rounded Number limit (VALIDATION_ERROR), nothing filled
-   * (NO_VALUES). A refusal writes nothing, `isEstimated` included. A save of the same member + type
-   * + date again edits the one assessment (BR-REC-19, 86).
+   * (METRIC_NOT_IN_TYPE), a Time or rounded Number limit (VALIDATION_ERROR), a save that would leave
+   * no stored value at all (NO_VALUES, D2). A refusal writes nothing, `isEstimated` included. A save
+   * of the same member + type + date again edits the one assessment (BR-REC-19, 86). Only the
+   * entries sent are written, so an untouched stored value is never re-rounded (D2); an edit with
+   * `values: []` changes only `isEstimated` and still writes its one change-log row.
    */
   async save(
     actor: Actor,
@@ -178,9 +180,9 @@ export const assessmentsService = {
       if (hasForeignMetric(sent, kinds)) throw metricNotInType();
       const issues = valueIssues(sent, kinds);
       if (issues.length > 0) throw invalid(issues);
-      if (hasNoValues(sent)) throw noValues();
 
       const plan = planSave(stored?.values ?? {}, roundEntries(sent, kinds));
+      if (leavesNoValues(plan)) throw noValues();
       let assessmentId: string;
       if (stored) {
         assessmentId = stored.id;

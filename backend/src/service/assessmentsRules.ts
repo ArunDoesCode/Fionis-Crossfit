@@ -80,10 +80,6 @@ export function roundEntries(
   });
 }
 
-/** BR-REC-78: nothing filled (no entry, or only `null` ones) is refused. */
-export const hasNoValues = (entries: readonly Entry[]): boolean =>
-  entries.every((entry) => entry.value === null);
-
 export type SavePlan = {
   /** non-null entries, to insert or overwrite */
   writes: { metricId: string; value: number }[];
@@ -127,6 +123,14 @@ export function planSave(
     after,
   };
 }
+
+/**
+ * BR-REC-78, D2: a save that would leave the assessment with no stored value at all is refused: a new
+ * assessment with no non-null entry, or an edit whose `null` entries remove every remaining value.
+ * An edit that sends no entry, or only some measurements, leaves values stored and is fine.
+ */
+export const leavesNoValues = (plan: Pick<SavePlan, "after">): boolean =>
+  Object.keys(plan.after).length === 0;
 
 /**
  * The measurements the entry form lists (D4, D20): the turned-on ones while the assessment is on,
