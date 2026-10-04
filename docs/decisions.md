@@ -167,6 +167,21 @@ composition" as the sketch draws it.
 (7) Owner decision O-1 (2026-10-04): the CSV formula guard applies to text only; real numbers are written plain (a negative Flexibility value stays a number in Excel), and a text that is exactly a negative number literal (the `display` "-0.5") is written as is (P9).
 Why: each keeps the spec's rules true without a shared-file change. Rejected: guarding numbers too (breaks sums and charts for negative values), a fingerprint cache or write hooks (touch other
 streams' code), a chart library (BR-REC-146), per-row CSV from one big query (re-sorts the table per batch).
+
+**D-022 · 2026-10-04 · member-records due-list (Stream E) build choices: overrides end on read, one date per measurement, rows built in memory, optimistic writes.**
+(1) "Assess soon" / "Remind me later" end when a save of that member + assessment is newer than the override and dated on/after the
+day it was set; worked out when reading (`due_overrides` row stays), so the assessments stream's save code need not touch it — but
+it must write `assessments.updated_at` on every save and edit (#24). (2) Each measurement has its own due date (latest value +
+effective interval, never recorded → join date); a row = one member + one assessment holding the measurements due within the Due
+soon window; the pure engine `computeDue` + `dueListRows` + `memberDueItems` + `isListedInDueList` takes `today` and the lead days as
+arguments. (3) E31 loads members, catalog, latest `measured_on` per member + measurement and overrides in 5 parallel queries, runs the
+pure functions and pages the sorted list in memory (measured on the 1,000-member perf seed: p95 ≈ 157 ms vs the 300 ms budget).
+(4) E33 / E34 take the member row lock, check 404 → `until` rules, write one change-log row each (`due_override.set` / `.clear`); E34 with
+nothing set still answers 200. (5) Admin writes are optimistic with undo (performance tactic 8); the row sheet is lazy-loaded and
+"Remind me later" is a second step inside the same sheet (no nested sheets, #18); admin "today" stays the device zone (D-021 7).
+(6) On the member page "Never recorded" wins over "Overdue 34 days" (owner, Q5).
+Why: keeps Stream D untouched in code, stays within the budget without a summary table, and keeps the spec's examples true.
+Rejected: storing a "done" flag on the override (a second write in D's transaction), per-member due table (stale on interval changes, BR-REC-15).
 **D-022 · 2026-10-04 · member-records assessments (Stream D) build choices: own settings read, changed-fields-only edits, reducer form, shared field fixes here, E29 API-only.**
 (1) The assessments repository reads `gym_settings` (time zone) itself, like members (D-021). (2) `NO_VALUES` means the save would leave the
 assessment with no stored value (spec D2 amended in review): an edit may send only the changed fields or an empty list (About-only), and the form

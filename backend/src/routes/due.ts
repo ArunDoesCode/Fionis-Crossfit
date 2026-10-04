@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { dueController } from "../controller/dueController";
+import { asyncHandler } from "../lib/async-handler";
 import {
   badRequestResponse,
   notFoundResponse,
@@ -20,9 +22,9 @@ import {
   memberDueItemSchema,
 } from "../types/due.types";
 import { END_POINTS, MAIN_ROUTES } from "./end-points";
-import { ANY_AUTHENTICATED, notImplemented, routeMounter } from "./mount-route";
+import { ANY_AUTHENTICATED, routeMounter } from "./mount-route";
 
-// Owner: due-list stream. E31-E34. Handlers answer 501 until Stream E builds them.
+// Owner: due-list stream. E31-E34.
 const dueRouter = new Hono<AppEnv>();
 const route = routeMounter(dueRouter, MAIN_ROUTES.due);
 const EP = END_POINTS.due;
@@ -43,10 +45,11 @@ route(
     },
     pagination: { sortableFields: [], searchable: false },
     notes: [
-      "One row per member per assessment. Order: Assess soon first, then most days overdue, then soonest due, then name (BR-REC-97). Archived and expired members are excluded (BR-REC-17).",
+      "One row per member per assessment. `items` = its turned-on measurements due on or before today + Due soon days (setup order); `dueOn` = the earliest of them; `daysOverdue` = calendar days from `dueOn` to today (0 = due today, negative = not yet due). `overdue` = `dueOn` before today, or Assess soon (`flagged`, every turned-on measurement, never in `upcoming`); `upcoming` = due today up to the Due soon window.",
+      "Order, fixed (no sort params): Assess soon first, then `dueOn` ascending, then name A-Z ignoring case, then assessment setup order (BR-REC-97). Archived and Expired members are left out (BR-REC-17); a row with an active Remind me later is hidden. An unknown or turned-off `typeId` gives an empty page.",
     ],
   },
-  notImplemented,
+  asyncHandler(dueController.list),
 );
 
 route(
@@ -64,10 +67,11 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      "A plain array, not paginated: one entry per turned-on assessment (bounded by the catalog).",
+      "A plain array, not paginated: one entry per turned-on assessment with at least one turned-on measurement, in setup order (bounded by the catalog).",
+      "`state` comes from dates only; `nextDueOn` = the earliest due date of its measurements; `flagged` / `snoozedUntil` only while Assess soon / Remind me later is active; `items` = the due measurements (every turned-on one when flagged, empty when `ok`). Archived and Expired members answer too. Unknown member: 404 `NOT_FOUND`.",
     ],
   },
-  notImplemented,
+  asyncHandler(dueController.memberItems),
 );
 
 route(
@@ -85,10 +89,11 @@ route(
       "404": notFoundResponse,
     },
     notes: [
-      "Body `{ action: 'flag' }` or `{ action: 'snooze', until: 'YYYY-MM-DD' }`. `until` is after today and at most 90 days ahead. The two replace each other.",
+      "Body `{ action: 'flag' }` or `{ action: 'snooze', until: 'YYYY-MM-DD' }`; unknown keys are rejected. The two replace each other and any earlier one (`setOn` = today, the gym day).",
+      "`until` must be after today (else 400 `VALIDATION_ERROR`, `details.field` = `until`) and at most today + 90 days (else 400 `SNOOZE_TOO_FAR`). Unknown member or assessment: 404 `NOT_FOUND`; archived members and turned-off assessments are accepted. Writes one change-log row, action `due_override.set`.",
     ],
   },
-  notImplemented,
+  asyncHandler(dueController.setAction),
 );
 
 route(
@@ -105,8 +110,11 @@ route(
       "401": unauthorizedResponse,
       "404": notFoundResponse,
     },
+    notes: [
+      "Removes Assess soon or Remind me later; with nothing set it is still 200 `{}`. Unknown member or assessment: 404 `NOT_FOUND`. Writes one change-log row, action `due_override.clear`.",
+    ],
   },
-  notImplemented,
+  asyncHandler(dueController.clearAction),
 );
 
 export { dueRouter as dueRoutes };
