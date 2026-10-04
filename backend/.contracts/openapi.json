@@ -8006,7 +8006,7 @@
           "setup"
         ],
         "summary": "E08 Change gym settings",
-        "description": "Any of the settings; unknown fields rejected; at least one field.",
+        "description": "Any of the settings; unknown fields rejected; at least one field.\n`gymName` is trimmed first, then 2-60 characters. `timezone` must be an IANA name the server knows, e.g. Asia/Kolkata; unknown names and offsets such as +05:30 are 400 VALIDATION_ERROR (not visible in the schema). Lead days are whole numbers within their range (C1).",
         "requestBody": {
           "required": true,
           "content": {
@@ -8015,20 +8015,22 @@
                 "type": "object",
                 "properties": {
                   "gymName": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 60
                   },
                   "timezone": {
                     "type": "string"
                   },
                   "upcomingLeadDays": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 0,
+                    "maximum": 30
                   },
                   "expiryLeadDays": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 0,
+                    "maximum": 60
                   }
                 },
                 "additionalProperties": false
@@ -8181,7 +8183,7 @@
           "setup"
         ],
         "summary": "E09 Assessment catalog (assessments with their measurements)",
-        "description": "Ordered by setup order (`sortOrder`). Inactive ones only with includeInactive=true.\nSends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160).",
+        "description": "Ordered by setup order (`sortOrder`), measurements likewise.\nWithout `includeInactive=true`, off assessments and off measurements are left out. With it, all are returned, each with its own `isActive`. Turning an assessment off does not change its measurements' own `isActive`; it hides them while it is off (C5).\n`hasValues`: a measurement has at least one stored value; an assessment has one in any of its measurements (C6).\nSends an `ETag`; a matching `If-None-Match` gets 304 with no body (BR-REC-160).",
         "parameters": [
           {
             "name": "page",
@@ -8544,6 +8546,7 @@
           "setup"
         ],
         "summary": "E10 Add an assessment",
+        "description": "`name` is trimmed first, then must be 2-40 characters; NAME_TAKEN compares trimmed names ignoring case (C2).\nAdded last, On, with no measurements (C7).",
         "requestBody": {
           "required": true,
           "content": {
@@ -8552,12 +8555,14 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 40
                   },
                   "intervalCount": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 1,
+                    "maximum": 24
                   },
                   "intervalUnit": {
                     "type": "string",
@@ -8906,7 +8911,7 @@
           "setup"
         ],
         "summary": "E12 Set the order of the assessments",
-        "description": "`typeIds` lists every assessment once each, in the new order.",
+        "description": "`typeIds` lists every assessment once each, in the new order.\nAt least one id, no id twice (400 VALIDATION_ERROR). Every item of the set, on and off, must be listed once; any missing, extra or foreign id is 400 VALIDATION_ERROR (C7).",
         "requestBody": {
           "required": true,
           "content": {
@@ -8915,6 +8920,7 @@
                 "type": "object",
                 "properties": {
                   "typeIds": {
+                    "minItems": 1,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -9052,7 +9058,7 @@
           "setup"
         ],
         "summary": "E11 Change or turn off an assessment",
-        "description": "Unknown fields rejected; at least one field.",
+        "description": "Unknown fields rejected; at least one field.\n`name` is trimmed first, then must be 2-40 characters; NAME_TAKEN compares trimmed names ignoring case (C2).\n`isActive: false` hides the assessment and its measurements without changing their own `isActive` (C5).\nThe answer lists all of the assessment's measurements, on and off, in setup order, each with its own `isActive`; `includeInactive` belongs to E09 only.",
         "parameters": [
           {
             "name": "typeId",
@@ -9073,12 +9079,14 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 40
                   },
                   "intervalCount": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 1,
+                    "maximum": 24
                   },
                   "intervalUnit": {
                     "type": "string",
@@ -9464,6 +9472,7 @@
           "setup"
         ],
         "summary": "E13 Add a measurement to an assessment",
+        "description": "`name` is unique inside the assessment (on and off ones), compared trimmed and ignoring case (C2).\n400 VALIDATION_ERROR: `plausibleMin` must be below `plausibleMax` when both are numbers (issue path `plausibleMin`); `intervalCount` + `intervalUnit` both set or both null (path `intervalCount`); `tableGroup` + `tablePart` both set or both null (path `tableGroup`). `tableGroup` is trimmed first, then 2-40 characters (C2).\nA duration (Time) measurement always gets unit `min:sec` and 0 decimals, whatever the request sends; its check range is in seconds (C3).\nAdded last and On. Defaults when omitted: unit empty, decimals 1 (0 for a duration), no check range, no own repeat, no report-table place.",
         "parameters": [
           {
             "name": "typeId",
@@ -9484,10 +9493,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 40
                   },
                   "unit": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 12
                   },
                   "datatype": {
                     "type": "string",
@@ -9498,8 +9510,8 @@
                   },
                   "decimals": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 0,
+                    "maximum": 2
                   },
                   "better": {
                     "type": "string",
@@ -9510,23 +9522,35 @@
                     ]
                   },
                   "plausibleMin": {
-                    "type": [
-                      "number",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -999999999.999,
+                        "maximum": 999999999.999
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "plausibleMax": {
-                    "type": [
-                      "number",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -999999999.999,
+                        "maximum": 999999999.999
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "intervalCount": {
                     "anyOf": [
                       {
                         "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
+                        "minimum": 1,
+                        "maximum": 24
                       },
                       {
                         "type": "null"
@@ -9548,9 +9572,15 @@
                     ]
                   },
                   "tableGroup": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "tablePart": {
@@ -9897,7 +9927,7 @@
           "setup"
         ],
         "summary": "E15 Set the order of an assessment's measurements",
-        "description": "`metricIds` lists every measurement of the assessment once each, in the new order.",
+        "description": "`metricIds` lists every measurement of the assessment once each, in the new order.\nAt least one id, no id twice (400 VALIDATION_ERROR). Every item of the set, on and off, must be listed once; any missing, extra or foreign id is 400 VALIDATION_ERROR (C7).",
         "parameters": [
           {
             "name": "typeId",
@@ -9918,6 +9948,7 @@
                 "type": "object",
                 "properties": {
                   "metricIds": {
+                    "minItems": 1,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -10093,7 +10124,7 @@
           "setup"
         ],
         "summary": "E14 Change or turn off a measurement",
-        "description": "Unknown fields rejected; at least one field.\nMETRIC_LOCKED: datatype and unit cannot change once any value exists (BR-REC-11).",
+        "description": "Unknown fields rejected; at least one field.\n`name` is unique inside its assessment (on and off ones), compared trimmed and ignoring case (C2).\n400 VALIDATION_ERROR: `plausibleMin` must be below `plausibleMax` when both are numbers (issue path `plausibleMin`); `intervalCount` + `intervalUnit` both set or both null (path `intervalCount`); `tableGroup` + `tablePart` both set or both null (path `tableGroup`). `tableGroup` is trimmed first, then 2-40 characters (C2).\nWhen only one side of a pair or of the check range is in the body, the result is checked against the stored values; a pair or range that would end up broken is 400 VALIDATION_ERROR (C8).\nA duration (Time) measurement always gets unit `min:sec` and 0 decimals, whatever the request sends; its check range is in seconds (C3).\nA change from Time to Number without a `unit` in the body leaves the unit empty (C3).\nMETRIC_LOCKED: datatype and unit cannot change once any value exists (BR-REC-11). Only a real change counts; sending the stored value again is fine (C4).",
         "parameters": [
           {
             "name": "metricId",
@@ -10114,10 +10145,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 40
                   },
                   "unit": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 12
                   },
                   "datatype": {
                     "type": "string",
@@ -10128,8 +10162,8 @@
                   },
                   "decimals": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": 0,
+                    "maximum": 2
                   },
                   "better": {
                     "type": "string",
@@ -10140,23 +10174,35 @@
                     ]
                   },
                   "plausibleMin": {
-                    "type": [
-                      "number",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -999999999.999,
+                        "maximum": 999999999.999
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "plausibleMax": {
-                    "type": [
-                      "number",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -999999999.999,
+                        "maximum": 999999999.999
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "intervalCount": {
                     "anyOf": [
                       {
                         "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
+                        "minimum": 1,
+                        "maximum": 24
                       },
                       {
                         "type": "null"
@@ -10178,9 +10224,15 @@
                     ]
                   },
                   "tableGroup": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "tablePart": {

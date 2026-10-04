@@ -1,7 +1,7 @@
 ---
 module: member-records
 spec: docs/specs/member-records.md   # v2 index; sub-specs in docs/specs/member-records/
-last_verified_commit: 06f55f1
+last_verified_commit: 1dd728c
 last_verified_on: 2026-10-04
 depends_on: []
 ---
@@ -20,6 +20,8 @@ Stream A (auth) is built: E01–E06, `bootstrap-admin`, page guard, Login (S1), 
 `.pipeline/member-records-auth/` (plan, contract incl. admin interfaces, findings, screens, checklist).
 Stream B (members) is built: E16–E24, S4–S9, Home search + membership sections, member header + membership block, archived/ended
 banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, contract incl. admin interfaces, findings, screens, checklist).
+Stream C (setup) is built: E07–E15, `roundMetricValue`, S14 Settings hub, S15 Assessment setup, S16 Reminders & gym; run notes
+`.pipeline/member-records-setup/` (plan, contract incl. admin interfaces, findings, screens, checklist); spec setup.md v2 (C1–C13).
 
 ## Code locations
 | Layer | Path | Key symbols |
@@ -44,6 +46,10 @@ banner; choices D-021; run notes `.pipeline/member-records-members/` (plan, cont
 | members (B) backend | `backend/src/{controller,service,repository}/{members,memberships}*`, `service/{membersView,membershipsRules}.ts`, `repository/membersSql.ts` | `membersService.{list,create,get,update,archive,restore,restoreInTransaction}`, `membershipsService.{add,update,ending}`; pure `periodsOverlap`, `coversDay`, `restoresMember`, `RECENTLY_ENDED_DAYS`; `statusCondition()` (SQL twin of `membershipStatus`); field rules + `cleanPhone`/`phoneDigits` in `types/members.types.ts` |
 | members (B) admin | `frontend/src/{lib/validators/members.ts,lib/members/**,lib/api/members/**,components/{views,pages}/members/**}`, routes `app/(app)/admin/{members,memberships}/**` | pure: `memberFormSchema`, `cleanPhone`, `samePhone`, `membershipStatusText`, `memberListBadge`, `memberBannerText`, `renewDefaults`, `renewRestoresMember`, `duplicatePhoneMatches`; hooks `useMemberList` (25/page), `useMember`, `useSavePeriod`, `useEndingList/Preview`; keys `memberKeys` `['members']`, `membershipKeys` `['memberships']`; `PeriodSheetLazy` + `useLazySheet`; `clampSearchText` (E16 `q` ≤ 100) |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B, filled), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B, filled), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
+| setup (C) backend | `backend/src/{routes/setup,controller/setupController,service/setupService,service/setupRules,repository/setupRepository}.ts` | `setupService.{getSettings,updateSettings,listCatalog,createType,updateType,reorderTypes,createMetric,updateMetric,reorderMetrics}`; pure rules `setupRules.ts`: `newMetricFields`, `editedMetricFields` (C3), `metricIssues` (C8), `changesKindOrUnit` (C4), `listsEveryIdOnce` (C7) |
+| domain (C) | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)` — half away from zero on the decimal digits; the assessments stream (D) calls it when saving (BR-REC-76) |
+| setup (C) admin | `frontend/src/{lib/validators/setup.ts,lib/setup/{describe,text,form,timezones}.ts,lib/api/setup/{fetchers,queries}.ts,components/{views,pages}/setup/*}`, `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `setupKeys`, `settingsQueryOptions`/`assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`), `SetupSheet` (edit sheet + confirm step), `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
+| slots | Home `components/pages/home/{HomeSearch,MembershipSections}` (B), `DueSections` (E); Member `pages/member/{MemberHeader,MembershipBlock}` (B), `DueBlock` (E), `RecentBlock` (D) | each owner replaces its whole file; member slots take `{ memberId }` |
 
 ## Data model / API
 Tables: data-model.md v2 (no hand SQL, no extensions, no exclusion constraint — overlap is the BR-REC-09 service
@@ -90,7 +96,17 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 - Page guard: its server E02 must send `Origin` (= `request.nextUrl.origin`; behind the HTTPS front Next must see the public origin, #8); `/login?reason=expired` renders Login even with an access cookie (no loop); only a 401 `UNAUTHORIZED` triggers the client refresh.
 - argon2id: 64 MiB / t=2 pinned; minimum cost only under `NODE_ENV=test`; a decoy hash at import keeps unknown-user timing equal.
 - Live server tests: `backend/tests/auth/signin` spawns the real API (`bun --no-env-file src/index.ts`); do not run two auth suites at once on one DB (one-row tables).
-- Theme follows the device (`defaultTheme="system"`); Settings (C) must render `ThemeToggle` for the manual choice.
+- Theme follows the device (`defaultTheme="system"`); the manual choice is `ThemeChoice` on S14 (the shared `ThemeToggle` is a two-state icon button and cannot offer System).
+
+- Setup E07 is a pure read (C13): no `gym_settings` row → the schema defaults (`SETTINGS_DEFAULTS` read from the Drizzle column defaults); only E08 (`lockSettings`) and `seed` create the row.
+- Setup locks (C11): E10–E12 take `pg_advisory_xact_lock(hashtext('setup.assessment_types'))`; E13 and E15 lock the type row `FOR UPDATE`; E14 locks the metric row (blocks a concurrent value insert, so `hasValues` cannot flip). Unique-index 23505 → 409 `NAME_TAKEN`; 23514 on the check range → 400.
+- Setup controllers parse the body again with the route schema: `validate()` only checks and discards, so the trim of `gymName`/`name`/`tableGroup` arrives through the controller's parse.
+- E09 `hasValues`: Drizzle drops table names inside `sql` fragments in a one-table select list, so a text sub-select compares its own columns and returns false — use `exists(db.select()…)` builders (`setupRepository.hasStoredValue`).
+- Setup audit: one `audit_log` row per successful write (entities `settings` id "1", `assessment_type`, `metric`; create rows hold the new item, reorder rows `{ order: [ids] }`); a no-op write still logs a row with null before/after; no ip/device.
+- Time → Number switch with no unit and no decimals in the body takes the creation defaults (unit "", decimals 1); a Time measurement is always `min:sec` + 0 decimals (C3). `INTERVAL`/`hasValues` rules and the E14 error order (404 → C8 400 → `METRIC_LOCKED` → `NAME_TAKEN`): setup contract.md.
+- Never nest Back-aware sheets (`useBackToClose` is not stack-aware, [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18)): a confirmation is a step inside the one `SetupSheet`, not a second `ResponsiveSheet`. A hidden (not unmounted) form keeps its state, but `focus()` on it fails until visible (`flushSync` first).
+- Setup edits to the catalog reach other screens through `setupKeys.all` only: the due-list stream's Home due query must use `staleTime: 0` (or a key setup invalidates) so BR-REC-70 ("Home reflects it at once") holds — the app default is 30 s (R-6).
+- iOS decimal keypad has no minus: `NumberField` cannot type a negative number ([#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21)); the desktop dialog of `ResponsiveSheet` does not scroll — setup wraps its sheets in `SheetBody` ([#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18)).
 
 - Members (B): every write to one member takes `select … for update` on its row first (`membersRepository.lockById`); overlap, join-date and restore checks run after it. Idempotency and the settings read happen outside the transaction; refusals throw before the first write.
 - Members (B): gym "today" and `expiry_lead_days` are read from `gym_settings` per request (no cache); a missing row falls back to Asia/Kolkata / 14. E16 status filters are SQL (`membersSql.statusCondition`) — change `lib/domain/membership.ts` and it together. E16 name order is `lower(full_name) COLLATE "C"` (word by word); `members_name_active_idx` does not serve it (bench in G).
@@ -115,6 +131,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | — | ResponsiveSheet ships Drawer + Dialog + AlertDialog together (RV-11) | [#4](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/4) (G) |
 | — | Server-Timing `db` accuracy + test (R2-2, R2-3) | [#5](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/5) (G) |
 | — | DurationField paste table test; offline banner under the notch (R2-5, R2-6) | [#6](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/6) (D, G) |
+| — | ResponsiveSheet desktop dialog does not scroll; `useBackToClose` not stack-aware | [#18](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/18) (shared) |
+| — | DurationField reads an out-of-range box as empty | [#19](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/19) (shared) |
+| — | NumberField cannot type a minus on iOS (needed by setup ranges and Stream D results) | [#21](https://github.com/ArunDoesCode/Fionis-Crossfit/issues/21) (shared, before D) |
 
 ## Tech notes
 - Fonts (BR-REC-150, 174, measured 2026-10-03): latin files Outfit 31.5 KB (preloaded), Raleway 600 17.4 KB, Geist Mono 22.6 KB = 71.5 KB; `next/font/google` also emits unused unicode subsets (166 KB total) — the budget counts `latin` only (performance changelog).
@@ -163,6 +182,9 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | members backend | `backend/tests/members/{field-rules,create-member,member-detail,update-member,archive-restore,add-period,edit-period,list-search,search-text-length,memberships-ending,membership-status}.test.ts` (+ `support/suite.ts`) | 03–09, 45–59, 172, 154–158 |
 | members admin | `frontend/tests/members/{validators-helpers,validators-forms,membership-text,banner,date-warning,renew,duplicates,search,search-clamp}.test.ts` | 03–05, 07, 45–50, 52, 54, 58, 59, 125, 134, 172 |
 | manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-members/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, S4–S9, Home search/sections, real-server items |
+| setup backend | `backend/tests/setup/{metric-value,settings,assessment-types,metrics,change-log,gates}.test.ts` (+ `settings-empty` for C13) | 10, 11, 13, 14, 60–67, 69, 72, 158, 159, 160 |
+| setup admin | `frontend/tests/setup/{validators,describe,text,queries}.test.ts` | 10, 13, 14, 60–67, 69–72, 126 (UI wiring of 70, 71 is manual: no DOM test library, #9) |
+| manual | `.pipeline/member-records-foundation/checklist.md`, `.pipeline/member-records-auth/checklist.md`, `.pipeline/member-records-setup/checklist.md` | shell / ux rules, fonts, same origin; S1, S17, real-server items |
 
 ## History
 | Date | PR / commit | Change |
@@ -172,3 +194,4 @@ When it says ready, answer "open the PR". After each merge, the other open sessi
 | 2026-10-03 | Stream 0 branch `claude/member-records-foundation-57e849` | Foundation built (M0): schema, 40 routes (501), middleware, change log, domain maths, seeds, shell + slots; data-model v2 (no hand SQL); D-019; 2 review rounds (round 2 READY), issues #3–#6; 551 backend + 506 frontend tests |
 | 2026-10-03 | auth branch `claude/member-records-parallel-build-f18292` | Stream A built (stacked on Stream 0, synced with `main` after the M0 squash): E01–E06, lock, rotation, rate limits, `bootstrap-admin`, guard, Login, Account; spec auth v2 (4 clarifications); D-020; 1 review + fix round (2 major fixed); issues #7–#9 |
 | 2026-10-04 | members branch `claude/member-records-feature-8fca5b` | Stream B built (from `main` 9244b2c): E16–E24, S4–S9, Home search + sections; 472 backend + 324 admin tests; 3 review rounds, 2 fix rounds (2 major fixed: lazy sheets −58…−68 KB gz, history from one period; 9 minor fixed, 1 → #20); D-021; issues #16, #17, #20 |
+| 2026-10-04 | setup branch `claude/member-records-setup-8ce4cb` | Stream C built (from `main` after M1): E07–E15, `roundMetricValue`, S14–S16; setup spec v2 (C1–C13); 2 review rounds (1 major fixed, minors fixed or filed), issues #18, #19, #21; 541 backend + 334 admin tests |
