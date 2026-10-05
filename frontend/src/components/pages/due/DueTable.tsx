@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import DataTable, { createDataTableColumnHelper } from '@/components/common/DataTable';
 import PersonCell from '@/components/common/PersonCell';
 import StatusBadge from '@/components/common/StatusBadge';
@@ -23,6 +23,28 @@ interface DueTableProps {
 }
 
 const helper = createDataTableColumnHelper<DueListItem>();
+
+// The open sheet and the open handler reach the "⋯" cells through context, not through the columns: columns
+// that change with the open row make TanStack rebuild every cell, the focused "⋯" remounts and keyboard
+// focus is lost on open and close (BR-REC-234, 137).
+interface SheetState {
+  openTarget: DueTarget | null;
+  onMore: (target: DueTarget) => void;
+}
+const SheetStateContext = createContext<SheetState>({ openTarget: null, onMore: () => {} });
+
+function MoreCell({ item }: { item: DueListItem }) {
+  const { openTarget, onMore } = useContext(SheetStateContext);
+  return (
+    <div className="relative z-10 flex justify-end">
+      <DueMoreButton
+        name={item.fullName}
+        onOpen={() => onMore(listTarget(item))}
+        expanded={isSheetOpenFor(openTarget, item.memberId, item.typeId)}
+      />
+    </div>
+  );
+}
 
 // The due list from 1024 px (BR-REC-183, 226, lg): name with avatar (the row's link to Record assessment),
 // phone (from the cached member directory, blank until it loads), assessment, what is due, due status, and
@@ -79,18 +101,15 @@ export default function DueTable({ items, turnedOn, onMore, openTarget }: DueTab
         helper.display({
           id: 'more',
           header: () => <span className="sr-only">Actions</span>, // no empty table header (BR-REC-226)
-          cell: ({ row }) => (
-            <div className="relative z-10 flex justify-end">
-              <DueMoreButton
-                name={row.original.fullName}
-                onOpen={() => onMore(listTarget(row.original))}
-                expanded={isSheetOpenFor(openTarget, row.original.memberId, row.original.typeId)}
-              />
-            </div>
-          ),
+          cell: ({ row }) => <MoreCell item={row.original} />,
         }),
       ]),
-    [onMore, openTarget, phones, turnedOn],
+    [phones, turnedOn],
   );
-  return <DataTable columns={columns} data={items} />;
+  const sheetState = useMemo(() => ({ openTarget, onMore }), [openTarget, onMore]);
+  return (
+    <SheetStateContext.Provider value={sheetState}>
+      <DataTable columns={columns} data={items} />
+    </SheetStateContext.Provider>
+  );
 }

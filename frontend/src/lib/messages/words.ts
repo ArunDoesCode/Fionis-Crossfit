@@ -88,9 +88,6 @@ export const UI_TEXT = {
   },
 } as const;
 
-/** What a screen reader says after the visible "+3" chip. */
-export const andMore = (count: number): string => `and ${count} more`;
-
 /** The two fixed lines of the word list; inputs are already-formatted days (BR-REC-127). */
 export const FIXED_LINES = {
   /** Sign-in locked (auth BR-REC-29); never says which part was wrong. */

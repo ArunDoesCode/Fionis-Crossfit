@@ -33,6 +33,7 @@ export default async function MemberPage({ params }: { params: Promise<{ memberI
   await queryClient.prefetchQuery({
     queryKey: memberKeys.detail(memberId),
     queryFn: () => getMemberOnServer(memberId),
+    retry: false,
   });
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
