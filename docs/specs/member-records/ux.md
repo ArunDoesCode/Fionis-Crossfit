@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 15
+version: 16
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -241,6 +241,9 @@ Names fixed so tests and code agree (no rule changed):
 - **Next-step banner (BR-REC-224):** an assessment counts as overdue by its dates only (a flagged "Assess soon" line that is
   not overdue does not count); a never-recorded assessment that is overdue by its dates counts ("… overdue 124 days");
   a line on "Remind me later" does not count; on equal days the setup order wins.
+- **Review round 2:** a number-band tile whose section fails to load shows "–" (BR-REC-222); each calendar button is
+  named "Open calendar for <field label>" and typed dates use the text keyboard (BR-REC-232); the Reports headline is
+  singular for one member: "1 of 1 member improved …" (BR-REC-228).
 - **Loose ends:** count line with 0 left out → "Based on 12 members" only; "1 more has only one reading" (singular).
 
 ## Not now
@@ -269,6 +272,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v16 — clarified during build (review round 2): failed tile "–", calendar button names, singular headline; no rule changed
 - 2026-10-05 v15 — clarified during build: which assessment the next-step banner picks; no rule changed
 - 2026-10-05 v14 — owner: a % measurement also refuses values below 0 (BR-REC-230)
 - 2026-10-05 v13 — clarified during build (review round 1): member-page title + shared prefetch, Due "What is due" column, age · sex in the meta line, two client-island files kept; no rule changed
