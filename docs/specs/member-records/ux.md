@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 4
+version: 5
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -162,6 +162,7 @@ Names fixed so tests and code agree (no rule changed):
 - **Tone map (BR-REC-185):** `frontend/src/lib/statusTone.ts` exports `type StatusTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral'`, `type StatusKey` and `toneFor(key: StatusKey): StatusTone`. Keys: `overdue`→danger, `soon`→warning, `ending`→warning, `active`→success, `done`→success, `reminder`→info, `estimated`→info, `ended`→neutral, `archived`→neutral, `neverRecorded`→neutral (due row "Never recorded" that is not yet overdue). `StatusBadge` takes the tone from here only.
 - **Route table (BR-REC-179):** `frontend/src/lib/routes.ts` exports `ROUTES` (one entry per screen-index route: `pattern`, `title`, optional `parent: { label, pattern }`) and `routeFor(pathname): { title: string; parent?: { label: string; href: string } }` (dynamic segments filled from the pathname). Top-level pages (Home, Members, Memberships ending, Reports, Settings) have no parent except as listed in the index.
 - **Density and width tokens (BR-REC-181, 182):** `--header-height` (56 px ≥ 1024 px fine pointer), `--control-height` (40 px), `--row-height` (48 px), `--page-padding` (24 px), `--section-gap` (16 px), `--page-max-narrow` (56rem), `--page-max-wide` (80rem), all in `globals.css`; touch keeps the BR-REC-122 values.
+- **Sidebar remembered state (BR-REC-177):** the choice lives in the cookie `sidebar_state`; before first paint a blocking script copies it (or the first-visit default: open from 1024 px, icons below) to `<html data-sidebar="open|collapsed">`, so a reload never flashes. Logic is one pure function in `frontend/src/components/shells/sidebarState.ts`, `readSidebarOpen()`: attribute first, else the cookie, else the viewport default — so a client-side navigation (login → `/admin`, where the script does not run) honours the cookie too. Ctrl/Cmd+B is not a sidebar shortcut (blocked only when the focus is not in an input, textarea or editable field, so bold still works in fields). Collapsed icon buttons are 44 px; the "F" placeholder keeps AA contrast (`bg-primary`, `text-primary-foreground`).
 
 ## Not now
 
@@ -189,6 +190,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v5 — clarified during build (U1 review round 2): sidebar remembered-state behaviour (`data-sidebar`, `readSidebarOpen` fallback, shortcut), 44 px collapsed targets, AA "F" square; no rule changed
 - 2026-10-05 v4 — clarified during build (U1 review R-6): breadcrumbs use static parent labels; member name in the trail deferred (#40)
 - 2026-10-05 v3 — clarified during build (U1): module paths and token names for the tone map, route table, density and width tokens (see Build clarifications); no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
