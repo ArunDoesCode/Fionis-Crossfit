@@ -26,7 +26,7 @@ Endpoints: E16 list/search · E17 create (`Idempotency-Key`) · E18 get · E19 u
 
 ## Gotchas
 - Every write to one member takes `select … for update` on its row first (`membersRepository.lockById`); the overlap, join-date and restore checks (BR-REC-09, 50, 58) run after it; idempotency and the settings read (`readGymSettings`) happen outside the transaction; refusals throw before the first write.
-- E16 status filters are SQL (`membersSql.statusCondition`): change `lib/domain/membership.ts` and it together. E16 name order is `lower(full_name) COLLATE "C"` (word by word); `members_name_active_idx` does not serve it (bench in G).
+- E16 status filters are SQL (`membersSql.statusCondition`): change `lib/domain/membership.ts` and it together. E16 name order is `lower(full_name) COLLATE "C"` (word by word); `members_name_active_idx` is built on exactly that expression (BR-REC-207; change both together). **Deploy trap:** `drizzle-kit push` does not see a collate-only change, so an existing database must run `drop index members_name_active_idx` once, then `db:push`.
 - `phone` is stored cleaned (`+919845012345`), `phone_digits` digits only; the `phone` filter and "same phone" compare the last 10 digits (BR-REC-47). In a query string a bare `+` becomes a space: send `%2B`.
 - Admin: `useToday()` has a server snapshot (UTC day): never take form defaults from it; `AfterHydration` draws S6 in the browser only.
 - `memberFormSchema` object-level checks need `.refine(…, { when: () => true })` or zod skips them once a field fails. `ChoiceChips` cannot un-choose (Goal has a "Not set" chip). `ApiError.body.details.field` carries the field.

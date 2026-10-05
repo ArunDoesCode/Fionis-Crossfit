@@ -31,6 +31,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 | docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | built; DB tests not yet run (no env files in this worktree) | not opened | owner creates the env files, then tests + PR |
 
 ## Waiting on you
+- [ ] Existing databases (dev, staging, prod): run `drop index members_name_active_idx` once, then `bun run db:push` (collate-only index change is invisible to drizzle-kit; BR-REC-207).
 - [ ] Run the manual checklists `.pipeline/member-records-*/checklist.md` on a phone (progress: also the print check, BR-REC-109).
 - [ ] Confirm the build choices and spec clarifications: members D-021, progress D-022 (P1–P14), due-list D-023 (C1–C13), assessments D-024 (D1–D21). Decide if the move-date screen (#32) is needed for the pilot.
 - [ ] GitHub: protect `main` (PR + required jobs `backend`, `frontend`, `member`, `fixtures`); create the `P1` label.
