@@ -6,10 +6,9 @@ import ListRow, { RowList } from '@/components/common/ListRow';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { RowSkeletons } from '@/components/common/Skeletons';
 import StatusBadge from '@/components/common/StatusBadge';
-import { dueStatusText } from '@/lib/assessments/dueStatus';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { MemberDueRow } from '@/lib/assessments/types';
-import { type StatusTone, toneFor } from '@/lib/statusTone';
+import { memberDueStatus } from '@/lib/due/status';
 
 export interface ChoosableAssessment {
   id: string;
@@ -31,17 +30,9 @@ interface ChooseAssessmentSheetProps {
   onPick: (typeId: string) => void;
 }
 
-const toneOf = (row: MemberDueRow): StatusTone =>
-  toneFor(
-    row.flagged || row.state === 'upcoming'
-      ? 'soon'
-      : row.state === 'overdue'
-        ? 'overdue'
-        : 'neverRecorded',
-  );
-
 // "Record for Surya" · Body composition — Overdue 34 days · Fitness test — Due in 5 days (BR-REC-73). Only
-// turned-on assessments are offered (D4); the status words come from E32 when it answers, else none (D11).
+// turned-on assessments are offered (D4); the status words and tone are the member page's own
+// (`memberDueStatus`, BR-REC-185, 197) when E32 answers, else none (D11).
 export default function ChooseAssessmentSheet({
   open,
   onOpenChange,
@@ -69,15 +60,12 @@ export default function ChooseAssessmentSheet({
         <RowList>
           {assessments.map((assessment) => {
             const row = due?.find((candidate) => candidate.typeId === assessment.id);
+            const status = row && memberDueStatus(row, today);
             return (
               <ListRow
                 key={assessment.id}
                 title={assessment.name}
-                status={
-                  row ? (
-                    <StatusBadge tone={toneOf(row)}>{dueStatusText(row, today)}</StatusBadge>
-                  ) : null
-                }
+                status={status ? <StatusBadge tone={status.tone}>{status.text}</StatusBadge> : null}
                 onClick={() => onPick(assessment.id)}
               />
             );

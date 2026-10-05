@@ -23,7 +23,7 @@ interface EndingRowProps {
 // One member on a Memberships ending list (S4, Home sections; BR-REC-08, 52, 53, 125): name, phone, the
 // status words ("Ends in 4 days", "Ended yesterday") with their colour and icon, and Renew beside the row.
 // The whole row opens the member; Renew is a separate control (never inside the link). The words sit under
-// the phone, not at the right, so a long name keeps its room next to Renew on a phone. A touch on Renew
+// the name on phones and at the right from 768 px (ListRow). A touch on Renew
 // starts two things before the click lands: the sheet's code and the member (E18) it will show, so the
 // sheet opens with the form instead of grey shapes (R-9).
 export default function EndingRow({ item, status, today, onRenew }: EndingRowProps) {
@@ -36,7 +36,9 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
   return (
     <ListRow
       title={item.fullName}
+      avatarName={item.fullName}
       detail={formatPhone(item.phone)}
+      status={<StatusBadge tone={text.tone}>{text.detail}</StatusBadge>}
       href={`/admin/members/${item.memberId}`}
       trailing={
         <div className="flex items-center pr-3">
@@ -52,8 +54,6 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
           </Button>
         </div>
       }
-    >
-      <StatusBadge tone={text.tone}>{text.detail}</StatusBadge>
-    </ListRow>
+    />
   );
 }

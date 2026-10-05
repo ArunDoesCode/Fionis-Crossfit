@@ -102,6 +102,21 @@ export const formatValue = (value: number, decimals: 0 | 1 | 2, unit: string): s
   return unit === '' ? text : `${text} ${unit}`;
 };
 
-/** Ten-digit phone as "98450 12345"; anything else is shown as typed. */
-export const formatPhone = (phone: string): string =>
-  /^\d{10}$/.test(phone) ? `${phone.slice(0, 5)} ${phone.slice(5)}` : phone;
+/**
+ * A stored phone as "98450 12345" (BR-REC-127): digits only, a leading "91" (12 digits) or "0" (11 digits)
+ * dropped, then two groups of five. Anything that is not ten digits after that is shown as typed.
+ */
+export const formatPhone = (phone: string): string => {
+  const digits = phone.replace(/\D/g, '');
+  const national =
+    digits.length === 12 && digits.startsWith('91')
+      ? digits.slice(2)
+      : digits.length === 11 && digits.startsWith('0')
+        ? digits.slice(1)
+        : digits;
+  return national.length === 10 ? `${national.slice(0, 5)} ${national.slice(5)}` : phone;
+};
+
+/** A filter tab with its count: "Ends soon (4)" (BR-REC-226); no count yet (loading) leaves the label alone. */
+export const withCount = (label: string, count: number | undefined): string =>
+  count === undefined ? label : `${label} (${count})`;

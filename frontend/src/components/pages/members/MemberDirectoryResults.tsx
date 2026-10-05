@@ -34,6 +34,7 @@ function MemberListRow({
   return (
     <ListRow
       title={item.fullName}
+      avatarName={item.fullName}
       detail={memberListDetail(item, today, timeZone)}
       status={<StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>}
       href={`/admin/members/${item.id}`}

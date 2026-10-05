@@ -8,6 +8,7 @@ import EndingRow from '@/components/pages/members/EndingRow';
 import PagedRows from '@/components/pages/members/PagedRows';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEndingList } from '@/lib/api/members/queries';
+import { withCount } from '@/lib/format';
 import { ENDING_EMPTY, endingTabParser, isEndingTab } from '@/lib/members/endingParams';
 import type { EndingStatus } from '@/lib/members/types';
 import { useRenewTarget } from '@/lib/members/useRenewTarget';
@@ -56,6 +57,9 @@ function EndingList({
 export default function EndingTabs() {
   const [tab, setTab] = useQueryState('tab', endingTabParser);
   const renew = useRenewTarget();
+  // Tab counts (BR-REC-226) read the same cached lists the tab panels show (same query keys).
+  const endingTotal = useEndingList('expiring').data?.pages[0]?.meta.total;
+  const endedTotal = useEndingList('expired').data?.pages[0]?.meta.total;
 
   return (
     <>
@@ -66,8 +70,8 @@ export default function EndingTabs() {
         }}
       >
         <TabsList className="w-full">
-          <TabsTrigger value="ending">{WORDS.endsSoon}</TabsTrigger>
-          <TabsTrigger value="ended">{WORDS.ended}</TabsTrigger>
+          <TabsTrigger value="ending">{withCount(WORDS.endsSoon, endingTotal)}</TabsTrigger>
+          <TabsTrigger value="ended">{withCount(WORDS.ended, endedTotal)}</TabsTrigger>
         </TabsList>
         <TabsContent value="ending">
           <EndingList status="expiring" onRenew={renew.renew} />

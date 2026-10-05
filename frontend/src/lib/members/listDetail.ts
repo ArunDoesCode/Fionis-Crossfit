@@ -4,7 +4,7 @@ import type { MemberListItem } from './types';
 
 /**
  * The one detail line under a member's name in a list (BR-REC-135, S5):
- * "98450 12345 · Last 12 Sep" / "98450 12345 · Never assessed", and for an archived member
+ * "98450 12345 · Last assessed 12 Sep 2026" / "98450 12345 · Never assessed", and for an archived member
  * "Archived 2 Jun · Ended 31 May" ("Ends 31 Dec" while the membership still runs).
  * `archivedAt` (ISO UTC) is shown as a day in `timeZone`.
  */
@@ -19,7 +19,7 @@ export const memberListDetail = (
     return `Archived ${archivedOn} · ${ended ? 'Ended' : 'Ends'} ${formatDay(item.membership.endOn)}`;
   }
   const assessed = item.lastAssessedOn
-    ? `Last ${formatDay(item.lastAssessedOn)}`
+    ? `Last assessed ${formatDay(item.lastAssessedOn)}`
     : 'Never assessed';
   return `${formatPhone(item.phone)} · ${assessed}`;
 };

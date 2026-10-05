@@ -6,7 +6,7 @@ import { UI_TEXT, WORDS } from '@/lib/messages/words';
 export const DUE_TEXT = {
   /** One sentence when a section or list has nobody (BR-REC-101, 130). */
   empty: {
-    overdue: 'Nobody is overdue.',
+    overdue: 'Nobody is overdue. Nice work.',
     soon: 'Nobody is due soon.',
   },
   /** The member page when no assessment is turned on. */
@@ -50,3 +50,12 @@ export const DUE_TEXT = {
     notSaved: "Couldn't save this. Try again.",
   },
 } as const;
+
+/** Due sub-items in one line of quiet text (BR-REC-225): "Height · Weight · +13", "All 15 measurements". */
+export const dueItemsText = (names: string[], turnedOnCount: number): string => {
+  if (names.length > 0 && names.length >= turnedOnCount && turnedOnCount > 1)
+    return `All ${turnedOnCount} measurements`;
+  const shown = names.slice(0, 2);
+  const hidden = names.length - shown.length;
+  return hidden > 0 ? `${shown.join(' · ')} · +${hidden}` : shown.join(' · ');
+};

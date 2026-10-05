@@ -1,6 +1,7 @@
 'use client';
 
-import { type ComponentProps, useMemo, useState } from 'react';
+import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
+import { useMemo, useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import { RowList } from '@/components/common/ListRow';
 import MemberSearch from '@/components/common/MemberSearch';
@@ -9,6 +10,7 @@ import PageHeader from '@/components/common/PageHeader';
 import Section from '@/components/common/Section';
 import { RowSkeletons } from '@/components/common/Skeletons';
 import DueRow from '@/components/pages/due/DueRow';
+import NumberBand from '@/components/pages/home/NumberBand';
 import { DueSheet, PeriodSheet } from '@/components/pages/lazySheets';
 import EndingRow from '@/components/pages/members/EndingRow';
 import MemberDirectoryResults from '@/components/pages/members/MemberDirectoryResults';
@@ -19,9 +21,11 @@ import { emptyDueLine } from '@/lib/due/status';
 import type { DueTarget } from '@/lib/due/target';
 import type { DueTab } from '@/lib/due/types';
 import { useDueSheet } from '@/lib/due/useDueSheet';
+import { useTurnedOnCounts } from '@/lib/due/useTurnedOnCounts';
 import { foldText, MIN_SEARCH_CHARS, searchMembers } from '@/lib/members/directory';
 import { ENDING_EMPTY } from '@/lib/members/endingParams';
 import type { EndingStatus } from '@/lib/members/types';
+import { useFieldPick } from '@/lib/members/useFieldPick';
 import { useRenewTarget } from '@/lib/members/useRenewTarget';
 import { useToday } from '@/lib/members/useToday';
 import { UI_TEXT } from '@/lib/messages/words';
@@ -39,6 +43,7 @@ const ENDING_SECTION = {
 // arrive (BR-REC-143).
 function DueSection({ tab, onMore }: { tab: DueTab; onMore: (target: DueTarget) => void }) {
   const { data, isError, refetch } = useDuePreview(tabToStatus(tab));
+  const turnedOn = useTurnedOnCounts();
   const total = data?.meta.total ?? 0;
 
   return (
@@ -53,11 +58,20 @@ function DueSection({ tab, onMore }: { tab: DueTab; onMore: (target: DueTarget) 
     >
       {data &&
         (data.data.length === 0 ? (
-          <EmptyState compact title={emptyDueLine(tab)} />
+          <EmptyState
+            compact
+            icon={tab === 'overdue' ? CheckmarkCircle02Icon : undefined}
+            title={emptyDueLine(tab)}
+          />
         ) : (
           <RowList>
             {data.data.map((item) => (
-              <DueRow key={`${item.memberId}:${item.typeId}`} item={item} onMore={onMore} />
+              <DueRow
+                key={`${item.memberId}:${item.typeId}`}
+                item={item}
+                turnedOnCount={turnedOn.get(item.typeId)}
+                onMore={onMore}
+              />
             ))}
           </RowList>
         ))}
@@ -110,13 +124,14 @@ function EndingSection({
   );
 }
 
-// The Home search (BR-REC-07, 140, 201, 204): pick Name, Email or Phone, type 2 letters, the matching
-// members appear as rows under the field, tap one to open them. Archived members are not found here
-// (BR-REC-06); they are under Members → Archived. Text and field live in state only. The results area keeps
-// a minimum height so the page does not jump when rows arrive (BR-REC-143).
+// The Home search (BR-REC-07, 140, 201, 204, 231): the field follows the text (digits -> Phone, @ -> Email,
+// else Name) unless it was picked by hand; type 2 letters, the matching members appear as rows under the
+// field, tap one to open them. Archived members are not found here (BR-REC-06); they are under Members →
+// Archived. Text and field live in state only. The results area keeps a minimum height so the page does
+// not jump when rows arrive (BR-REC-143).
 function HomeSearch() {
   const [text, setText] = useState('');
-  const [field, setField] = useState<ComponentProps<typeof MemberSearch>['field']>('name');
+  const { field, pick } = useFieldPick(text);
   const { data, isError, refetch } = useMemberDirectory();
   const rows = useMemo(
     () => data && searchMembers(data, { text, field, archived: false }),
@@ -126,7 +141,7 @@ function HomeSearch() {
 
   return (
     <div className="flex flex-col gap-3">
-      <MemberSearch text={text} field={field} onChange={setText} onFieldChange={setField} />
+      <MemberSearch text={text} field={field} onChange={setText} onFieldChange={pick} />
       {ready && (
         <div className="min-h-48">
           <MemberDirectoryResults
@@ -142,7 +157,7 @@ function HomeSearch() {
   );
 }
 
-// Home (S2, `/admin`). Order on a phone is BR-REC-101: Overdue, Due soon, Memberships ending, Recently
+// Home (S2, `/admin`). Under the search: the navy number band (BR-REC-222). Order on a phone is BR-REC-101: Overdue, Due soon, Memberships ending, Recently
 // ended, under the search field. From 1024 px: due sections left, membership sections right, 1080 px. A row
 // tap opens Record assessment (1 tap, BR-REC-140); the row's "⋯" opens the one sheet both due sections
 // share. Renew on a row opens the S9 sheet, so Renew from Home is two taps (BR-REC-140); one sheet serves
@@ -155,6 +170,7 @@ export default function HomeView() {
     <Page>
       <PageHeader />
       <HomeSearch />
+      <NumberBand />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">
         <div className="section-gap flex flex-col">
           <DueSection tab="overdue" onMore={dueSheet.show} />
