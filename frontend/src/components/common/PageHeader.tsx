@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import ActionBar from '@/components/common/ActionBar';
 import {
   BackToParent,
   PatternBack,
@@ -50,8 +49,8 @@ export default function PageHeader({
           className,
         )}
       >
-        {/* ☰ opens the drawer on phones; from 768 px the same button collapses or expands the sidebar. */}
-        <SidebarTrigger className="-ml-2 size-(--control-height) shrink-0" />
+        {/* ☰ opens the drawer on phones; from 768 px the sidebar's own header button collapses it. */}
+        <SidebarTrigger className="-ml-2 size-(--control-height) shrink-0 md:hidden" />
         <div className="min-w-0 flex-1">
           <Suspense
             fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
@@ -67,7 +66,18 @@ export default function PageHeader({
       <Suspense fallback={<PatternBack pattern={pattern} />}>
         <BackToParent />
       </Suspense>
-      {form && action && <ActionBar>{action}</ActionBar>}
+      {/* BR-REC-180: on a phone a form's one main action (Save) is a full-width bar fixed to the bottom edge
+          (above the keyboard); the admin layout pads the content while a bar exists. Hidden from 768 px. */}
+      {form && action && (
+        <div
+          data-slot="action-bar"
+          className="page-px fixed inset-x-0 bottom-0 z-30 flex min-h-[var(--actionbar-h)] items-center border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          <div className="mx-auto flex w-full max-w-(--page-max-narrow) flex-col *:h-(--control-height) *:w-full">
+            {action}
+          </div>
+        </div>
+      )}
     </>
   );
 }

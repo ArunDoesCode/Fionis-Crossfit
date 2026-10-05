@@ -1,4 +1,4 @@
-import { DEFAULT_GYM_NAME, UI_TEXT } from '@/lib/messages/words';
+import { UI_TEXT } from '@/lib/messages/words';
 
 const SCREENS = UI_TEXT.screens;
 
@@ -24,7 +24,7 @@ const ASSESSMENT_SETUP = {
 // never changes while a screen loads.
 export const ROUTES: readonly RouteEntry[] = [
   { pattern: '/login', title: UI_TEXT.signIn },
-  { pattern: '/admin', title: DEFAULT_GYM_NAME },
+  { pattern: '/admin', title: UI_TEXT.nav.home },
   { pattern: '/admin/due', title: SCREENS.dueList, parent: HOME },
   { pattern: '/admin/memberships', title: SCREENS.membershipsEnding },
   { pattern: '/admin/members', title: SCREENS.members },
