@@ -124,13 +124,13 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
     [
       'a reminder until 20 Oct (BR-REC-103 example)',
       { state: 'upcoming', nextDueOn: '2026-10-06', snoozedUntil: '2026-10-20' },
-      'Reminder on 20 Oct',
+      'Reminder on 20 Oct 2026',
       'info',
     ],
     [
       'a reminder wins over overdue',
       { state: 'overdue', nextDueOn: '2026-08-30', snoozedUntil: '2026-10-20' },
-      'Reminder on 20 Oct',
+      'Reminder on 20 Oct 2026',
       'info',
     ],
     [
@@ -141,13 +141,13 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
         neverRecorded: true,
         snoozedUntil: '2026-11-03',
       },
-      'Reminder on 3 Nov',
+      'Reminder on 03 Nov 2026',
       'info',
     ],
     [
       'a reminder in another year shows the year (BR-REC-127)',
       { state: 'ok', nextDueOn: '2027-03-01', snoozedUntil: '2027-01-05' },
-      'Reminder on 5 Jan 2027',
+      'Reminder on 05 Jan 2027',
       'info',
     ],
     [
@@ -192,19 +192,19 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
     [
       'next due 12 Dec (BR-REC-103 example)',
       { state: 'ok', nextDueOn: '2026-12-12' },
-      'Next due 12 Dec',
+      'Next due 12 Dec 2026',
       'success',
     ],
     [
       'next due 10 Nov (case 3: Fran-only fitness test)',
       { state: 'ok', nextDueOn: '2026-11-10' },
-      'Next due 10 Nov',
+      'Next due 10 Nov 2026',
       'success',
     ],
     [
       'next due in another year shows the year',
       { state: 'ok', nextDueOn: '2027-01-05' },
-      'Next due 5 Jan 2027',
+      'Next due 05 Jan 2027',
       'success',
     ],
   ];
@@ -215,12 +215,12 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
     });
   }
 
-  test('BR-REC-127 the year is left out only when the date is in the same year as "today" (today is an argument)', () => {
+  test('BR-REC-127 BR-REC-191: the year is always shown, whatever "today" is', () => {
     const line = memberLine({ state: 'ok', nextDueOn: '2027-01-05' });
-    expect(status.memberDueStatus(line, '2026-10-03').text).toBe('Next due 5 Jan 2027');
-    expect(status.memberDueStatus(line, '2027-01-02').text).toBe('Next due 5 Jan');
+    expect(status.memberDueStatus(line, '2026-10-03').text).toBe('Next due 05 Jan 2027');
+    expect(status.memberDueStatus(line, '2027-01-02').text).toBe('Next due 05 Jan 2027');
     const reminder = memberLine({ state: 'ok', snoozedUntil: '2027-01-05' });
-    expect(status.memberDueStatus(reminder, '2027-01-02').text).toBe('Reminder on 5 Jan');
+    expect(status.memberDueStatus(reminder, '2027-01-02').text).toBe('Reminder on 05 Jan 2027');
   });
 
   test('BR-REC-125 every combination gives words and one of the four tones', () => {

@@ -145,7 +145,7 @@ describe('BR-REC-127 formatMetricValue', () => {
 
 describe('BR-REC-20 / 80 previousLine: "Last 95.5 kg · 12 Sep"', () => {
   test('BR-REC-20 value, unit and the day it was recorded (this year: no year)', () => {
-    expect(previousLine(WEIGHT, TODAY)).toBe('Last 95.5 kg · 12 Sep');
+    expect(previousLine(WEIGHT, TODAY)).toBe('Last 95.5 kg · 12 Sep 2026');
   });
 
   test('BR-REC-127 a day from another year shows the year', () => {
@@ -159,7 +159,7 @@ describe('BR-REC-20 / 80 previousLine: "Last 95.5 kg · 12 Sep"', () => {
   });
 
   test('BR-REC-20 a Time reads as m:ss', () => {
-    expect(previousLine(PLANK, TODAY)).toBe('Last 1:50 · 12 Sep');
+    expect(previousLine(PLANK, TODAY)).toBe('Last 1:50 · 12 Sep 2026');
   });
 
   test('BR-REC-20 no previous value, no line', () => {

@@ -1,10 +1,10 @@
 // Spec: docs/specs/member-records/members.md
 //   BR-REC-172 — the page of an archived member, or of one whose membership has ended, starts with a banner
-//     saying when: "Archived 2 Jun 2026 · Membership ended 31 May 2026" (the archived part only when archived;
+//     saying when: "Archived 02 Jun 2026 · Membership ended 31 May 2026" (the archived part only when archived;
 //     "ends" when the membership is still running). The three cases:
 //       ended 31 May, not archived -> "Membership ended 31 May 2026"
-//       archived 2 Jun while running -> "Archived 2 Jun 2026 · Membership ends 31 Dec 2026"
-//       archived and ended -> "Archived 2 Jun 2026 · Membership ended 31 May 2026"
+//       archived 2 Jun while running -> "Archived 02 Jun 2026 · Membership ends 31 Dec 2026"
+//       archived and ended -> "Archived 02 Jun 2026 · Membership ended 31 May 2026"
 //     Nothing to say (not archived, still running) -> no banner.
 //   BR-REC-52 — a period ending today is "Ends soon", not "Ended", so it still "ends".
 // Interface: docs/specs/member-records/members.md — `@/lib/members/banner`:
@@ -44,24 +44,24 @@ describe('BR-REC-172 memberBannerText, the three cases of the spec', () => {
     );
   });
 
-  test('BR-REC-172 archived 2 Jun while running: "Archived 2 Jun 2026 · Membership ends 31 Dec 2026"', () => {
+  test('BR-REC-172 archived 2 Jun while running: "Archived 02 Jun 2026 · Membership ends 31 Dec 2026"', () => {
     expect(
       banner.memberBannerText(
         member('2026-06-02T08:00:00.000Z', 'active', '2026-12-31'),
         TODAY,
         GYM_ZONE,
       ),
-    ).toBe('Archived 2 Jun 2026 · Membership ends 31 Dec 2026');
+    ).toBe('Archived 02 Jun 2026 · Membership ends 31 Dec 2026');
   });
 
-  test('BR-REC-172 archived and ended: "Archived 2 Jun 2026 · Membership ended 31 May 2026"', () => {
+  test('BR-REC-172 archived and ended: "Archived 02 Jun 2026 · Membership ended 31 May 2026"', () => {
     expect(
       banner.memberBannerText(
         member('2026-06-02T08:00:00.000Z', 'expired', '2026-05-31'),
         TODAY,
         GYM_ZONE,
       ),
-    ).toBe('Archived 2 Jun 2026 · Membership ended 31 May 2026');
+    ).toBe('Archived 02 Jun 2026 · Membership ended 31 May 2026');
   });
 });
 
@@ -101,7 +101,7 @@ describe('BR-REC-172 memberBannerText, running memberships that are archived', (
         TODAY,
         GYM_ZONE,
       ),
-    ).toBe('Archived 30 Sep 2026 · Membership ends 3 Oct 2026');
+    ).toBe('Archived 30 Sep 2026 · Membership ends 03 Oct 2026');
   });
 
   test('BR-REC-172 archived and ended yesterday: "ended" (not "ends")', () => {
@@ -111,7 +111,7 @@ describe('BR-REC-172 memberBannerText, running memberships that are archived', (
         TODAY,
         GYM_ZONE,
       ),
-    ).toBe('Archived 1 Oct 2026 · Membership ended 2 Oct 2026');
+    ).toBe('Archived 01 Oct 2026 · Membership ended 02 Oct 2026');
   });
 });
 
@@ -138,7 +138,7 @@ describe('BR-REC-172 memberBannerText, dates always carry the year', () => {
         TODAY,
         GYM_ZONE,
       ),
-    ).toBe('Archived 2 Jun 2026 · Membership ends 31 May 2027');
+    ).toBe('Archived 02 Jun 2026 · Membership ends 31 May 2027');
   });
 
   test('BR-REC-172 the year follows the dates, not today', () => {
@@ -153,10 +153,10 @@ describe('BR-REC-172 memberBannerText, archivedAt is turned into a day in the gi
   const lateEvening = '2026-06-01T20:00:00.000Z';
 
   test.each([
-    ['Asia/Kolkata', 'Archived 2 Jun 2026 · Membership ended 31 May 2026'],
-    ['UTC', 'Archived 1 Jun 2026 · Membership ended 31 May 2026'],
-    ['America/Los_Angeles', 'Archived 1 Jun 2026 · Membership ended 31 May 2026'],
-    ['Pacific/Auckland', 'Archived 2 Jun 2026 · Membership ended 31 May 2026'],
+    ['Asia/Kolkata', 'Archived 02 Jun 2026 · Membership ended 31 May 2026'],
+    ['UTC', 'Archived 01 Jun 2026 · Membership ended 31 May 2026'],
+    ['America/Los_Angeles', 'Archived 01 Jun 2026 · Membership ended 31 May 2026'],
+    ['Pacific/Auckland', 'Archived 02 Jun 2026 · Membership ended 31 May 2026'],
   ])('BR-REC-172 archived at 2026-06-01T20:00Z in %s reads "%s"', (zone, expected) => {
     expect(banner.memberBannerText(member(lateEvening, 'expired', '2026-05-31'), TODAY, zone)).toBe(
       expected,
@@ -174,8 +174,8 @@ describe('BR-REC-172 memberBannerText, archivedAt is turned into a day in the gi
       TODAY,
       'Asia/Kolkata',
     );
-    expect(before).toBe('Archived 1 Jun 2026 · Membership ended 31 May 2026');
-    expect(after).toBe('Archived 2 Jun 2026 · Membership ended 31 May 2026');
+    expect(before).toBe('Archived 01 Jun 2026 · Membership ended 31 May 2026');
+    expect(after).toBe('Archived 02 Jun 2026 · Membership ended 31 May 2026');
   });
 
   test('BR-REC-172 the year is the year in the given zone (31 Dec 20:00Z is already next year in India)', () => {
@@ -185,7 +185,7 @@ describe('BR-REC-172 memberBannerText, archivedAt is turned into a day in the gi
         '2027-01-02',
         'Asia/Kolkata',
       ),
-    ).toBe('Archived 1 Jan 2027 · Membership ends 31 Dec 2027');
+    ).toBe('Archived 01 Jan 2027 · Membership ends 31 Dec 2027');
   });
 });
 
@@ -207,7 +207,7 @@ describe('BR-REC-172 memberBannerText does not depend on the time zone of the de
             TODAY,
             'Asia/Kolkata',
           ),
-        ).toBe('Archived 2 Jun 2026 · Membership ended 31 May 2026');
+        ).toBe('Archived 02 Jun 2026 · Membership ended 31 May 2026');
         expect(
           banner.memberBannerText(member(null, 'expired', '2026-05-31'), TODAY, 'Asia/Kolkata'),
         ).toBe('Membership ended 31 May 2026');

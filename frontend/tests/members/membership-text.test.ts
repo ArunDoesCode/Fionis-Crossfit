@@ -124,7 +124,7 @@ describe('BR-REC-52 membershipStatusText, Active', () => {
         { status: 'active', startOn: '2026-10-20', endOn: '2026-11-19', daysLeft: 47 },
         TODAY,
       ),
-    ).toEqual({ label: 'Active', detail: 'Starts 20 Oct', tone: 'success' });
+    ).toEqual({ label: 'Active', detail: 'Starts 20 Oct 2026', tone: 'success' });
   });
 
   test('BR-REC-52 a start tomorrow is "Starts 4 Oct"', () => {
@@ -132,15 +132,15 @@ describe('BR-REC-52 membershipStatusText, Active', () => {
       { status: 'active', startOn: '2026-10-04', endOn: '2026-11-03', daysLeft: 31 },
       TODAY,
     );
-    expect(result.detail).toBe('Starts 4 Oct');
+    expect(result.detail).toBe('Starts 04 Oct 2026');
   });
 
-  test('BR-REC-127 a start in another year shows the year: "Starts 5 Jan 2027"', () => {
+  test('BR-REC-127 a start in another year shows the year: "Starts 05 Jan 2027"', () => {
     const result = text.membershipStatusText(
       { status: 'active', startOn: '2027-01-05', endOn: '2027-02-04', daysLeft: 124 },
       TODAY,
     );
-    expect(result.detail).toBe('Starts 5 Jan 2027');
+    expect(result.detail).toBe('Starts 05 Jan 2027');
   });
 });
 

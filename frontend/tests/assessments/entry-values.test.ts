@@ -297,7 +297,13 @@ describe('BR-REC-85 / D13 valuesFromDraft', () => {
 });
 
 describe('BR-REC-74 / BR-REC-85 decideLoaded: what to do with the saved assessment and the draft of a date', () => {
-  test.each<[string, { typed: boolean; hasDraft: boolean; hasSaved: boolean }, string]>([
+  test.each<
+    [
+      string,
+      { typed: boolean; hasDraft: boolean; hasSaved: boolean },
+      ReturnType<typeof decideLoaded>,
+    ]
+  >([
     ['nothing typed, a draft', { typed: false, hasDraft: true, hasSaved: false }, 'offer-draft'],
     [
       'nothing typed, draft and saved',
