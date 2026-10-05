@@ -336,13 +336,17 @@ describe('BR-REC-125 memberListBadge (S5 Members rows)', () => {
     }
   });
 
-  test('BR-REC-125 the tone differs between Active, Ends soon, Ended and Archived', () => {
+  test('BR-REC-125 Active, Ends soon and Ended/Archived are three distinct tones (BR-REC-185)', () => {
     const tones = [
       text.memberListBadge(item('active', 100), TODAY).tone,
       text.memberListBadge(item('expiring', 4), TODAY).tone,
       text.memberListBadge(item('expired', -4), TODAY).tone,
-      text.memberListBadge(item('active', 100, '2026-06-02T08:00:00.000Z'), TODAY).tone,
     ];
-    expect(new Set(tones).size).toBe(4);
+    expect(new Set(tones).size).toBe(3);
+    const archived = text.memberListBadge(
+      item('active', 100, '2026-06-02T08:00:00.000Z'),
+      TODAY,
+    ).tone;
+    expect(archived).toBe(text.memberListBadge(item('expired', -4), TODAY).tone);
   });
 });

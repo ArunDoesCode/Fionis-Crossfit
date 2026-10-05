@@ -16,6 +16,7 @@ describe('BR-REC-185 tone map', () => {
     ['estimated', 'info'],
     ['ended', 'neutral'],
     ['archived', 'neutral'],
+    ['neverRecorded', 'neutral'],
   ];
   test.each(cases)('BR-REC-185 %s -> %s', (key, tone) => {
     expect(toneFor(key)).toBe(tone as never);
@@ -24,7 +25,8 @@ describe('BR-REC-185 tone map', () => {
     const src = readFileSync(join(import.meta.dir, '../../src/lib/statusTone.ts'), 'utf8');
     const m = src.match(/type StatusTone\s*=([^;]+);/s);
     expect(m).not.toBeNull();
-    for (const t of ['success', 'warning', 'danger', 'info', 'neutral']) expect(m?.[1]).toContain(`'${t}'`);
+    for (const t of ['success', 'warning', 'danger', 'info', 'neutral'])
+      expect(m?.[1]).toContain(`'${t}'`);
   });
 });
 
@@ -73,12 +75,15 @@ describe('BR-REC-179 route table', () => {
   test('BR-REC-179 account settings parent is Settings', () => {
     expect(routeFor('/admin/settings/account').parent?.href).toBe('/admin/settings');
   });
-  test.each(['/admin', '/admin/members', '/admin/memberships', '/admin/reports', '/admin/settings'])(
-    'BR-REC-179 top-level %s has no parent',
-    (p) => {
-      expect(routeFor(p).parent).toBeUndefined();
-    },
-  );
+  test.each([
+    '/admin',
+    '/admin/members',
+    '/admin/memberships',
+    '/admin/reports',
+    '/admin/settings',
+  ])('BR-REC-179 top-level %s has no parent', (p) => {
+    expect(routeFor(p).parent).toBeUndefined();
+  });
   test('BR-REC-179 same input gives the same answer (loading and view agree)', () => {
     expect(routeFor('/admin/members/x1/report')).toEqual(routeFor('/admin/members/x1/report'));
   });
@@ -91,12 +96,14 @@ describe('BR-REC-180/181/182 density and width tokens', () => {
     if (!m) return Number.NaN;
     return m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]);
   };
-  const decl = (text: string, name: string) => text.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1];
+  const decl = (text: string, name: string) =>
+    text.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1];
   // text of every @media block whose query mentions 1024px and a fine pointer
   const fineBlocks: string[] = [];
   const re = /@media\s*([^{]+)\{/g;
   for (let m = re.exec(css); m; m = re.exec(css)) {
-    if (!/1024px/.test(m[1]) || !/pointer:\s*fine/.test(m[1])) continue;
+    const query = m[1] ?? '';
+    if (!/1024px/.test(query) || !/pointer:\s*fine/.test(query)) continue;
     let depth = 1;
     let i = re.lastIndex;
     for (; i < css.length && depth > 0; i++) {

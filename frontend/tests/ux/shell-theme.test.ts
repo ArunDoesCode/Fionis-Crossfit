@@ -41,7 +41,20 @@ const lightness = (blk: string, name: string): number | null => {
 };
 
 describe('BR-REC-184 semantic colour tokens exist in both themes and in @theme inline', () => {
-  const tokens = ['brand', 'info', 'info-soft', 'success', 'success-soft', 'warning', 'warning-soft', 'danger', 'danger-soft', 'neutral', 'neutral-soft', 'sidebar'];
+  const tokens = [
+    'brand',
+    'info',
+    'info-soft',
+    'success',
+    'success-soft',
+    'warning',
+    'warning-soft',
+    'danger',
+    'danger-soft',
+    'neutral',
+    'neutral-soft',
+    'sidebar',
+  ];
   test.each(tokens)('BR-REC-184 --%s defined in :root and .dark', (t) => {
     expect(root).toMatch(new RegExp(`--${t}:`));
     expect(dark).toMatch(new RegExp(`--${t}:`));
@@ -54,14 +67,20 @@ describe('BR-REC-184 semantic colour tokens exist in both themes and in @theme i
 describe('BR-REC-184 / 200 no raw colour outside globals.css and src/tv/theme.ts', () => {
   const allowed = (f: string) => f.endsWith('app/globals.css') || rel(f) === 'src/tv/theme.ts';
   const scan = codeFiles.filter((f) => !allowed(f));
-  const palette = '(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)';
+  const palette =
+    '(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)';
   const rules: [string, RegExp][] = [
     ['hex colour', /#[0-9a-fA-F]{3,8}\b(?![\w-])/],
     ['oklch()', /\boklch\(/],
     ['rgb()/rgba()', /\brgba?\(/],
     ['hsl()', /\bhsla?\(/],
     ['arbitrary [#...] value', /\[#[0-9a-fA-F]+\]/],
-    ['palette class', new RegExp(`\\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|divide|decoration|shadow|accent|caret)-${palette}-\\d{2,3}\\b`)],
+    [
+      'palette class',
+      new RegExp(
+        `\\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|divide|decoration|shadow|accent|caret)-${palette}-\\d{2,3}\\b`,
+      ),
+    ],
   ];
   test.each(rules)('BR-REC-184 no %s in components', (_n, re) => {
     const hits = scan
@@ -104,7 +123,9 @@ describe('BR-REC-186 brand surfaces', () => {
     expect(existsSync(join(ROOT, 'public/Fionis-Logo.avif'))).toBe(true);
   });
   test('BR-REC-186 wordmark used via next/image with 284 x 106 in at least two places (login + sidebar)', () => {
-    const users = codeFiles.filter((f) => f.endsWith('.tsx') && readFileSync(f, 'utf8').includes('Fionis-Logo.avif'));
+    const users = codeFiles.filter(
+      (f) => f.endsWith('.tsx') && readFileSync(f, 'utf8').includes('Fionis-Logo.avif'),
+    );
     expect(users.length).toBeGreaterThanOrEqual(2);
     for (const f of users) {
       const t = readFileSync(f, 'utf8');
@@ -115,7 +136,12 @@ describe('BR-REC-186 brand surfaces', () => {
   });
   test('BR-REC-186 Login logo has priority', () => {
     const login = readFileSync(join(SRC, 'app/(auth)/login/page.tsx'), 'utf8');
-    const users = codeFiles.filter((f) => f.endsWith('.tsx') && /login/i.test(f) && readFileSync(f, 'utf8').includes('Fionis-Logo.avif'));
+    const users = codeFiles.filter(
+      (f) =>
+        f.endsWith('.tsx') &&
+        /login/i.test(f) &&
+        readFileSync(f, 'utf8').includes('Fionis-Logo.avif'),
+    );
     const text = users.map((f) => readFileSync(f, 'utf8')).join('\n') + login;
     expect(text).toContain('Fionis-Logo.avif');
     expect(text).toMatch(/\bpriority\b/);
@@ -142,13 +168,16 @@ describe('BR-REC-177 shell is the shadcn Sidebar', () => {
     expect(all).toContain('<SidebarInset');
   });
   test('BR-REC-177 sidebar lists Home, Members, Reports, Settings and has Sign out', () => {
-    for (const label of ['Home', 'Members', 'Reports', 'Settings', 'Sign out']) expect(all).toContain(label);
+    for (const label of ['Home', 'Members', 'Reports', 'Settings', 'Sign out'])
+      expect(all).toContain(label);
   });
 });
 
 describe('BR-REC-178 no tab bar; drawer below 768 px', () => {
   test('BR-REC-178 no --tabbar-h or data-hide-tabs left in src', () => {
-    const hits = codeFiles.filter((f) => /--tabbar-h|data-hide-tabs/.test(readFileSync(f, 'utf8'))).map(rel);
+    const hits = codeFiles
+      .filter((f) => /--tabbar-h|data-hide-tabs/.test(readFileSync(f, 'utf8')))
+      .map(rel);
     expect(hits).toEqual([]);
   });
   test('BR-REC-178 BottomTabBar is gone', () => {
@@ -171,7 +200,8 @@ describe('BR-REC-178 no tab bar; drawer below 768 px', () => {
 
 describe('BR-REC-214 fonts: Outfit preloaded, Poppins 600 and Geist Mono on demand, Latin only', () => {
   const layout = readFileSync(join(SRC, 'app/layout.tsx'), 'utf8');
-  const callOf = (name: string) => layout.match(new RegExp(`${name}\\(\\{[\\s\\S]*?\\}\\)`))?.[0] ?? '';
+  const callOf = (name: string) =>
+    layout.match(new RegExp(`${name}\\(\\{[\\s\\S]*?\\}\\)`))?.[0] ?? '';
   test('BR-REC-214 Raleway is gone, Poppins is imported', () => {
     expect(layout).not.toMatch(/Raleway/);
     expect(layout).toMatch(/\bPoppins\b/);
@@ -196,7 +226,13 @@ describe('BR-REC-214 fonts: Outfit preloaded, Poppins 600 and Geist Mono on dema
   test('BR-REC-214 exactly three font families are loaded', () => {
     expect((layout.match(/from 'next\/font\/google'/g) ?? []).length).toBe(1);
     const imp = layout.match(/import \{([^}]*)\} from 'next\/font\/google'/)?.[1] ?? '';
-    expect(imp.split(',').map((s) => s.trim()).filter(Boolean).sort()).toEqual(['Geist_Mono', 'Outfit', 'Poppins']);
+    expect(
+      imp
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .sort(),
+    ).toEqual(['Geist_Mono', 'Outfit', 'Poppins']);
   });
 });
 
