@@ -9,7 +9,7 @@
 | R-6 | minor | fix: aria-expanded from sheet open state | frontend-dev |
 | R-7 | minor | fix: inputMode text; calendar button names per field | frontend-dev |
 | R-8 | minor | fix: MemberMeta error state | frontend-dev |
-| R-9 | minor | ask owner: % below 0 | user |
+| R-9 | minor | owner yes: % refuses below 0 (spec v14) | frontend-dev + test-writer |
 | R-10 | minor | fix: singular "1 of 1 member" | frontend-dev |
 | R-11 | minor | fix: inline NumberBand + ActionsHeader; ActionBar/MenuButton kept (spec v13) | frontend-dev |
 | R-12 | minor | detail page only (spec v13); use generated type | frontend-dev |

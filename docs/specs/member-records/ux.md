@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 13
+version: 14
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -101,7 +101,7 @@ Audit and before/after shots: `docs/design/admin-ui-audit/README.md`. Same Fioni
 | BR-REC-227 | Sidebar toggle sits outside the sidebar, at the left of the page header, as shadcn ships it (`SidebarTrigger` in the `SidebarInset` header) from 768 px; phones keep ☰ "Open menu" in the top bar (amends the U7 clarification). The sidebar header shows the orange "F" square plus "Fionis CrossFit" when expanded and the "F" only when collapsed (amends BR-REC-186). The active item is an orange-tint pill with a 3 px orange bar at the left and orange 600 icon and text. | Click the toggle beside the page title → sidebar collapses to icons | Sidebar test; the sidebar header holds no toggle |
 | BR-REC-228 | Reports (S13) words and layout (amends progress BR-REC-113 wording, same numbers): a headline sentence "17 of 20 members improved Body fat since their first reading"; a count line "Based on 12 members (5 more have only one reading)"; the average as "Body fat down 2.0 % on average · better" (better / worse from the measurement's direction, no word when it has none); the KPI number in `text-brand`; the leaderboard title names the measurement and ranks 1–3 get a medal badge; "Download CSV" in the Reports header (the S18 export); month pickers use the control height. | n = 12, 5 not counted → "Based on 12 members (5 more have only one reading)" | Unit test of the text helpers |
 | BR-REC-229 | Report card (S12) on screen uses the same cards on desktop as on phones (change line + sparkline); the table stays for print; a measurement with one reading shows "First reading" instead of dashes. | One reading of Weight → "First reading · 81.7 kg" | Screenshot desktop + print preview |
-| BR-REC-230 | Record assessment (S10): 1 column on phones, 2 from 768 px, 3 from 1280 px, so it fits 1440 × 900 (amends assessments BR-REC-216 and the U8 clarification); "Paper column" and "Save & next date" sit in a closed "Copying from the paper card?" Collapsible (open while a paper column is picked); a partial save's toast says "Saved 3 for Naveen Kumar · 12 still due"; a value above 100 in a % measurement is a field error "Use 0 to 100" (no "Save anyway"). | 3 of 15 saved → toast "Saved 3 for Naveen Kumar · 12 still due" | Form test; 1440 × 900 screenshot without page scroll |
+| BR-REC-230 | Record assessment (S10): 1 column on phones, 2 from 768 px, 3 from 1280 px, so it fits 1440 × 900 (amends assessments BR-REC-216 and the U8 clarification); "Paper column" and "Save & next date" sit in a closed "Copying from the paper card?" Collapsible (open while a paper column is picked); a partial save's toast says "Saved 3 for Naveen Kumar · 12 still due"; a value below 0 or above 100 in a % measurement is a field error "Use 0 to 100" (no "Save anyway"; owner 2026-10-05). | 3 of 15 saved → toast "Saved 3 for Naveen Kumar · 12 still due" | Form test; 1440 × 900 screenshot without page scroll |
 | BR-REC-231 | Search picks the field from the text (amends members BR-REC-201 default): only digits (spaces, `+`, `-` allowed) → Phone, text with `@` → Email, else Name; the picker shows the field in use and a manual pick wins until the text is cleared; each result shows "Last assessed 23 Sep 2026". | Name picked, type "10016" → field Phone, Lakshmi Pillai shows | Unit test of the field picker |
 | BR-REC-232 | `DatePicker` also takes typed dates `dd/mm/yyyy` (`-` or `.` allowed, single digits allowed), checked on Save like any field; the calendar stays (amends BR-REC-192). On Add member, "Starts on" copies "Joined on" until the user changes it. | Type "5/1/1990" → 05 Jan 1990 | Unit test of the date parser |
 | BR-REC-233 | Words (word list): empty gym name → "Enter the gym name"; setup "Please check below / above" → "Warn if lower than / Warn if higher than"; "Report table" → "Show in a group on the report card"; time zone shows city and short name ("India (Kolkata) · IST", value unchanged); empty places get one icon and a warm sentence ("Nobody is overdue. Nice work."). | Overdue list empty → icon + "Nobody is overdue. Nice work." | Copy review |
@@ -266,6 +266,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v14 — owner: a % measurement also refuses values below 0 (BR-REC-230)
 - 2026-10-05 v13 — clarified during build (review round 1): member-page title + shared prefetch, Due "What is due" column, age · sex in the meta line, two client-island files kept; no rule changed
 - 2026-10-05 v12 — owner removed the logo image: Login and sidebar use the text wordmark "Fionis CrossFit" (BR-REC-235 rewritten, BR-REC-186 logo clause struck)
 - 2026-10-05 v11 — clarified during build (v10): helper module names, alert exception, page-title mechanism, count-line loose ends; no rule changed
