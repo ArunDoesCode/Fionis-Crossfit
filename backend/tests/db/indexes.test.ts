@@ -3,6 +3,9 @@ import { describe, expect, test } from "bun:test";
 import { sql } from "drizzle-orm";
 
 import { db } from "../../src/db/client";
+import { members } from "../../src/db/schemas";
+import { nameKey } from "../../src/repository/membersSql";
+import { rolledBack } from "../helpers/db";
 
 // data-model v4: BR-REC-206 (every read path in the index map has its index, nothing else is
 // indexed, no extension / trigram index), BR-REC-207 (the name index is exactly
@@ -134,5 +137,32 @@ describe("BR-REC-207 the name index serves the E16 / E39 order", () => {
     expect(norm(await def("members_name_active_idx"))).toContain(
       "where (archived_at is null)",
     );
+  });
+});
+
+describe("BR-REC-207 EXPLAIN: the name sort is served by the index, no Sort step", () => {
+  test("BR-REC-207 order by lower(full_name) collate C, id over non-archived members uses members_name_active_idx and has no Sort node", async () => {
+    const plan = await rolledBack(async (tx) => {
+      const rows = Array.from({ length: 80 }, (_, i) => ({
+        fullName: `TEST_indexes_${i % 2 ? "Zed" : "amy"} ${String(i).padStart(3, "0")}`,
+        phone: `+9190000${String(i).padStart(5, "0")}`,
+        phoneDigits: `9190000${String(i).padStart(5, "0")}`,
+        dateOfBirth: "1990-01-01",
+        sex: "male" as const,
+        joinedOn: "2025-01-01",
+      }));
+      await tx.insert(members).values(rows);
+      await tx.execute(sql`analyze members`);
+      await tx.execute(sql`set local enable_seqscan = off`);
+      await tx.execute(sql`set local enable_sort = off`);
+      const out = Array.from(
+        await tx.execute(
+          sql`explain select id from members where archived_at is null order by ${nameKey}, id limit 50`,
+        ),
+      ) as Array<Record<string, string>>;
+      return out.map((r) => r["QUERY PLAN"]).join("\n");
+    });
+    expect(plan).not.toMatch(/\bSort\b/);
+    expect(plan).toContain("members_name_active_idx");
   });
 });
