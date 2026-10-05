@@ -92,9 +92,10 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
     );
   };
 
-  // "Joined on" first sets "Starts on" too, until "Starts on" has been changed on its own (BR-REC-50).
+  // "Joined on" first sets "Starts on" too, until "Starts on" has been changed on its own (BR-REC-50, 232). Typed
+  // text that is not a day (an empty "Joined on") leaves "Starts on" as it was: that field asks on Save.
   const followJoinDate = (joinedOn: string) => {
-    if (!startOnChangedByHand.current) form.setValue('startOn', joinedOn);
+    if (joinedOn !== '' && !startOnChangedByHand.current) form.setValue('startOn', joinedOn);
   };
 
   return (

@@ -20,7 +20,7 @@ interface EntryFieldsProps {
 }
 
 // The measurements as cells of the form's grid (BR-REC-73, 216): untitled cells straight in it, a titled block as
-// a FormSection with its parts in a 2-up sub-grid. The screen owns the outer FormGrid.
+// a FormSection with its parts in a sub-grid (2 from 768 px, 4 from 1280 px: whole body, arms, trunk, legs on one row). The screen owns the outer FormGrid.
 export default function EntryFields({
   control,
   metrics,
@@ -55,7 +55,7 @@ export default function EntryFields({
       block.metrics.map(cell)
     ) : (
       <FormSection key={block.title} title={block.title} className="gap-3 border-t pt-4">
-        <FormGrid maxCols={2} className="gap-y-4">
+        <FormGrid maxCols={1} className="gap-y-4 md:grid-cols-2 xl:grid-cols-4">
           {block.metrics.map(cell)}
         </FormGrid>
       </FormSection>

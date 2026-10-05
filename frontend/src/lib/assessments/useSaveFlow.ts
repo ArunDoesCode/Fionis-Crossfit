@@ -6,7 +6,7 @@ import type { EntryFormInput, EntryFormValues } from '@/lib/validators/assessmen
 import { browserDraftStorage, clearDraft, draftKey } from './draft';
 import { type EntrySession, isUnchangedField } from './entryValues';
 import { type FlaggedField, flaggedFields } from './fieldView';
-import { buildSaveValues, leavesNoValue, type SaveField } from './saveBody';
+import { buildSaveValues, leavesNoValue, type SaveField, stillDueAfter } from './saveBody';
 import { saveFailureText } from './saveError';
 import { ASSESSMENT_TEXT } from './text';
 import { asDecimals, type EntryMetric } from './types';
@@ -52,6 +52,8 @@ interface Prepared {
   date: string;
   isEstimated: boolean;
   next: boolean;
+  /** Measurements still empty after this save (the partial-save toast, BR-REC-230). */
+  stillDue: number;
 }
 
 /**
@@ -81,10 +83,10 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
     else input.exitToStart();
   }
 
-  function send({ values, date, isEstimated, next }: Prepared) {
+  function send({ values, date, isEstimated, next, stillDue }: Prepared) {
     setStatus(null);
     mutation.mutate(
-      { memberId, typeId, date, isEstimated, values },
+      { memberId, typeId, date, isEstimated, values, stillDue },
       {
         onSuccess: () => finish(date, next),
         onError: (error) => setStatus(saveFailureText(error)),
@@ -128,6 +130,11 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
       date: valid.date,
       isEstimated: valid.isEstimated,
       next,
+      stillDue: stillDueAfter(
+        metrics.map((metric) => metric.id),
+        Object.keys(session.baseline),
+        built.values,
+      ),
     };
     const sent = metrics.filter((metric) => !isUnchangedField(session, typed, metric.id));
     const odd = flaggedFields(sent, valid.values);

@@ -40,35 +40,31 @@ const NOTHING_TYPED = {};
 const NO_MEMBER = { fullName: '', joinedOn: '' };
 
 interface SaveBarProps {
-  /** The id of the `<form>`: the buttons sit in the page header, outside it. */
+  /** The id of the `<form>`: the button sits in the page header, outside it. */
   formId: string;
   saving: boolean;
-  /** "Save & next date" is the one saving. */
+  /** "Save & next date" is the one saving: this Save is not. */
   savingNext: boolean;
 }
 
-// The screen's one main action (BR-REC-121): "Save" with "Save & next date" beside it (BR-REC-84). Both are
-// submit buttons of the form, so Enter in a field saves; Save comes first in the page so it is the form's
-// default button (Enter never means "next date"), and the row is reversed to show it on the right. Both stay
-// tappable with problems (Save then jumps to the first one, BR-REC-189) and are off only while saving.
+// The screen's one main action (BR-REC-121): "Save", a submit button of the form so Enter in a field saves. It
+// comes first in the page, so it is the form's default button (Enter never means "next date"; "Save & next
+// date" sits in the paper-card block inside the form, BR-REC-230). It stays tappable with problems (Save then
+// jumps to the first one, BR-REC-189) and is off only while saving.
 function SaveBar({ formId, saving, savingNext }: SaveBarProps) {
-  const spinner = (
-    <HugeiconsIcon
-      icon={Loading03Icon}
-      strokeWidth={2}
-      className="animate-spin"
-      aria-hidden="true"
-    />
-  );
+  const busy = saving && !savingNext;
   return (
-    <div className="flex w-full flex-row-reverse gap-2 *:flex-1 lg:w-auto lg:*:flex-none">
+    <div className="flex w-full gap-2 *:flex-1 lg:w-auto lg:*:flex-none">
       <Button type="submit" form={formId} disabled={saving}>
-        {saving && !savingNext && spinner}
-        {saving && !savingNext ? UI_TEXT.saving : ASSESSMENT_TEXT.save}
-      </Button>
-      <Button type="submit" form={formId} data-next="true" variant="secondary" disabled={saving}>
-        {savingNext && spinner}
-        {savingNext ? UI_TEXT.saving : ASSESSMENT_TEXT.saveNextDate}
+        {busy && (
+          <HugeiconsIcon
+            icon={Loading03Icon}
+            strokeWidth={2}
+            className="animate-spin"
+            aria-hidden="true"
+          />
+        )}
+        {busy ? UI_TEXT.saving : ASSESSMENT_TEXT.save}
       </Button>
     </div>
   );
@@ -201,7 +197,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         {session.offer && (
           <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
-        <FormGrid maxCols={2} className="gap-y-4">
+        <FormGrid maxCols={1} className="gap-y-4 md:grid-cols-2 xl:grid-cols-3">
           <EntryDateSection
             control={form.control}
             date={date}
@@ -209,6 +205,8 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
             opened={session.opened}
             member={member}
             today={today}
+            saving={flow.saving}
+            savingNext={flow.savingNext}
             onMoveToDate={moveToDate}
           />
           <EntryFields

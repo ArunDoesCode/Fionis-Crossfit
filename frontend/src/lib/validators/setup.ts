@@ -31,6 +31,7 @@ export const DECIMALS_MAX = 2;
 export const RANGE_BOUND = 999_999_999.999;
 
 const MESSAGES = {
+  gymNameEmpty: 'Enter the gym name',
   gymName: `Use ${GYM_NAME_MIN} to ${GYM_NAME_MAX} characters`,
   timezone: 'Use a time zone name',
   upcomingLeadDays: `Use 0 to ${UPCOMING_LEAD_MAX} days`,
@@ -54,6 +55,7 @@ export const gymSettingsSchema = z.object({
   gymName: z
     .string({ error: MESSAGES.gymName })
     .trim()
+    .min(1, { error: MESSAGES.gymNameEmpty })
     .min(GYM_NAME_MIN, { error: MESSAGES.gymName })
     .max(GYM_NAME_MAX, { error: MESSAGES.gymName }),
   timezone: z.string({ error: MESSAGES.timezone }).min(1, { error: MESSAGES.timezone }),

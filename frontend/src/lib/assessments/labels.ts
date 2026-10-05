@@ -43,6 +43,11 @@ export function entryDateIssue(input: {
 /** "15 results" / "1 result". */
 export const resultCountLabel = (count: number): string => ASSESSMENT_TEXT.resultCount(count);
 
-/** "Saved 9 results for Surya" (the first word of the member's name, BR-REC-84). */
-export const savedMessage = (count: number, memberName: string): string =>
-  ASSESSMENT_TEXT.savedResults(resultCountLabel(count), firstWord(memberName));
+/**
+ * "Saved 9 results for Surya" (the first word of the member's name, BR-REC-84). A partial save (`stillDue` above 0)
+ * says what is left, with the full name: "Saved 3 for Naveen Kumar · 12 still due" (BR-REC-230).
+ */
+export const savedMessage = (count: number, memberName: string, stillDue = 0): string =>
+  stillDue > 0
+    ? ASSESSMENT_TEXT.savedPartly(count, memberName.trim(), stillDue)
+    : ASSESSMENT_TEXT.savedResults(resultCountLabel(count), firstWord(memberName));

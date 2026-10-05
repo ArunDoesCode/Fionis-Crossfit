@@ -147,29 +147,29 @@ export default function MeasurementFields({ form, locked, isEdit }: MeasurementF
 
       {isTime ? (
         <>
-          <DurationField control={control} name="plausibleMin" label={text.pleaseCheckBelow} />
-          <DurationField control={control} name="plausibleMax" label={text.pleaseCheckAbove} />
+          <DurationField control={control} name="plausibleMin" label={text.warnBelow} />
+          <DurationField control={control} name="plausibleMax" label={text.warnAbove} />
         </>
       ) : (
         <>
           <NumberField
             control={control}
             name="plausibleMin"
-            label={text.pleaseCheckBelow}
+            label={text.warnBelow}
             decimals={2}
             allowNegative
           />
           <NumberField
             control={control}
             name="plausibleMax"
-            label={text.pleaseCheckAbove}
+            label={text.warnAbove}
             decimals={2}
             allowNegative
           />
         </>
       )}
       <p className="col-span-full text-sm text-muted-foreground">
-        {isTime ? text.pleaseCheckHintTime : text.pleaseCheckHint}
+        {isTime ? text.warnHintTime : text.warnHint}
       </p>
 
       <FormItem className="col-span-full">
@@ -200,7 +200,7 @@ export default function MeasurementFields({ form, locked, isEdit }: MeasurementF
 
       <FormItem className="col-span-full">
         <ChoiceChips
-          legend={text.reportTable}
+          legend={text.reportGroup}
           options={REPORT_OPTIONS}
           value={inTable ? 'place' : 'none'}
           onChange={onReportPick}

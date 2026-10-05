@@ -48,8 +48,8 @@ const FIELD_ORDER = [
 const LABELS = {
   name: SETUP_TEXT.measurementSheet.name,
   unit: SETUP_TEXT.measurementSheet.unit,
-  plausibleMin: SETUP_TEXT.measurementSheet.pleaseCheckBelow,
-  plausibleMax: SETUP_TEXT.measurementSheet.pleaseCheckAbove,
+  plausibleMin: SETUP_TEXT.measurementSheet.warnBelow,
+  plausibleMax: SETUP_TEXT.measurementSheet.warnAbove,
   intervalCount: SETUP_TEXT.measurementSheet.ownRepeatNumber,
   tableGroup: SETUP_TEXT.measurementSheet.group,
 };

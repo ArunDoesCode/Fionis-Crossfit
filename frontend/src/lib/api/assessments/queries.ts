@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner';
 import { savedMessage } from '@/lib/assessments/labels';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
+import type { SaveAssessmentBody } from '@/lib/assessments/types';
 import { getEntryForm, getMemberDue, saveAssessment } from './fetchers';
 
 // What Record assessment (S10) needs: the keys, the entry form (E25), Save (E26) and the due words (E32). The
@@ -103,8 +104,12 @@ export const useEntryForm = (memberId: string, typeId: string | null, date: stri
       keepWhileSameForm(previous, previousQuery, memberId, typeId),
   });
 
+/** The request body plus what the toast needs: how many measurements are still empty after this save (BR-REC-230). */
+export type SaveAssessmentInput = SaveAssessmentBody & { stillDue?: number };
+
 /**
- * E26. The toast is the BR-REC-84 line ("Saved 9 results for Surya"). The form shows every refusal itself, next
+ * E26. The toast is the BR-REC-84 line ("Saved 9 results for Surya"), or for a partial save "Saved 3 for Naveen
+ * Kumar · 12 still due" (BR-REC-230). The form shows every refusal itself, next
  * to the Save bar (BR-REC-78, 83, 86), so there is no error toast here. Invalidation is not waited for:
  * the screen leaves at once and the lists refetch when they are next shown.
  */
@@ -112,11 +117,13 @@ export function useSaveAssessment(memberName: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: assessmentMutationKeys.save(),
-    mutationFn: saveAssessment,
-    onSuccess: (result) => {
+    mutationFn: ({ stillDue: _stillDue, ...body }: SaveAssessmentInput) => saveAssessment(body),
+    onSuccess: (result, { stillDue }) => {
       // About changed and no value written (an edit that touches nothing else): there is no count to say.
       toast.success(
-        result.saved === 0 ? ASSESSMENT_TEXT.saved : savedMessage(result.saved, memberName),
+        result.saved === 0
+          ? ASSESSMENT_TEXT.saved
+          : savedMessage(result.saved, memberName, stillDue),
       );
       void invalidateAssessmentData(queryClient);
     },
