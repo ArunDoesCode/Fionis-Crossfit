@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
 
 import type { Db, Tx } from "../db/client";
 import {
@@ -82,7 +82,7 @@ const overrideColumns = {
 type RowFilter = { memberId?: string | undefined; typeId?: string | undefined };
 
 export const dueRepository = {
-  /** Every member with the latest membership period (a member with none is kept: a left join). */
+  /** Every non-archived member (the due list drops archived ones anyway, BR-REC-17) with the latest membership period (a member with none is kept: a left join). */
   async listMembers(executor: Executor): Promise<MemberDueRow[]> {
     const rows = await executor
       .select({
@@ -94,7 +94,8 @@ export const dueRepository = {
         endOn: latestPeriod.endOn,
       })
       .from(members)
-      .leftJoin(latestPeriod, onLatestPeriod);
+      .leftJoin(latestPeriod, onLatestPeriod)
+      .where(isNull(members.archivedAt));
     return rows.map(({ startOn, endOn, ...member }) => ({
       ...member,
       latestMembership:

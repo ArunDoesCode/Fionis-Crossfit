@@ -18,7 +18,13 @@ QueryPromise.prototype.then = function (onFulfilled, onRejected) {
 
 // Prepared statements off: the app must also work behind a transaction-mode
 // pooler (Supabase pooler URL in production).
-const queryClient = postgres(env.DATABASE_URL, { prepare: false });
+// One server process (D-018): a small fixed pool is enough, and idle connections are
+// released after 30 s so a pooler / free-tier DB is not held open.
+const queryClient = postgres(env.DATABASE_URL, {
+  prepare: false,
+  max: 10,
+  idle_timeout: 30,
+});
 
 export const db = drizzle({ client: queryClient });
 

@@ -202,10 +202,12 @@ export const membersService = {
 
   /** E18. Archived members are returned like any other. */
   async get(memberId: string, now: Date): Promise<MemberDetail> {
-    const clock = await readGymClock(now);
-    const member = await membersRepository.findById(memberId);
+    const [clock, member, periods] = await Promise.all([
+      readGymClock(now),
+      membersRepository.findById(memberId),
+      membershipsRepository.listForMember(db, memberId),
+    ]);
     if (!member) throw memberNotFound();
-    const periods = await membershipsRepository.listForMember(db, memberId);
     return toMemberDetail(member, periods, clock);
   },
 
