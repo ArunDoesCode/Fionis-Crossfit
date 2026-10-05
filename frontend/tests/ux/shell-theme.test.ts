@@ -122,11 +122,12 @@ describe('BR-REC-186 brand surfaces', () => {
   test('BR-REC-186 the Fionis wordmark file is shipped', () => {
     expect(existsSync(join(ROOT, 'public/Fionis-Logo.avif'))).toBe(true);
   });
-  test('BR-REC-186 wordmark used via next/image with 284 x 106 in at least two places (login + sidebar)', () => {
+  test('BR-REC-186 wordmark logo is on Login only, via next/image 284 x 106', () => {
     const users = codeFiles.filter(
       (f) => f.endsWith('.tsx') && readFileSync(f, 'utf8').includes('Fionis-Logo.avif'),
     );
-    expect(users.length).toBeGreaterThanOrEqual(2);
+    expect(users.length).toBeGreaterThanOrEqual(1);
+    expect(users.map(rel).some((f) => f.endsWith('views/auth/LoginView.tsx'))).toBe(true);
     for (const f of users) {
       const t = readFileSync(f, 'utf8');
       expect(t).toContain('next/image');
@@ -148,12 +149,30 @@ describe('BR-REC-186 brand surfaces', () => {
   });
   test('BR-REC-186 collapsed sidebar placeholder is an "F" square with AA contrast (bg-primary, text-primary-foreground)', () => {
     const t = codeFiles
-      .filter((f) => f.endsWith('.tsx') && /shell/i.test(f))
+      .filter((f) => f.endsWith('(app)/admin/_components/AdminSidebar.tsx'))
       .map((f) => readFileSync(f, 'utf8'))
       .join('\n');
+    expect(t).not.toBe('');
     expect(t).toMatch(/>\s*F\s*</);
     expect(t).toContain('bg-primary');
     expect(t).toContain('text-primary-foreground');
+  });
+});
+
+describe('BR-REC-186 / 218 sidebar brand and shell location', () => {
+  const sidebar = readFileSync(join(SRC, 'app/(app)/admin/_components/AdminSidebar.tsx'), 'utf8');
+  test('BR-REC-186 the sidebar shows the gym name as text, not the logo image', () => {
+    expect(sidebar).toMatch(/Fionis CrossFit|DEFAULT_GYM_NAME|gymName/);
+    expect(sidebar).not.toContain('Fionis-Logo');
+    expect(sidebar).not.toContain('next/image');
+  });
+  test('BR-REC-218 there is no components/shells directory', () => {
+    expect(existsSync(join(SRC, 'components/shells'))).toBe(false);
+  });
+  test('BR-REC-218 the admin layout renders the sidebar and stays a server file', () => {
+    const layout = readFileSync(join(SRC, 'app/(app)/admin/layout.tsx'), 'utf8');
+    expect(layout).toMatch(/<AdminSidebar|AdminSidebar/);
+    expect(layout).not.toMatch(/^\s*['"]use client['"]/m);
   });
 });
 

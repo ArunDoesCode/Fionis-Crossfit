@@ -95,14 +95,9 @@ describe('BR-REC-203 directory query', () => {
     expect(body).toMatch(/memberKeys\.directory\(\)|memberKeys\.all\(\)/);
   });
   test('the directory is warmed when the shell opens (BR-REC-203)', () => {
-    const shell = [
-      dirText('components/layout'),
-      dirText('components/shell'),
-      read('app/admin/layout.tsx'),
-    ].join('\n');
-    expect(shell + dirText('components/providers')).toMatch(
-      /memberDirectoryQuery|useMemberDirectory/,
-    );
+    const warm = read('app/(app)/admin/_components/DirectoryWarmup.tsx');
+    expect(warm).toMatch(/memberDirectoryQuery|useMemberDirectory/);
+    expect(read('app/(app)/admin/layout.tsx')).toContain('DirectoryWarmup');
   });
 });
 
@@ -119,6 +114,10 @@ describe('BR-REC-201 one MemberSearch', () => {
     expect(ms).toMatch(/tel|numeric/);
     expect(ms).toMatch(/email/);
   });
+  test('BR-REC-201 the Name / Email / Phone picker is a dropdown inside MemberSearch, no ChoiceChips', () => {
+    expect(ms).toMatch(/Select|DropdownMenu/);
+    expect(ms).not.toMatch(/ChoiceChips/);
+  });
   test('is controlled by text, field, onChange', () => {
     expect(ms).toMatch(/\btext\b/);
     expect(ms).toMatch(/\bfield\b/);
@@ -128,14 +127,14 @@ describe('BR-REC-201 one MemberSearch', () => {
     expect(ms).not.toMatch(/useDebounce|debounce|setTimeout/i);
   });
   test('Home and Members both use MemberSearch', () => {
-    expect(read('components/pages/home/HomeSearch.tsx')).toMatch(/MemberSearch/);
+    expect(read('components/views/home/HomeView.tsx')).toMatch(/MemberSearch/);
     expect(read('components/pages/members/MemberListPanel.tsx')).toMatch(/MemberSearch/);
   });
 });
 
 describe('BR-REC-203 typing never calls the server', () => {
   for (const f of [
-    'components/pages/home/HomeSearch.tsx',
+    'components/views/home/HomeView.tsx',
     'components/pages/members/MemberListPanel.tsx',
   ]) {
     test(`${f}: no SearchField, no debounce, no per-text useMemberList`, () => {
@@ -181,8 +180,7 @@ describe('BR-REC-183 tables from 1024 px', () => {
     ['Due list', dirText('components/pages/due')],
     [
       'Memberships ending',
-      read('components/pages/members/EndingList.tsx') +
-        read('components/pages/members/EndingSection.tsx'),
+      read('components/pages/members/EndingTabs.tsx') + read('components/views/home/HomeView.tsx'),
     ],
   ];
   for (const [name, text] of screens) {
@@ -196,7 +194,7 @@ describe('BR-REC-183 tables from 1024 px', () => {
     expect(dirText('components/pages/members')).not.toMatch(/min-width:\s*(?!1024)\d+px/);
   });
   for (const f of [
-    'components/pages/members/MemberListRow.tsx',
+    'components/pages/members/MemberDirectoryResults.tsx',
     'components/pages/due/DueRow.tsx',
     'components/pages/members/EndingRow.tsx',
   ]) {

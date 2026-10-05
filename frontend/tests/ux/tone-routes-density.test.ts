@@ -84,6 +84,9 @@ describe('BR-REC-179 route table', () => {
   ])('BR-REC-179 top-level %s has no parent', (p) => {
     expect(routeFor(p).parent).toBeUndefined();
   });
+  test('BR-REC-179 /admin is titled Home', () => {
+    expect(routeFor('/admin').title).toBe('Home');
+  });
   test('BR-REC-179 same input gives the same answer (loading and view agree)', () => {
     expect(routeFor('/admin/members/x1/report')).toEqual(routeFor('/admin/members/x1/report'));
   });

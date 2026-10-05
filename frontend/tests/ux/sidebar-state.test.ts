@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readSidebarOpen } from '@/components/shells/sidebarState';
+import { readSidebarOpen } from '@/lib/sidebarState';
 
 type G = Record<string, unknown>;
 const g = globalThis as unknown as G;
@@ -78,16 +78,16 @@ describe('BR-REC-177 readSidebarOpen: the remembered choice', () => {
 
 describe('BR-REC-177 the pre-paint script writes the values the spec names', () => {
   test('BR-REC-177 script sets data-sidebar to "open" or "collapsed"', async () => {
-    const { SIDEBAR_STATE_SCRIPT } = await import('@/components/shells/sidebarState');
+    const { SIDEBAR_STATE_SCRIPT } = await import('@/lib/sidebarState');
     expect(SIDEBAR_STATE_SCRIPT).toContain("'open'");
     expect(SIDEBAR_STATE_SCRIPT).not.toContain("'expanded'");
     expect(SIDEBAR_STATE_SCRIPT).toContain("'collapsed'");
   });
 });
 
-describe('BR-REC-186 / 122 SideNav source', () => {
+describe('BR-REC-186 / 122 AdminSidebar source', () => {
   const nav = readFileSync(
-    join(import.meta.dir, '../../src/components/shells/SideNav.tsx'),
+    join(import.meta.dir, '../../src/app/(app)/admin/_components/AdminSidebar.tsx'),
     'utf8',
   );
   test('BR-REC-186 the "F" placeholder uses bg-primary and text-primary-foreground (AA)', () => {
