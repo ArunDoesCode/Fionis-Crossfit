@@ -2,7 +2,7 @@
 module: member-records/progress
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
+version: 3
 frozen_on: 2026-10-03
 owner: Arun
 depends_on: [member-records/setup, member-records/members, member-records/assessments, member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -44,7 +44,7 @@ None: this part only reads.
 | BR-REC-110 | Gym progress and leaderboards always include the latest saves: they are computed from the database on every request (no server cache, v2) and the screens fetch them again on every open.                                                                                                                                                                                                      | Save Surya's body fat → progress n goes 12 → 13 at once       | Freshness test (write, then read)             |
 | BR-REC-111 | Gym progress: pick a measurement (default Body fat), filter by join month from–to, plan, sex, age band; it shows n, the average change since first reading in the unit, and Improved / No change / Worse counts; filters stay in the web address so a view can be bookmarked.                                                                                                                  | Body fat, joined Jan–Mar 2026, Female → avg −1.8 %, n = 7    | E36 + URL test                                |
 | BR-REC-112 | Per member, change = latest − first reading; Improved/Worse follow the direction; "No change" when the change is under 1% of the first reading (both 0 → No change); "No direction" shows only the average change.                                                                                                                                                                            | First 30.0 → latest 29.8 (−0.67%) → No change                | `progressStats` test                        |
-| BR-REC-113 | Gym progress counts non-archived members (Q1) with 2+ readings of the measurement, ended memberships included, and says how many were left out: "n = 12 · 5 with one reading not counted".                                                                                                                                                                                                     | Member with one reading → only in "not counted"                | E36`notCounted`                             |
+| BR-REC-113 | (v10: shown as "Based on 12 members (5 more have only one reading)", ux BR-REC-228.) Gym progress counts non-archived members (Q1) with 2+ readings of the measurement, ended memberships included, and says how many were left out: "n = 12 · 5 with one reading not counted".                                                                                                                                                                                                     | Member with one reading → only in "not counted"                | E36`notCounted`                             |
 | BR-REC-114 | Age bands are 10 years wide from 20: Under 20, 20–29, 30–39, 40–49, 50–59, 60+, by age today (Q2). | Born 1996-11-01 → 29 on 3 Oct 2026 → 20–29; born 2007-01-15 → 19 → Under 20 | Band test at 19/20, 29/30, 59/60; E36 `ageBand` values `under20`…`60plus` |
 | BR-REC-115 | The leaderboard ranks each member's latest value of one measurement, Male and Female tabs, best first by direction, top 10 with "Show more" (Q3); equal values share a rank (1, 2, 2, 4); none for "No direction"; archived members left out.                                                                                                                                                   | Two at 4:10 Fran → both rank 2                                 | E37 test;`NO_DIRECTION` → 400              |
 | BR-REC-116 | "Active members by plan" counts members whose membership is Active or Ends soon, by the plan of their latest period, plus a total.                                                                                                                                                                                                                                                              | 40 Monthly, 22 Quarterly, 9 Half-annual, 31 Annual → total 102 | E38 test                                      |
@@ -131,6 +131,7 @@ BR-REC-109 (print) is a manual check; the BR-REC-119 300,000-value timing is Str
 | Q4 | Report card covers | **A** all time / B the last 12 months | **A** |
 
 ## Changelog
+- 2026-10-05 v3 — ux v10 visual refresh (D-037) amends wording only; see ux BR-REC-219…235
 
 - 2026-10-03 v0 — draft, split out of member-records v2 (file named `progress` because "report" names are reserved for run reports); carries BR-REC-22…24 from v1 unchanged
 - 2026-10-03 v0 — answers folded: age bands Under 20 … 60+ (BR-REC-114, E36); archived members still left out

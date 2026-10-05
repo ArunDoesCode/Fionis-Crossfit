@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import DataTable, { createDataTableColumnHelper } from '@/components/common/DataTable';
+import PersonCell from '@/components/common/PersonCell';
 import StatusBadge from '@/components/common/StatusBadge';
-import TableRowLink from '@/components/common/TableRowLink';
 import { Button } from '@/components/ui/button';
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatDay, formatPhone } from '@/lib/format';
@@ -19,7 +19,7 @@ interface EndingTableProps {
 
 const helper = createDataTableColumnHelper<EndingItem>();
 
-// Memberships ending from 1024 px (BR-REC-183): name (the row's link), phone, status, end date, Renew.
+// Memberships ending from 1024 px (BR-REC-183, 226): name with avatar (the row's link), phone, status, end date, Renew.
 export default function EndingTable({ items, status, today, onRenew }: EndingTableProps) {
   const columns = useMemo(
     () =>
@@ -28,9 +28,10 @@ export default function EndingTable({ items, status, today, onRenew }: EndingTab
           id: 'name',
           header: 'Name',
           cell: ({ row }) => (
-            <TableRowLink href={`/admin/members/${row.original.memberId}`}>
-              {row.original.fullName}
-            </TableRowLink>
+            <PersonCell
+              name={row.original.fullName}
+              href={`/admin/members/${row.original.memberId}`}
+            />
           ),
         }),
         helper.display({
@@ -53,7 +54,7 @@ export default function EndingTable({ items, status, today, onRenew }: EndingTab
         }),
         helper.display({
           id: 'renew',
-          header: '',
+          header: () => <span className="sr-only">Actions</span>, // no empty table header (BR-REC-226)
           cell: ({ row }) => (
             <Button
               type="button"

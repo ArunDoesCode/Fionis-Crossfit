@@ -23,7 +23,7 @@ const text = PROGRESS_TEXT.report;
 // globals.css stay as they are: these rules ship with the report card only (a `<style>` that exists while
 // the screen is open and goes with it), and they find the shell through its own `data-slot` marks.
 // The print width is about 700 px, so the `lg:` look never applies on paper: the table is shown with the
-// `print:` variant (MeasurementTable), and the cards and the page header are hidden the same way.
+// `print:` variant (MeasurementTable), and the cards and the page header are hidden the same way (BR-REC-229).
 // `color-scheme: light !important`: the theme puts an inline `color-scheme: dark` on `<html>`, which would
 // otherwise paint the page margin dark when the browser prints background graphics.
 const PRINT_CSS = `
@@ -82,13 +82,13 @@ interface ReportSectionProps {
   today: string;
 }
 
-// One assessment of the report card, in setup order (BR-REC-106): cards on a phone, the table on desktop
-// and paper. Never-recorded measurements are already left out by the API.
+// One assessment of the report card, in setup order (BR-REC-106): cards on screen (phone and desktop), the
+// table on paper only (BR-REC-229). Never-recorded measurements are already left out by the API.
 function ReportSection({ type, today }: ReportSectionProps) {
   return (
     <section aria-label={type.name} className="flex flex-col gap-3 print:gap-1">
       <h2 className="font-heading text-lg font-semibold print:text-[11pt]">{type.name}</h2>
-      <ul className="flex flex-col gap-3 lg:hidden print:hidden">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 print:hidden">
         {type.metrics.map((metric) => (
           <MeasurementCard key={metric.id} metric={metric} today={today} />
         ))}
@@ -103,7 +103,7 @@ interface ReportCardViewProps {
 }
 
 // S12 Report card (`/admin/members/[memberId]/report`), 1080 px wide on desktop. Main action: Print (bar on
-// phones, header from 1024 px). Phone: one card per measurement; desktop and paper: a table (BR-REC-135).
+// phones, header from 1024 px). Screen: one card per measurement; paper: a table (BR-REC-135, 229).
 // The card is read again on every open (staleTime 0, BR-REC-110). On paper (BR-REC-109): A4 portrait, black
 // on white, no shell and no page header: `PRINT_CSS` hides the shell, `print:hidden` the header.
 export default function ReportCardView({ memberId }: ReportCardViewProps) {

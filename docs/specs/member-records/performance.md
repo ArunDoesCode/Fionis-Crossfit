@@ -2,7 +2,7 @@
 module: member-records/performance
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 3
+version: 4
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/ux, member-records/api-contract, member-records/data-model]
@@ -52,7 +52,7 @@ meets BR-REC-150 and 174 (fonts) in the root layout.
 | BR-REC-211 | Client hot paths are cheap: icons tree-shaken (`optimizePackageImports`), no `X-Powered-By`, compression done once (Brotli at the HTTPS front when present), one cached day formatter behind the today hook, draft autosave written at most every 300 ms and on page hide, no costly backdrop blur on overlays. | 5 components read "today" → one `Intl.DateTimeFormat` built | Profiler check; `curl -I` shows one `content-encoding` |
 | BR-REC-212 | API: Home's two due sections share one due computation per request; the due engine skips archived members in SQL; E18 reads settings, member and periods in parallel; the database pool size and idle timeout are set for the D-018 server; E16, E18, E24, E31 and E35 send an `ETag` (BR-REC-160). | Home → one due computation, ≤ 10 database queries | `bench` + `Server-Timing`; route tests for 304 |
 | BR-REC-213 | Server prefetch (tactic 1, #20): Home and the member page start their API calls on the server and hand the data to the screen; other screens start in the browser (Q6 = A). | Home cold open → due rows in the first HTML | Lighthouse LCP ≤ 2.0 s on Home and member page |
-| BR-REC-214 | Three self-hosted fonts, Latin only, each showing text at once in a size-matched fallback and swapping in without a jump: Outfit (all text) is the only one preloaded; Poppins 600 (titles, ux v2) and Geist Mono (number columns) download only when the screen shows them. | Open Login → Outfit preloaded, Poppins fetched for the title, Geist Mono never requested | Network review per screen; CLS check of BR-REC-143; fonts ≤ BR-REC-174 |
+| BR-REC-214 | (v10: two fonts — Geist Mono removed, numbers in Outfit `tabular-nums`, ux BR-REC-220.) Three self-hosted fonts, Latin only, each showing text at once in a size-matched fallback and swapping in without a jump: Outfit (all text) is the only one preloaded; Poppins 600 (titles, ux v2) and Geist Mono (number columns) download only when the screen shows them. | Open Login → Outfit preloaded, Poppins fetched for the title, Geist Mono never requested | Network review per screen; CLS check of BR-REC-143; fonts ≤ BR-REC-174 |
 | BR-REC-215 | First-load JavaScript is at most 150 KB gzip shared plus 40 KB per screen; CI fails above it; no chart or whole-icon-pack library ships; the shadcn Calendar (`react-day-picker`) is allowed only as an on-demand chunk loaded when a date picker opens, never in the shared chunk or a screen's first load. | `/assess` first load unchanged after the DatePicker lands; Calendar chunk fetched on first open | CI bundle check; network log on opening a picker |
 
 ## Tactics
@@ -110,6 +110,7 @@ Edge rendering, a CDN for API responses, offline saving with background sync, im
 The owner asked for U6 to stay simple: minimal code, the biggest wins, lazy loading where cheap, no complicated fetching or caching. Delivered in U6: BR-REC-208 (row and member links no longer opt out of prefetching, plus the existing hover prefetch of the member's data; no sibling-tab or form preloading), BR-REC-209 (no refetch on window focus; 30 s default freshness; entry forms always fresh; the assessment save refreshes the member list and directory instead of every `members` key), BR-REC-210 (no Zod in the shared client bundle; CI runs `next build`; dead packages removed), BR-REC-211 (icons, powered-by header, one cached day formatter, 300 ms draft autosave, no overlay blur), BR-REC-212 in part (E18 reads in parallel; pool size and idle timeout; due engine skips archived members in SQL). Deferred by the owner, still open: BR-REC-212 ETag on lists and the shared Home due computation, BR-REC-213 server prefetch (#20), sibling-tab prefetch (BR-REC-208 tail).
 
 ## Changelog
+- 2026-10-05 v4 — ux v10 visual refresh (D-037) amends wording only; see ux BR-REC-219…235
 - 2026-10-05 v3 — owner scope cut for U6 (simple, minimal): which of BR-REC-208…213 ship now and which are deferred; no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, new in member-records v2

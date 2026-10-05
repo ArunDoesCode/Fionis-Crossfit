@@ -2,17 +2,18 @@
 
 import {
   Alert02Icon,
+  Archive02Icon,
   ArrowRight01Icon,
-  Call02Icon,
   InformationCircleIcon,
   Loading03Icon,
+  MoreHorizontalIcon,
+  WhatsappIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import ChipList from '@/components/common/ChipList';
 import EmptyState from '@/components/common/EmptyState';
-import ErrorState from '@/components/common/ErrorState';
 import ListRow, { RowList } from '@/components/common/ListRow';
 import Section from '@/components/common/Section';
 import { CardSkeleton, RowSkeletons } from '@/components/common/Skeletons';
@@ -22,26 +23,29 @@ import DueMoreButton from '@/components/pages/due/DueMoreButton';
 import { DueSheet, PeriodSheet, preloadPeriodSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRecentAssessments } from '@/lib/api/assessments/listQueries';
 import { useMemberDue } from '@/lib/api/due/queries';
-import { isApiError } from '@/lib/api/errors';
 import { useArchiveMember, useMember, useRestoreMember } from '@/lib/api/members/queries';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { IsoDate } from '@/lib/domain/dates';
+import { recordHref } from '@/lib/due/links';
 import { memberDueStatus } from '@/lib/due/status';
-import { type DueTarget, lineTarget } from '@/lib/due/target';
-import { DUE_TEXT } from '@/lib/due/text';
+import { type DueTarget, isSheetOpenFor, lineTarget } from '@/lib/due/target';
+import { DUE_TEXT, dueItemsText } from '@/lib/due/text';
 import type { MemberDueItem } from '@/lib/due/types';
 import { useDueSheet } from '@/lib/due/useDueSheet';
+import { useTurnedOnCounts } from '@/lib/due/useTurnedOnCounts';
 import { formatDay, formatPhone } from '@/lib/format';
 import { memberBannerText } from '@/lib/members/banner';
 import { SEX_LABELS } from '@/lib/members/labels';
 import { membershipStatusText, PLAN_LABELS } from '@/lib/members/membershipText';
+import { mostOverdue, NEXT_STEP_TEXT, nextStepFor } from '@/lib/members/nextStep';
 import type { MemberPeriod } from '@/lib/members/types';
 import { sheetLoader, useLazySheet } from '@/lib/members/useLazySheet';
 import { deviceTimeZone, useToday } from '@/lib/members/useToday';
-import { messageForCode } from '@/lib/messages/errors';
+import { whatsAppUrl } from '@/lib/members/whatsapp';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
 
 interface MemberBlockProps {
@@ -60,36 +64,61 @@ function preloadConfirmSheet() {
   loadConfirmSheet().catch(() => undefined);
 }
 
-// BR-REC-06, 58, 133: archiving is the one thing on the member page that asks first. They are hidden from
-// search and Home, nothing is deleted, and Restore brings them back.
-function ArchiveMemberButton({ memberId, fullName }: { memberId: string; fullName: string }) {
-  const [open, setOpen] = useState(false);
-  const { Sheet, open: sheetOpen } = useLazySheet(loadConfirmSheet, open, setOpen);
+// BR-REC-06, 58, 133, 224: Archive (hide) is the one thing on the member page that asks first; it sits in the
+// "⋯" menu beside Edit, not on the page. They are hidden from search and Home, nothing is deleted, and
+// Restore brings them back. The "⋯" announces the popup and whether it is open (BR-REC-234).
+export function MemberMoreMenu({ memberId, fullName }: { memberId: string; fullName: string }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { Sheet, open: sheetOpen } = useLazySheet(loadConfirmSheet, confirmOpen, setConfirmOpen);
   const { mutate, isPending } = useArchiveMember(memberId);
 
   return (
     <>
-      <Button
-        type="button"
-        variant="secondary"
-        size="lg"
-        className="w-fit"
-        onPointerDown={preloadConfirmSheet}
-        onFocus={preloadConfirmSheet}
-        onClick={() => setOpen(true)}
-      >
-        {WORDS.archive}
-      </Button>
+      <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-11"
+              aria-label={`More for ${fullName}`}
+              aria-haspopup="dialog"
+              aria-expanded={menuOpen}
+              onPointerDown={preloadConfirmSheet}
+              onFocus={preloadConfirmSheet}
+            />
+          }
+        >
+          <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-5" />
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-auto min-w-48 gap-1 p-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="justify-start"
+            onClick={() => {
+              setMenuOpen(false);
+              setConfirmOpen(true);
+            }}
+          >
+            <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} aria-hidden="true" />
+            {WORDS.archive}
+          </Button>
+        </PopoverContent>
+      </Popover>
       {Sheet && (
         <Sheet
           open={sheetOpen}
-          onOpenChange={setOpen}
+          onOpenChange={setConfirmOpen}
           title={`Archive ${fullName}?`}
           description="They'll be hidden from search and Home. You can restore them later."
           confirmLabel="Archive"
           destructive
           pending={isPending}
-          onConfirm={() => mutate(undefined, { onSuccess: () => setOpen(false) })}
+          onConfirm={() => mutate(undefined, { onSuccess: () => setConfirmOpen(false) })}
         />
       )}
     </>
@@ -101,98 +130,144 @@ function RestoreMemberButton({ memberId }: { memberId: string }) {
   const { mutate, isPending } = useRestoreMember(memberId);
 
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      size="lg"
-      disabled={isPending}
-      onClick={() => mutate()}
-    >
+    <Button type="button" variant="outline" size="lg" disabled={isPending} onClick={() => mutate()}>
       {isPending && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
       {isPending ? UI_TEXT.saving : 'Restore'}
     </Button>
   );
 }
 
-// BR-REC-172: the first thing on the page of an archived member or one whose membership ended: when,
-// in words, with an icon (never colour alone, BR-REC-125), and Restore while archived. `text` is the
-// BR-REC-172 line ("Archived 2 Jun 2026 · Membership ended 31 May 2026").
-function MemberBanner({
-  memberId,
-  text,
-  archived,
-}: {
-  memberId: string;
-  text: string;
-  archived: boolean;
-}) {
+// BR-REC-224: under the name, "18 y · Male · [Active] Annual · 98450 22171 · Joined 05 Oct 2026": the membership
+// status in words (badge), the plan, the phone that opens a WhatsApp chat (BR-REC-59), the join date. Grey shapes while loading.
+export function MemberMeta({ memberId }: MemberBlockProps) {
+  const { data: member, isError } = useMember(memberId);
+  const today = useToday();
+
+  // A failed read shows nothing here (the page's own blocks carry the retry), never a skeleton that never ends.
+  if (!member && isError) return null;
+  if (!member) {
+    return <Skeleton aria-hidden="true" className="mt-1 h-5 w-72 max-w-full" />;
+  }
+  const status = membershipStatusText(member.membership, today);
+  const parts = [
+    `${member.age} y · ${SEX_LABELS[member.sex]}`,
+    PLAN_LABELS[member.membership.plan],
+  ];
+
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-base text-muted-foreground max-md:text-sm">
+      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+      <span>{parts.join(' · ')}</span>
+      <span aria-hidden="true">·</span>
+      <a
+        href={whatsAppUrl(member.phone)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`WhatsApp ${formatPhone(member.phone)}`}
+        className="inline-flex min-h-tap items-center gap-1 font-medium text-foreground underline underline-offset-4"
+      >
+        <HugeiconsIcon icon={WhatsappIcon} strokeWidth={2} aria-hidden="true" className="size-4" />
+        {formatPhone(member.phone)}
+      </a>
+      <span aria-hidden="true">·</span>
+      <span>{`Joined ${formatDay(member.joinedOn)}`}</span>
+    </p>
+  );
+}
+
+const BANNER_TONE = {
+  danger: 'bg-danger-soft text-danger',
+  warning: 'bg-warning-soft text-warning',
+  neutral: 'bg-neutral-soft text-neutral',
+} as const;
+
+// BR-REC-172: the first thing on the page of an archived member, with its words (when, and that the
+// membership ended), an icon (never colour alone, BR-REC-125) and Restore.
+function ArchivedBanner({ memberId, text }: { memberId: string; text: string }) {
   return (
     <div
       role="status"
-      className={`flex flex-col gap-3 rounded-2xl p-4 text-base ${archived ? 'bg-neutral-soft text-neutral' : 'bg-danger-soft text-danger'}`}
+      className={`flex flex-wrap items-center gap-3 rounded-lg p-3 text-base ${BANNER_TONE.neutral}`}
     >
-      <p className="flex items-start gap-2">
+      <p className="flex min-w-0 flex-1 items-start gap-2">
         <HugeiconsIcon
-          icon={archived ? InformationCircleIcon : Alert02Icon}
+          icon={InformationCircleIcon}
           strokeWidth={2}
           aria-hidden="true"
           className="mt-0.5 size-5 shrink-0"
         />
         <span>{text}</span>
       </p>
-      {archived && <RestoreMemberButton memberId={memberId} />}
+      <RestoreMemberButton memberId={memberId} />
     </div>
   );
 }
 
-// S7: the archived/ended banner (BR-REC-172), then name, "44 y · Male · Joined 1 Jun 2025", the phone to
-// tap and call, and Archive (BR-REC-06, 58, 59). Edit is in the page header (the frame's). Grey shapes
-// while loading, "Couldn't load this." in its own place when it fails (BR-REC-129, 131): the other blocks
-// keep working.
-export function MemberHeader({ memberId }: MemberBlockProps) {
-  const { data: member, error, isError, refetch } = useMember(memberId);
+// BR-REC-224: at most ONE banner under the name. An archived member: the archived line with Restore (BR-REC-172).
+// Anyone else: the next step (`nextStepFor`): the most overdue assessment with [Record now] wins over a
+// membership that ended or ends soon with [Renew]. Nothing is drawn until both reads have answered, so the
+// banner never switches from one step to the other.
+export function MemberBanner({ memberId }: MemberBlockProps) {
+  const { data: member } = useMember(memberId);
+  const due = useMemberDue(memberId);
   const today = useToday();
+  const [renewOpen, setRenewOpen] = useState(false);
 
-  if (!member) {
-    if (!isError) {
-      return (
-        <div aria-busy="true" className="flex flex-col gap-2">
-          <Skeleton className="h-8 w-56 max-w-full" />
-          <Skeleton className="h-5 w-64 max-w-full" />
-          <Skeleton className="h-5 w-40 max-w-full" />
-        </div>
-      );
-    }
-    const missing = isApiError(error) && error.status === 404;
-    return (
-      <ErrorState
-        message={missing ? messageForCode('NOT_FOUND') : undefined}
-        onRetry={missing ? undefined : () => void refetch()}
-      />
-    );
+  if (!member) return null;
+  if (member.archivedAt) {
+    const text = memberBannerText(member, today, deviceTimeZone());
+    return text ? <ArchivedBanner memberId={member.id} text={text} /> : null;
   }
+  if (!due.data && !due.isError) return null;
 
-  const banner = memberBannerText(member, today, deviceTimeZone());
-  const archived = member.archivedAt !== null;
+  const overdue = mostOverdue(due.data ?? []);
+  const step = nextStepFor({
+    overdue,
+    membershipStatus: member.membership.status,
+    endOn: formatDay(member.membership.endOn),
+  });
+  if (!step) return null;
 
+  const tone =
+    step.kind === 'record' || member.membership.status === 'expired' ? 'danger' : 'warning';
   return (
-    <div className="flex flex-col gap-4">
-      {banner && <MemberBanner memberId={member.id} text={banner} archived={archived} />}
-      <div className="flex flex-col gap-1">
-        <h2 className="font-heading text-2xl font-semibold lg:text-3xl">{member.fullName}</h2>
-        <p className="text-base text-muted-foreground">
-          {`${member.age} y · ${SEX_LABELS[member.sex]} · Joined ${formatDay(member.joinedOn)}`}
-        </p>
-        <a
-          href={`tel:${member.phone}`}
-          className="inline-flex min-h-11 w-fit items-center gap-2 text-base font-medium underline underline-offset-4 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+    <div
+      role="status"
+      className={`flex flex-wrap items-center gap-3 rounded-lg p-3 text-base ${BANNER_TONE[tone]}`}
+    >
+      <p className="flex min-w-0 flex-1 items-start gap-2 font-medium">
+        <HugeiconsIcon
+          icon={Alert02Icon}
+          strokeWidth={2}
+          aria-hidden="true"
+          className="mt-0.5 size-5 shrink-0"
+        />
+        <span>{step.text}</span>
+      </p>
+      {step.kind === 'record' && overdue ? (
+        <Button
+          variant="outline"
+          size="lg"
+          nativeButton={false}
+          render={<Link href={recordHref(member.id, overdue.typeId)} />}
         >
-          <HugeiconsIcon icon={Call02Icon} strokeWidth={2} aria-hidden="true" className="size-5" />
-          {formatPhone(member.phone)}
-          <span className="sr-only"> (call)</span>
-        </a>
-      </div>
-      {!archived && <ArchiveMemberButton memberId={member.id} fullName={member.fullName} />}
+          {NEXT_STEP_TEXT.record}
+        </Button>
+      ) : (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onPointerDown={preloadPeriodSheet}
+            onFocus={preloadPeriodSheet}
+            onClick={() => setRenewOpen(true)}
+          >
+            {NEXT_STEP_TEXT.renew}
+          </Button>
+          <PeriodSheet memberId={member.id} open={renewOpen} onOpenChange={setRenewOpen} />
+        </>
+      )}
     </div>
   );
 }
@@ -319,28 +394,42 @@ export function MembershipBlock({ memberId }: MemberBlockProps) {
 
 // One assessment on the member page (BR-REC-103, 125; C10): its name, ONE status in words (Assess soon,
 // Reminder on 20 Oct, Never recorded, Overdue 34 days, Due in 5 days, Next due 12 Dec), the due measurements
-// as chips when there are some, and a "⋯" for the same choices as the lists (plus Remove reminder).
+// as one line of quiet text when there are some (BR-REC-225), and a "⋯" for the same choices as the lists (plus Remove reminder).
 function MemberDueRow({
   memberId,
   line,
   today,
   onMore,
+  openTarget,
 }: {
   memberId: string;
   line: MemberDueItem;
   today: IsoDate;
   onMore: (target: DueTarget) => void;
+  openTarget: DueTarget | null;
 }) {
   const status = memberDueStatus(line, today);
+  const turnedOn = useTurnedOnCounts();
   return (
     <ListRow
       title={line.typeName}
       status={<StatusBadge tone={status.tone}>{status.text}</StatusBadge>}
       trailing={
-        <DueMoreButton name={line.typeName} onOpen={() => onMore(lineTarget(memberId, line))} />
+        <DueMoreButton
+          name={line.typeName}
+          onOpen={() => onMore(lineTarget(memberId, line))}
+          expanded={isSheetOpenFor(openTarget, memberId, line.typeId)}
+        />
       }
     >
-      {line.items.length > 0 && <ChipList items={line.items.map((chip) => chip.name)} />}
+      {line.items.length > 0 && (
+        <span className="block text-sm text-muted-foreground">
+          {dueItemsText(
+            line.items.map((chip) => chip.name),
+            turnedOn.get(line.typeId) ?? Number.POSITIVE_INFINITY,
+          )}
+        </span>
+      )}
     </ListRow>
   );
 }
@@ -375,6 +464,7 @@ export function DueBlock({ memberId }: MemberBlockProps) {
                   line={line}
                   today={today}
                   onMore={sheet.show}
+                  openTarget={sheet.openTarget}
                 />
               ))}
             </RowList>

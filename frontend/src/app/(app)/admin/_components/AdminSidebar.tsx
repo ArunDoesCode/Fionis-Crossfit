@@ -21,7 +21,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useSignOut } from '@/lib/api/auth/queries';
@@ -74,31 +73,35 @@ function isActive(item: NavItem, pathname: string): boolean {
 const BUTTON =
   'h-[var(--control-height)] [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!';
 
-// BR-REC-177: gym name, the four places, theme and Sign out. Fixed to the window (dvh, not svh, so a
-// phone's address bar does not cut Sign out off); only the page content scrolls. Below 768 px the same
-// items are the ☰ drawer (its ☰ is in PageHeader). Collapsed to icons the name gives way to an orange
-// "F" with the toggle under it (BR-REC-186). The "pre-paint" CSS in lib/sidebarState.ts mirrors the
-// `group-data-[collapsible=icon]` classes here.
+// BR-REC-227: the active item is an orange-tint pill (`bg-sidebar-accent`, from the shadcn button) with a 3 px
+// orange bar at the left and orange 600 text; the icon is orange in NavMenu.
+const ACTIVE =
+  'relative data-active:font-semibold! data-active:before:absolute data-active:before:inset-y-2 data-active:before:left-0 data-active:before:w-[3px] data-active:before:rounded-r-sm data-active:before:bg-sidebar-primary';
+
+// BR-REC-177, 227: gym name, the four places, then theme and Sign out in one row. Fixed to the window (dvh, not
+// svh, so a phone's address bar does not cut Sign out off); only the page content scrolls. Below 768 px the
+// same items are the ☰ drawer (its ☰ "Open menu" is in PageHeader, and the collapse toggle sits in the page
+// header too, outside the sidebar). The header shows the orange "F" square, plus the name when expanded.
+// The "pre-paint" CSS in lib/sidebarState.ts mirrors the `group-data-[collapsible=icon]` classes here.
 export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?: string }) {
   const { mutate: signOut, isPending, isSuccess } = useSignOut();
 
   return (
     <Sidebar collapsible="icon" className="h-dvh">
-      <SidebarHeader className="h-header flex-row items-center justify-between gap-1 px-4 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
+      <SidebarHeader className="h-header flex-row items-center gap-2 px-4 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
+        <span
+          aria-hidden="true"
+          data-slot="sidebar-mark"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary font-heading font-semibold text-primary-foreground"
+        >
+          F
+        </span>
         <span
           data-slot="sidebar-wordmark"
           className="min-w-0 truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden"
         >
           {gymName}
         </span>
-        <span
-          aria-hidden="true"
-          data-slot="sidebar-mark"
-          className="hidden size-8 items-center justify-center rounded-lg bg-primary font-heading font-semibold text-primary-foreground group-data-[collapsible=icon]:flex"
-        >
-          F
-        </span>
-        <SidebarTrigger className="size-[var(--control-height)] shrink-0 max-md:hidden group-data-[collapsible=icon]:size-11" />
       </SidebarHeader>
       <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0">
         <nav aria-label="Main">
@@ -107,10 +110,10 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
           </Suspense>
         </nav>
       </SidebarContent>
-      <SidebarFooter className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-        <ThemeToggle className="size-[var(--control-height)] group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+      <SidebarFooter className="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
+        <ThemeToggle className="size-[var(--control-height)] shrink-0 group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         {/* BR-REC-177, 35: ends this device's sign-in (E03). Off while the call runs, so a second tap cannot send it twice. */}
-        <SidebarMenu>
+        <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
           <SidebarMenuItem>
             <SidebarMenuButton
               type="button"
@@ -158,7 +161,7 @@ function NavMenu({ pathname }: { pathname: string }) {
             <SidebarMenuButton
               isActive={active}
               tooltip={item.label}
-              className={BUTTON}
+              className={`${BUTTON} ${ACTIVE}`}
               render={
                 <Link
                   href={item.href}

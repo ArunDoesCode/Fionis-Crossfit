@@ -37,3 +37,7 @@ export const lineTarget = (memberId: string, line: MemberDueItem): DueTarget => 
   snoozedUntil: line.snoozedUntil,
   openMember: false,
 });
+
+/** Is the row sheet open for this row? (`open` is the sheet's target while it shows, else null.) */
+export const isSheetOpenFor = (open: DueTarget | null, memberId: string, typeId: string): boolean =>
+  open !== null && open.memberId === memberId && open.typeId === typeId;

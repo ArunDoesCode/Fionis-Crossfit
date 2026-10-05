@@ -2,7 +2,7 @@ import { UI_TEXT } from '@/lib/messages/words';
 
 // Setup's own plain words (BR-REC-126): screen titles, row words, sheet labels, confirm texts and toasts.
 // Rules word -> screen word is in ux.md "Word list": Assessment, Measurement, Number / Time, Higher is
-// better / Lower is better / No direction, Repeat every, Due soon, Ends soon, Please check, Turn off.
+// better / Lower is better / No direction, Repeat every, Due soon, Ends soon, Warn if lower than / Warn if higher than, Show in a group on the report card, Turn off.
 // Shared `UI_TEXT` is only read here; server codes go through `messageForCode`.
 export const SETUP_TEXT = {
   hub: {
@@ -80,10 +80,11 @@ export const SETUP_TEXT = {
     higher: 'Higher',
     lower: 'Lower',
     none: 'No direction',
-    pleaseCheckBelow: 'Please check below',
-    pleaseCheckAbove: 'Please check above',
-    pleaseCheckHint: 'A result outside this range gets a second look.',
-    pleaseCheckHintTime: 'A result outside this range gets a second look. Use minutes and seconds.',
+    warnBelow: 'Warn if lower than',
+    warnAbove: 'Warn if higher than',
+    warnHint: 'A result outside this range shows "Please check" when it is recorded.',
+    warnHintTime:
+      'A result outside this range shows "Please check" when it is recorded. Use minutes and seconds.',
     repeatEvery: 'Repeat every',
     sameAsAssessment: 'Same as assessment',
     ownRepeat: 'Own repeat',
@@ -91,7 +92,7 @@ export const SETUP_TEXT = {
     weeksOrMonths: 'Weeks or months',
     weeks: 'Weeks',
     months: 'Months',
-    reportTable: 'Report table',
+    reportGroup: 'Show in a group on the report card',
     reportNone: 'None',
     reportPlace: 'In a group',
     group: 'Group',

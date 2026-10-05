@@ -6,6 +6,7 @@ import { UI_TEXT } from '@/lib/messages/words';
 export const ASSESSMENT_TEXT = {
   // Fixed lines
   numberError: 'Enter a number like 95.5', // BR-REC-76
+  percentRange: 'Use 0 to 100', // BR-REC-230
   noValues: UI_TEXT.needOneValue, // BR-REC-78
   notSaved: 'Not saved — check the connection and tap Save again', // BR-REC-86
 
@@ -13,6 +14,7 @@ export const ASSESSMENT_TEXT = {
   recordFor: (name: string) => `Record for ${name}`,
   date: 'Date',
   paperColumn: 'Paper column',
+  paperCard: 'Copying from the paper card?', // BR-REC-230: closed Collapsible with the paper tools
   datePick: 'Pick a date',
   editing: (day: string) => `Edit · ${day}`,
 
@@ -75,6 +77,8 @@ export const ASSESSMENT_TEXT = {
   saved: 'Saved.',
   deleted: 'Deleted.',
   savedResults: (results: string, name: string) => `Saved ${results} for ${name}`,
+  savedPartly: (count: number, name: string, stillDue: number) =>
+    `Saved ${count} for ${name} · ${stillDue} still due`,
   resultCount: (count: number) => `${count} ${count === 1 ? 'result' : 'results'}`,
   noChange: 'No change',
   beforeJoin: (name: string, day: string) => `This is before ${name} joined (${day})`,

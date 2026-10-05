@@ -42,7 +42,7 @@ export default function Section<T extends string>({
         <h2 className="min-w-0 flex-1 truncate font-heading text-lg font-semibold">
           {title}
           {count !== undefined && (
-            <span className="ml-2 text-base font-normal text-muted-foreground tabular-nums">
+            <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 align-middle text-sm font-semibold text-secondary-foreground tabular-nums">
               {count}
             </span>
           )}

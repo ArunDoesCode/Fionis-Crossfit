@@ -41,7 +41,7 @@ interface SetupSheetProps {
 // as a second step of the SAME sheet. One sheet means one Back entry (BR-REC-138): Back closes the whole
 // sheet, and Cancel on the question returns to the form with every typed value kept. A second sheet on
 // top would push a second Back entry (useBackToClose is not stack-aware). The sheet keeps its form title;
-// the question is a `role="alert"` block in the body, so a screen reader reads it out when it appears (it
+// the question is a `role="status"` block in the body, so a screen reader reads it out when it appears (it
 // is not an AlertDialog: that would swap the dialog and remount the body). The footer's buttons are
 // replaced between steps, so focus is moved on purpose: Cancel on the question (the safe button, so
 // Enter or Space on the keyboard cannot confirm), Save again when back at the form. A finger double tap
@@ -86,7 +86,7 @@ export default function SetupSheet({
     >
       <SheetBody hidden={asking}>{children}</SheetBody>
       {confirm && (
-        <div role="alert" className="flex flex-col gap-1">
+        <div role="status" className="flex flex-col gap-1">
           <p className="text-base font-medium">{confirm.title}</p>
           <p className="text-sm text-muted-foreground">{confirm.description}</p>
         </div>

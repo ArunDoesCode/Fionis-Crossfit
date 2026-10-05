@@ -80,3 +80,7 @@ test-results/
 
 # backend/.contracts/api-manifest.json and openapi.json are generated AND committed;
 # CI's `contract:check` fails if they are stale.
+
+# --- ui-audit (D-039) ---
+.ui-audit/
+tools/ui-audit/out/

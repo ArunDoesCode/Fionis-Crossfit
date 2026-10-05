@@ -4,17 +4,11 @@ import ListRow, { RowList } from '@/components/common/ListRow';
 import Page from '@/components/common/Page';
 import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
-import type { ExportFile } from '@/lib/api/progress/fetchers';
 import { useDownloadExport } from '@/lib/api/progress/queries';
+import { EXPORT_FILES } from '@/lib/progress/exportFiles';
 import { PROGRESS_TEXT } from '@/lib/progress/text';
 
 const text = PROGRESS_TEXT.export;
-
-const FILES: { file: ExportFile; title: string }[] = [
-  { file: 'members.csv', title: text.members },
-  { file: 'memberships.csv', title: text.memberships },
-  { file: 'measurements.csv', title: text.measurements },
-];
 
 // S18: three rows, each a "Download CSV" button and the line "Opens in Excel or Google Sheets". A tap makes
 // one sign-in check and then the browser downloads the file by itself (BR-REC-119, P10); while that check runs
@@ -24,7 +18,7 @@ function ExportRows() {
 
   return (
     <RowList>
-      {FILES.map(({ file, title }) => (
+      {EXPORT_FILES.map(({ file, title }) => (
         <ListRow
           key={file}
           title={title}

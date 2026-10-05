@@ -1,14 +1,17 @@
 import type { Route } from 'next';
 import Link from 'next/link';
+import MemberAvatar from '@/components/common/MemberAvatar';
 import { cn } from '@/lib/utils';
 
 interface ListRowProps<T extends string> {
   title: string;
+  /** A person's row: the shown name for the initials avatar at the start (BR-REC-223). */
+  avatarName?: string;
   /** One detail line under the title (BR-REC-135). */
   detail?: React.ReactNode;
   /** Status at the right, usually a StatusBadge. */
   status?: React.ReactNode;
-  /** Extra line under the detail, usually a ChipList. */
+  /** Extra line under the detail, usually a line of quiet text or chips. */
   children?: React.ReactNode;
   /** Whole row is a link (preferred) ... */
   href?: Route<T>;
@@ -21,10 +24,12 @@ interface ListRowProps<T extends string> {
 const ROW =
   'flex min-h-row min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 hover:bg-accent/50';
 
-// A list row (BR-REC-122, 135): at least 56 px (we use 64), name, one detail line, status at the right.
+// A list row (BR-REC-122, 135, 223, 225): at least 56 px (we use 64), avatar, name (wraps to two lines, never
+// cut to a fragment), one detail line; the status sits under the name below 768 px and at the right from there.
 // Render inside <RowList>.
 export default function ListRow<T extends string>({
   title,
+  avatarName,
   detail,
   status,
   children,
@@ -34,12 +39,15 @@ export default function ListRow<T extends string>({
 }: ListRowProps<T>) {
   const content = (
     <>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-base font-medium">{title}</span>
-        {detail && <span className="truncate text-sm text-muted-foreground">{detail}</span>}
-        {children && <span className="mt-1 block">{children}</span>}
+      {avatarName !== undefined && <MemberAvatar name={avatarName} />}
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="line-clamp-2 text-base font-semibold break-words">{title}</span>
+          {detail && <span className="truncate text-sm text-muted-foreground">{detail}</span>}
+          {children && <span className="mt-0.5 block">{children}</span>}
+        </span>
+        {status && <span className="self-start md:shrink-0 md:self-center">{status}</span>}
       </span>
-      {status && <span className="shrink-0">{status}</span>}
     </>
   );
 

@@ -79,3 +79,20 @@ export function leavesNoValue(
   ).length;
   return stored.size - built.removed + added === 0;
 }
+
+/**
+ * How many of the assessment's measurements hold no value once this save is done (the "12 still due" of the toast,
+ * BR-REC-230): the stored values, minus the ones this save removes, plus the ones it adds.
+ */
+export function stillDueAfter(
+  metricIds: string[],
+  stored: Iterable<string>,
+  values: { metricId: string; value: number | null }[],
+): number {
+  const held = new Set(stored);
+  for (const { metricId, value } of values) {
+    if (value === null) held.delete(metricId);
+    else held.add(metricId);
+  }
+  return metricIds.filter((id) => !held.has(id)).length;
+}

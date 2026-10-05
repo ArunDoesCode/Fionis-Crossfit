@@ -11,7 +11,9 @@ Current milestone and next step: `docs/STATUS.md`.
 Roadmap and daily routine: `docs/WORKFLOW.md`. Design drafts (input to specs): `docs/design/`.
 
 ## The loop (every module, no exceptions)
-SPEC → FREEZE → CONTRACT → BACKEND + TESTS → CLIENTS (admin / TV / member) → SCENARIO TEST → OWNER/COACH CHECK → DONE → lessons written down
+SPEC → DESIGN (admin screens) → FREEZE → CONTRACT → BACKEND + TESTS → CLIENTS (admin / TV / member) → VISUAL QA → SCENARIO TEST → OWNER/COACH CHECK → DONE → lessons written down
+DESIGN = `/design <module>` (ux-designer: mock-ups on the real app, owner picks); VISUAL QA = visual-qa in `/feature` verify.
+Both judge against `docs/standards/design.md` on the isolated `tools/ui-audit` copy (D-039).
 
 **Gate rule:** do not write or change feature code for a module unless `docs/specs/<module>.md` exists and
 has `status: frozen`. If it doesn't, stop and say so — suggest `/spec <module>`. Bug fixes to existing
@@ -24,6 +26,9 @@ behaviour go through `/bug`; a bug that reveals a missing rule becomes a spec ch
 context with a pointers-only brief (never a fork, never your summary). Developer agents and the coordinator
 never create or edit tests; tests and code go in separate `test(…)` / `feat(…)`/`fix(…)` commits.
 Details: `.claude/pipeline/PROTOCOL.md` → Test independence.
+**No look tests (D-038):** frontend tests cover logic only (formatters, parsers, validators, save rules, queries).
+Visual rules (colours, fonts, sizes, layout, class names) are checked by screenshots, axe and the manual checklist —
+never by source-scan tests. Kept guards: `check:colors` (no raw colour), no hand-edited `components/ui`.
 
 ## How to write (every agent, every reply, report and doc)
 - Answer or result first, in 1–2 lines. Then only what the user needs to decide or act.
@@ -48,11 +53,11 @@ Module learnings go in the map, not here. If the user corrects you twice on the 
 the narrowest layer that fits. CodeGraph: if `.codegraph/` exists use it first (`.claude/pipeline/PROTOCOL.md` → Code lookup).
 
 ## Commands (`.claude/skills/`)
-You: `/spec <module>` → owner/coach answers → `/freeze <module>`  ← last step you must be present for
+You: `/spec <module>` → `/design <module>` (admin screens) → owner/coach answers → `/freeze <module>`  ← last step you must be present for
 Autonomous (Opus coordinator = main session, `claude --model opus`): `/feature <module>`.
 Pick-up: `/status`, `/map <module>` | `/map --stale`, `/wrap`. Manual: `/slice`, `/bug`.
 Agents (`.claude/agents/`): explorer, test-runner (haiku); backend-dev, frontend-dev, tv-dev, member-dev,
-test-writer, reviewer (sonnet); spec-analyst (opus). They talk only via the coordinator; run notes live in
+test-writer, reviewer, visual-qa (sonnet); spec-analyst, ux-designer (opus). They talk only via the coordinator; run notes live in
 `.pipeline/<feature>/{plan,contract,screens}.md`. Package agents (hono-*, nextjs-*, expo-*)
 hold the detailed conventions the dev/review agents read.
 

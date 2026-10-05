@@ -1,0 +1,15 @@
+{
+  "name": "ui-audit",
+  "private": true,
+  "type": "module",
+  "description": "Screenshots, axe and token previews of the admin on an isolated copy (D-039). Used by the ux-designer and visual-qa agents.",
+  "scripts": {
+    "setup": "bash setup.sh",
+    "shots": "bun shots.mjs",
+    "axe": "bun axe.mjs"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.56.0"
+  }
+}

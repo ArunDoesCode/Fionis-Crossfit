@@ -1,5 +1,6 @@
 'use client';
 
+import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
 import dynamic from 'next/dynamic';
 import { useQueryStates } from 'nuqs';
 import ChoiceChips from '@/components/common/ChoiceChips';
@@ -17,6 +18,8 @@ import type { DueTarget } from '@/lib/due/target';
 import { DUE_TEXT } from '@/lib/due/text';
 import type { DueTab } from '@/lib/due/types';
 import { useDueSheet } from '@/lib/due/useDueSheet';
+import { useTurnedOnCounts } from '@/lib/due/useTurnedOnCounts';
+import { withCount } from '@/lib/format';
 import { UI_TEXT } from '@/lib/messages/words';
 
 /** The "All" chip's value; the other chips use the assessment's id (an id is never this word). */
@@ -30,21 +33,36 @@ interface DueListProps {
   /** The assessment filter, or null for "All". */
   typeId: string | null;
   onMore: (target: DueTarget) => void;
+  openTarget: DueTarget | null;
 }
 
 // One tab of S3 (BR-REC-104): 25 rows, then "Show more", in the server's order (Assess soon first, then
 // the earliest due date, then the name). Nobody on it is one sentence.
-function DueList({ tab, typeId, onMore }: DueListProps) {
+function DueList({ tab, typeId, onMore, openTarget }: DueListProps) {
   const query = useDueList(tabToStatus(tab), typeId);
+  const turnedOn = useTurnedOnCounts();
 
   return (
     <PagedRows
       query={query}
       skeletonChips
-      empty={<EmptyState title={emptyDueLine(tab)} />}
-      renderTable={(items) => <DueTable items={items} onMore={onMore} />}
+      empty={
+        <EmptyState
+          icon={tab === 'overdue' ? CheckmarkCircle02Icon : undefined}
+          title={emptyDueLine(tab)}
+        />
+      }
+      renderTable={(items) => (
+        <DueTable items={items} turnedOn={turnedOn} onMore={onMore} openTarget={openTarget} />
+      )}
       renderRow={(item) => (
-        <DueRow key={`${item.memberId}:${item.typeId}`} item={item} onMore={onMore} />
+        <DueRow
+          key={`${item.memberId}:${item.typeId}`}
+          item={item}
+          turnedOnCount={turnedOn.get(item.typeId)}
+          onMore={onMore}
+          openTarget={openTarget}
+        />
       )}
     />
   );
@@ -59,6 +77,9 @@ function DueList({ tab, typeId, onMore }: DueListProps) {
 export default function DueListPanel() {
   const [{ tab, type }, setParams] = useQueryStates(dueListSearchParams);
   const sheet = useDueSheet();
+  // Tab counts (BR-REC-226) read the same cached lists the tab panels show (same query keys).
+  const overdueTotal = useDueList('overdue', type).data?.pages[0]?.meta.total;
+  const soonTotal = useDueList('upcoming', type).data?.pages[0]?.meta.total;
   const { data: assessments } = useAssessmentTypes(false);
   const options = [
     { value: ALL, label: DUE_TEXT.all },
@@ -74,8 +95,10 @@ export default function DueListPanel() {
         }}
       >
         <TabsList className="w-full">
-          <TabsTrigger value="overdue">{UI_TEXT.sections.overdue}</TabsTrigger>
-          <TabsTrigger value="soon">{UI_TEXT.sections.dueSoon}</TabsTrigger>
+          <TabsTrigger value="overdue">
+            {withCount(UI_TEXT.sections.overdue, overdueTotal)}
+          </TabsTrigger>
+          <TabsTrigger value="soon">{withCount(UI_TEXT.sections.dueSoon, soonTotal)}</TabsTrigger>
         </TabsList>
         <ChoiceChips
           legend={DUE_TEXT.assessmentFilter}
@@ -86,10 +109,10 @@ export default function DueListPanel() {
           className="mt-2"
         />
         <TabsContent value="overdue">
-          <DueList tab="overdue" typeId={type} onMore={sheet.show} />
+          <DueList tab="overdue" typeId={type} onMore={sheet.show} openTarget={sheet.openTarget} />
         </TabsContent>
         <TabsContent value="soon">
-          <DueList tab="soon" typeId={type} onMore={sheet.show} />
+          <DueList tab="soon" typeId={type} onMore={sheet.show} openTarget={sheet.openTarget} />
         </TabsContent>
       </Tabs>
       <DueSheet

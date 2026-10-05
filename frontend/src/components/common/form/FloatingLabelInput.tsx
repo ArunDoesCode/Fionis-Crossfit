@@ -31,8 +31,8 @@ export function FloatingLabel({
       className={cn(
         'pointer-events-none absolute left-3 z-10 origin-left truncate text-muted-foreground transition-all peer-aria-invalid:text-destructive',
         floated === undefined &&
-          'top-1.5 text-xs peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-xs',
-        floated === true && 'top-1.5 text-xs',
+          'top-1.5 text-[0.8125rem] peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[0.8125rem]',
+        floated === true && 'top-1.5 text-[0.8125rem]',
         floated === false && 'top-3.5 text-base',
         className,
       )}

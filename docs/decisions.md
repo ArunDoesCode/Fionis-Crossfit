@@ -229,3 +229,25 @@ owner answers ux Q4, Q5, Q7, Q8, performance Q6. Rejected: 1024 px breakpoint (e
 Completes D-034 (owner answers ux Q9–Q11). Why: one field shape everywhere, so the grid rows line up and nothing moves
 when an error appears. Rejected: a label per box, no minimum height for choice fields, a smaller desktop minimum.
 Detail: ux BR-REC-187.
+
+**D-037 · 2026-10-05 · Visual refresh "Navy & Flame": same Fionis brand applied with more strength — true #F7941E, cool page, card shadows, 5 px radius, two fonts (Geist Mono out), Home number band, initials avatars, member name as page title, sidebar toggle beside the sidebar.**
+Owner answers after the admin UI audit (`docs/design/admin-ui-audit/README.md`): (1) Outfit `tabular-nums` replaces Geist
+Mono; (2) number band and avatars now (spec v10, not later); (3) Record assessment 3 columns from 1280 px so it fits
+1440 × 900; (4) the sidebar toggle sits outside the sidebar as shadcn ships it (reverses the U7 placement). Why: the app
+looked bland — muddy #DC7400 orange, page vs card 1.05:1, grey inputs that read as disabled, no numbers or faces.
+Rejected: a new palette (D-029 stays), photo upload, chart libraries (BR-REC-215). Detail: ux BR-REC-219…235.
+
+**D-038 · 2026-10-05 · No look tests: frontend tests cover logic only; visual rules are checked by screenshots, axe and the manual checklist.**
+Owner, after seeing ~150 source-scan tests in `frontend/tests/ux/` (fonts, token lightness, class names) that broke on
+every restyle and had to be rewritten for ux v10. Why: they test strings in files, not what the owner sees, and they
+slow every visual change. Kept: logic tests (formatters, parsers, validators, save rules, queries, proxy) and two guards
+(`check:colors` — no raw colour; no hand-edited `components/ui`). Rejected: keeping scan tests as "cheap coverage".
+Note: tests never ship to the browser (`frontend/tests/**` is run by `bun test` only; nothing in `src` imports it).
+
+**D-039 · 2026-10-05 · UI/UX is a pipeline step: DESIGN (`/design`, ux-designer) before freeze and VISUAL QA (visual-qa) in verify, both on an isolated copy of the real admin and judged against `docs/standards/design.md`.**
+Owner, after the ux v10 refresh worked where earlier rounds did not. Why it worked: the agents looked at the real
+running app (screenshots on seeded data), measured instead of guessing, ran several lenses in parallel, and showed
+before/after mock-ups before any code. The new step keeps that: `tools/ui-audit/` (own DB `gym_ui_audit`, ports
+3100/4100, `shots.mjs` with CSS preview, `axe.mjs`), one design-rules file, one recommended design per screen,
+owner picks, then the spec. VISUAL QA replaces the look tests removed by D-038. Rejected: a Figma hand-off (no
+designer on the team), visual-diff snapshots in CI (brittle on every restyle, same problem as D-038).

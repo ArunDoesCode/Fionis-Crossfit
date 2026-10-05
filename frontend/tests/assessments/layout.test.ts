@@ -139,24 +139,10 @@ describe('layoutMetrics (BR-REC-216)', () => {
   });
 });
 
-describe('Record assessment form source (BR-REC-216, BR-REC-188)', () => {
-  const dir = join(import.meta.dir, '../../src/components/pages/assessments');
-  const read = (f: string) => readFileSync(join(dir, f), 'utf8');
-  const all = () =>
-    ['EntryScreen.tsx', 'EntryFields.tsx', 'EntryDateSection.tsx'].map(read).join('\n');
-
-  test('BR-REC-216 (amended 2026-10-05) the form screen uses FormGrid with maxCols 2', () => {
-    expect(all()).toMatch(/<FormGrid[^>]*maxCols=\{2\}/);
-    expect(all()).not.toMatch(/<FormGrid[^>]*maxCols=\{4\}/);
-  });
-
-  test('BR-REC-216 titled blocks use FormSection and layoutMetrics', () => {
-    const src = all();
-    expect(src).toContain('FormSection');
-    expect(src).toContain('layoutMetrics');
-  });
-
+describe('Record assessment form source (BR-REC-216)', () => {
+  // Behaviour guard (D-038 removed the grid / section markup checks): Enter in a field saves the form.
   test('BR-REC-216 the screen keeps a real <form> with an onSubmit (Enter saves)', () => {
-    expect(read('EntryScreen.tsx')).toMatch(/<form[^>]*onSubmit=/);
+    const f = join(import.meta.dir, '../../src/components/pages/assessments/EntryScreen.tsx');
+    expect(readFileSync(f, 'utf8')).toMatch(/<form[^>]*onSubmit=/);
   });
 });

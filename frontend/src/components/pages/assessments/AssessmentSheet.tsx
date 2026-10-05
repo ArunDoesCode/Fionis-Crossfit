@@ -156,7 +156,7 @@ export default function AssessmentSheet({
   let body: React.ReactNode;
   if (data && asking && day) {
     body = (
-      <div role="alert" className="flex flex-col gap-1">
+      <div role="status" className="flex flex-col gap-1">
         <p className="text-base font-medium">
           {ASSESSMENT_TEXT.deleteQuestion(data.typeName, day)}
         </p>
@@ -235,7 +235,7 @@ function Values({
           className="flex min-h-12 items-baseline justify-between gap-4 px-4 py-3"
         >
           <span className="min-w-0 break-words text-base">{result.name}</span>
-          <span className="shrink-0 font-mono text-base tabular-nums">
+          <span className="shrink-0 text-base tabular-nums">
             {storedValueText(result, decimals.get(result.metricId))}
           </span>
         </li>

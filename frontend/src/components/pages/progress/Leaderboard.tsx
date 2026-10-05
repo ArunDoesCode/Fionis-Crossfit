@@ -1,8 +1,11 @@
 'use client';
 
+import { Medal01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
+import MemberAvatar from '@/components/common/MemberAvatar';
 import Section from '@/components/common/Section';
 import { RowSkeletons } from '@/components/common/Skeletons';
 import { Button } from '@/components/ui/button';
@@ -19,8 +22,8 @@ const text = PROGRESS_TEXT.progress;
 interface LeaderboardProps {
   /** `null` until a measurement is known. */
   metricId: string | null;
-  /** How to write a value; `undefined` until the measurement has loaded. */
-  metric: ValueMetric | undefined;
+  /** How to write a value and what to call it; `undefined` until the measurement has loaded. */
+  metric: (ValueMetric & { name: string }) | undefined;
   className?: string;
 }
 
@@ -29,7 +32,28 @@ const TABS: { value: Sex; label: string }[] = [
   { value: 'female', label: text.female },
 ];
 
-const ROW = 'grid min-h-14 grid-cols-[2rem_minmax(0,1fr)_auto_5rem] items-center gap-3 px-4 py-2';
+const ROW = 'grid min-h-14 grid-cols-[3rem_minmax(0,1fr)_auto_5rem] items-center gap-3 px-4 py-2';
+
+// BR-REC-228: ranks 1 to 3 get a medal badge (icon + number, never colour alone); equal values share a rank.
+const MEDALS: Record<number, string> = {
+  1: 'bg-warning-soft text-warning',
+  2: 'bg-neutral-soft text-neutral',
+  3: 'bg-info-soft text-info',
+};
+
+function Rank({ rank }: { rank: number }) {
+  const medal = MEDALS[rank];
+  if (!medal) return <span className="tabular-nums text-base text-muted-foreground">{rank}</span>;
+  return (
+    <span
+      className={`inline-flex h-7 w-fit items-center gap-1 rounded-full px-2 text-sm font-semibold tabular-nums ${medal}`}
+    >
+      <HugeiconsIcon icon={Medal01Icon} strokeWidth={2} aria-hidden="true" className="size-4" />
+      {rank}
+      <span className="sr-only"> (medal)</span>
+    </span>
+  );
+}
 
 function Rows({
   metricId,
@@ -60,9 +84,12 @@ function Rows({
         {items.map((item) => (
           <li key={item.memberId}>
             <div className={ROW}>
-              <span className="font-mono text-base text-muted-foreground">{item.rank}</span>
-              <span className="truncate text-base font-medium">{item.fullName}</span>
-              <span className="font-mono text-base">{valueText(item.value, metric)}</span>
+              <Rank rank={item.rank} />
+              <span className="flex min-w-0 items-center gap-2">
+                <MemberAvatar name={item.fullName} size="sm" />
+                <span className="truncate text-base font-semibold">{item.fullName}</span>
+              </span>
+              <span className="tabular-nums text-base">{valueText(item.value, metric)}</span>
               <span className="text-right text-sm text-muted-foreground">{formatDay(item.on)}</span>
             </div>
           </li>
@@ -89,7 +116,10 @@ export default function Leaderboard({ metricId, metric, className }: Leaderboard
   const [sex, setSex] = useState<Sex>('male');
 
   return (
-    <Section title={text.leaderboard} className={className}>
+    <Section
+      title={metric ? text.leaderboardFor(metric.name) : text.leaderboard}
+      className={className}
+    >
       {metric?.better === 'none' ? (
         <p className="text-base text-muted-foreground">{messageForCode('NO_DIRECTION')}</p>
       ) : (

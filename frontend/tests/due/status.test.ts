@@ -278,8 +278,9 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
 });
 
 describe('BR-REC-101 / 130 emptyDueLine: one sentence when a section has nobody', () => {
-  test('BR-REC-101 the Overdue section says "Nobody is overdue."', () => {
-    expect(status.emptyDueLine('overdue')).toBe('Nobody is overdue.');
+  // ux.md v10 BR-REC-233: empty places get "a warm sentence ("Nobody is overdue. Nice work.")".
+  test('BR-REC-233 the Overdue section says "Nobody is overdue. Nice work."', () => {
+    expect(status.emptyDueLine('overdue')).toBe('Nobody is overdue. Nice work.');
   });
 
   test('BR-REC-101 the Due soon section says "Nobody is due soon."', () => {

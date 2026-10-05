@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import DataTable, { createDataTableColumnHelper } from '@/components/common/DataTable';
+import PersonCell from '@/components/common/PersonCell';
 import StatusBadge from '@/components/common/StatusBadge';
-import TableRowLink from '@/components/common/TableRowLink';
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatDay, formatPhone } from '@/lib/format';
 import { memberListBadge } from '@/lib/members/membershipText';
@@ -16,7 +16,7 @@ interface MemberTableProps {
 
 const helper = createDataTableColumnHelper<MemberListItem>();
 
-// Members from 1024 px (BR-REC-183): name (the row's link), phone, status, last assessment.
+// Members from 1024 px (BR-REC-183, 226): name with avatar (the row's link), phone, status, last assessment.
 export default function MemberTable({ items, today }: MemberTableProps) {
   const columns = useMemo(
     () =>
@@ -25,9 +25,7 @@ export default function MemberTable({ items, today }: MemberTableProps) {
           id: 'name',
           header: 'Name',
           cell: ({ row }) => (
-            <TableRowLink href={`/admin/members/${row.original.id}`}>
-              {row.original.fullName}
-            </TableRowLink>
+            <PersonCell name={row.original.fullName} href={`/admin/members/${row.original.id}`} />
           ),
         }),
         helper.display({

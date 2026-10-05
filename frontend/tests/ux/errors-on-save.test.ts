@@ -1,6 +1,5 @@
-// Spec: docs/specs/member-records/ux.md v9 "Build clarifications (U8)" — BR-REC-189 (errors only on Save, plain
-// words), BR-REC-181/182 (whole page, p-4 on every side); assessments.md BR-REC-216 (amended: label = name + unit,
-// "Approximate date"). Source scans + schema parses; headless.
+// Spec: docs/specs/member-records/ux.md BR-REC-189 (errors only on Save, plain words); assessments.md BR-REC-216
+// (amended: "Approximate date"). useForm option scan (behaviour) + schema parses; headless. No look tests (D-038).
 import { describe, expect, test } from 'bun:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -151,37 +150,7 @@ describe('BR-REC-189 schema messages are plain words', () => {
 });
 
 describe('BR-REC-216 (amended) Record assessment wording', () => {
-  const dir = join(SRC, 'components/pages/assessments');
-  test('BR-REC-216 the measurement label is name + unit only, no due tag', () => {
-    const f = read(join(dir, 'MetricField.tsx'));
-    expect(f).not.toMatch(/·\s*\$\{[^}]*due/i);
-    expect(f).not.toMatch(/ASSESSMENT_TEXT\.due\b/);
-  });
   test('BR-REC-216 the word list says "Approximate date"', () => {
     expect(JSON.stringify(UI_TEXT)).toContain('"Approximate date"');
-  });
-  test('BR-REC-216 the old "About" label is gone from the Record form', () => {
-    const f = read(join(dir, 'EntryDateSection.tsx')).replace(/\/\/.*$/gm, '');
-    expect(f).not.toMatch(/ASSESSMENT_TEXT\.about|WORDS?\.about|['"`]About['"`]/);
-    expect(f).not.toMatch(/>\s*About\s*</);
-  });
-});
-
-describe('BR-REC-181/182 whole page, p-4 on every side', () => {
-  const page = read(join(SRC, 'components/common/Page.tsx'))
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/.*$/gm, '');
-  test('BR-REC-182 Page has no centring or max width', () => {
-    expect(page).not.toMatch(/mx-auto/);
-    expect(page).not.toMatch(/max-w-/);
-    expect(page).not.toMatch(/page-narrow|page-wide/);
-  });
-  test('BR-REC-181 Page pads p-4 on all sides (no px-only page-px, no 24 px step)', () => {
-    expect(page).toMatch(/(^|[\s'"`])(md:)?p-4(?=[\s'"`])/);
-    expect(page).not.toMatch(/page-px|pb-page|md:p-6|lg:p-6|p-6/);
-  });
-  test('BR-REC-182 no file under src uses page-narrow or page-wide', () => {
-    const hits = files.filter((f) => /page-narrow|page-wide/.test(read(f)));
-    expect(hits.map((f) => f.slice(SRC.length + 1))).toEqual([]);
   });
 });

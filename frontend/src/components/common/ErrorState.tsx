@@ -19,7 +19,7 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      role="alert"
+      role="status"
       className={cn(
         'flex flex-col items-start gap-3 rounded-2xl border border-danger/40 bg-danger-soft p-4 text-danger',
         className,

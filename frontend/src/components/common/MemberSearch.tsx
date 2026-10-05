@@ -7,8 +7,10 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxTrigger,
 } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
+import { InputGroupAddon, InputGroupButton } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 import type { MemberSearchField } from '@/lib/members/directory';
 import { UI_TEXT } from '@/lib/messages/words';
@@ -46,6 +48,7 @@ export default function MemberSearch({ text, field, onChange, onFieldChange }: M
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const picked = useRef(false);
+  const fieldLabel = FIELDS.find((item) => item.value === field)?.label ?? 'Name';
 
   return (
     <search className="flex items-center gap-2">
@@ -67,8 +70,19 @@ export default function MemberSearch({ text, field, onChange, onFieldChange }: M
         <ComboboxInput
           aria-label="Search by"
           readOnly
+          showTrigger={false}
           className="h-[var(--control-height)] min-h-11 w-36 shrink-0"
-        />
+        >
+          {/* The ui trigger takes no props: render our own so the icon-only button has a spoken name (BR-REC-137). */}
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton
+              size="icon-xs"
+              variant="ghost"
+              render={<ComboboxTrigger aria-label={`Search by: ${fieldLabel}`} />}
+              className="data-pressed:bg-transparent"
+            />
+          </InputGroupAddon>
+        </ComboboxInput>
         <ComboboxContent>
           <ComboboxList>
             {(item: FieldItem) => (

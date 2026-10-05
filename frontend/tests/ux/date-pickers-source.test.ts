@@ -1,7 +1,7 @@
-// Spec: docs/specs/member-records/ux.md · BR-REC-192, 194 (grep: no native date inputs), U3 build clarifications;
-// performance.md BR-REC-215 (calendar only as an on-demand chunk). Source-text checks.
+// Spec: ux.md BR-REC-192, 194 (no native date inputs), BR-REC-191 (one formatter); performance.md BR-REC-215
+// (calendar only as an on-demand chunk). Source guards for non-visual rules only (D-038).
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = join(import.meta.dir, '..', '..');
@@ -20,28 +20,6 @@ describe('BR-REC-192 / 194 no native date inputs left', () => {
   test.each(['date', 'month', 'datetime-local', 'time'])('no type="%s" under src', (kind) => {
     const re = new RegExp(`type\\s*=\\s*(\\{\\s*)?['"\`]${kind}['"\`]`);
     const hits = files.filter((f) => re.test(read(f))).map(rel);
-    expect(hits).toEqual([]);
-  });
-});
-
-describe('U3 the old date components are gone', () => {
-  test.each([
-    'src/components/common/DateField.tsx',
-    'src/components/pages/members/MemberDateField.tsx',
-    'src/components/pages/progress/MonthField.tsx',
-    'src/lib/assessments/useDeferredDate.ts',
-    'src/lib/members/dayText.ts',
-  ])('%s does not exist', (path) => {
-    expect(existsSync(join(root, path))).toBe(false);
-  });
-  test('nothing imports the removed modules', () => {
-    const hits = files
-      .filter((f) =>
-        /(?<![A-Za-z0-9_])(DateField|MemberDateField|MonthField|useDeferredDate|formatDayWithYear)(?![A-Za-z0-9_])|members\/dayText|common\/DateField|members\/MemberDateField|progress\/MonthField/.test(
-          read(f),
-        ),
-      )
-      .map(rel);
     expect(hits).toEqual([]);
   });
 });
@@ -66,22 +44,6 @@ describe('BR-REC-215 the calendar is an on-demand chunk', () => {
   test('react-day-picker is imported only by components/ui/calendar.tsx', () => {
     const hits = files.filter((f) => /from\s+['"]react-day-picker/.test(read(f))).map(rel);
     expect(hits.filter((f) => f !== 'src/components/ui/calendar.tsx')).toEqual([]);
-  });
-});
-
-describe('BR-REC-192 DatePicker props and trigger', () => {
-  const code = () => read(join(src, 'components/common/DatePicker.tsx'));
-  test.each(['min', 'max', 'today', 'yearRange', 'variant'])(
-    'DatePicker has a "%s" prop',
-    (prop) => {
-      expect(code()).toMatch(new RegExp(`\\b${prop}\\??\\s*:`));
-    },
-  );
-  test('the trigger button carries the field id', () => {
-    expect(code()).toMatch(/<Button[^>]*\bid=\{id\}|<button[^>]*\bid=\{id\}|\bid=\{id\}/);
-  });
-  test('the shown date comes from formatDay (BR-REC-191)', () => {
-    expect(code()).toMatch(/formatDay/);
   });
 });
 

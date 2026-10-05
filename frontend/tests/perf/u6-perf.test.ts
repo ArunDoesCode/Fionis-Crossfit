@@ -122,15 +122,6 @@ describe('BR-REC-211 hot paths', () => {
     ].map((m) => Number((m[1] as string).replace(/_/g, '')));
     expect(delays.some((n) => n >= 300)).toBe(true);
   });
-  test('BR-REC-211 globals.css switches the backdrop filter off for all four overlay slots', () => {
-    const css = read('src/app/globals.css');
-    for (const slot of ['sheet', 'dialog', 'alert-dialog', 'drawer']) {
-      const rule = new RegExp(
-        `\\[data-slot="${slot}-overlay"\\][^{}]*\\{[^}]*backdrop-filter:\\s*none`,
-      );
-      expect(css, slot).toMatch(rule);
-    }
-  });
 });
 
 describe('BR-REC-208 prefetch', () => {

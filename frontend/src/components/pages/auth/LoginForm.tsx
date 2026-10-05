@@ -33,7 +33,7 @@ interface LoginFormProps {
 const LOGIN_ORDER = ['username', 'password'] as const;
 
 // S1 (auth.md): username, password with Show/Hide, "Keep me signed in" ticked, one error line with its
-// space always reserved, Sign in. There is no "create account" (BR-REC-25). The button is only off while
+// one-line space kept, Sign in. There is no "create account" (BR-REC-25). The button is only off while
 // the call runs: a locked login (BR-REC-29) keeps it tappable and the line says how long to wait.
 export default function LoginForm({ next, expired = false }: LoginFormProps) {
   const router = useRouter();
@@ -163,10 +163,11 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
       />
 
       {/* One line for the server's answer (red), "Please sign in again." after an ended sign-in (BR-REC-41).
-          Its space is always kept (two lines) and both regions are always in the page, only their text
-          changes, so a screen reader announces it (BR-REC-137). */}
-      <div className="min-h-12 text-base">
-        <p role="alert" className="text-destructive">
+          Only one of the two shows at a time, so one line of space is kept (the button does not jump) and
+          the gap to the checkbox is pulled in to match the field gaps. Both regions are always in the page,
+          only their text changes, so a screen reader announces it (BR-REC-137). */}
+      <div className="-mt-2 min-h-6 text-base">
+        <p aria-live="assertive" className="text-destructive">
           {error}
         </p>
         <p role="status">{notice}</p>
