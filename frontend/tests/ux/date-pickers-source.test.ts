@@ -37,7 +37,7 @@ describe('U3 the old date components are gone', () => {
   test('nothing imports the removed modules', () => {
     const hits = files
       .filter((f) =>
-        /(DateField|MemberDateField|MonthField|useDeferredDate|members\/dayText|formatDayWithYear)/.test(
+        /(?<![A-Za-z0-9_])(DateField|MemberDateField|MonthField|useDeferredDate|formatDayWithYear)(?![A-Za-z0-9_])|members\/dayText|common\/DateField|members\/MemberDateField|progress\/MonthField/.test(
           read(f),
         ),
       )

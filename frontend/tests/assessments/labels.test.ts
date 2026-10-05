@@ -111,7 +111,7 @@ describe('BR-REC-80 assessmentDateLabel: an exact date is a plain day', () => {
   test.each(['2025-03-12', '2026-09-12', '2026-10-03', '2024-02-29'])(
     'BR-REC-80 an exact date is formatDay (%s)',
     (date) => {
-      expect(labels.assessmentDateLabel(date, false, TODAY)).toBe(formatDay(date, TODAY));
+      expect(labels.assessmentDateLabel(date, false, TODAY)).toBe(formatDay(date));
     },
   );
 
@@ -200,7 +200,7 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
       joinedOn,
       memberName: 'Anil Kumar',
     });
-    expect(issue.message).toBe(`This is before Anil joined (${formatDay(joinedOn, TODAY)})`);
+    expect(issue.message).toBe(`This is before Anil joined (${formatDay(joinedOn)})`);
   });
 
   test('BR-REC-83 one day before the join date is already before_join', () => {
