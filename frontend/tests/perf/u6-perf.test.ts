@@ -101,7 +101,7 @@ describe('BR-REC-211 hot paths', () => {
       return new Original(...args);
     } as unknown as typeof Original;
     Object.setPrototypeOf(Spy, Original);
-    Spy.prototype = Original.prototype;
+    Object.defineProperty(Spy, 'prototype', { value: Original.prototype });
     Intl.DateTimeFormat = Spy;
     try {
       // a fresh copy of the module, so its module-level cache starts empty and its Intl lookup sees the spy
