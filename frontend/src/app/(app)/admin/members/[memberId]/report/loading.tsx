@@ -6,7 +6,7 @@ import ReportSkeleton from '@/components/pages/progress/ReportSkeleton';
 export default function Loading() {
   return (
     <Page width="wide">
-      <PageHeader />
+      <PageHeader pattern="/admin/members/[memberId]/report" />
       <ReportSkeleton />
     </Page>
   );

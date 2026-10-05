@@ -8,7 +8,7 @@ import { UI_TEXT } from '@/lib/messages/words';
 export default function Loading() {
   return (
     <Page width="wide">
-      <PageHeader />
+      <PageHeader pattern="/admin" />
       <Skeleton className="h-12 w-full rounded-4xl" />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">
         <div className="section-gap flex flex-col">

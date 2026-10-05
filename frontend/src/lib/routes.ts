@@ -75,6 +75,16 @@ function match(pattern: string, pathname: string): Record<string, string> | null
 const fill = (pattern: string, params: Record<string, string>) =>
   pattern.replace(/\[[^\]]+\]/g, (name) => params[name] ?? name);
 
+function resolve(entry: RouteEntry, params: Record<string, string>): ResolvedRoute {
+  return {
+    title: entry.title,
+    parent: entry.parent && {
+      label: entry.parent.label,
+      href: fill(entry.parent.pattern, params),
+    },
+  };
+}
+
 /** Title and parent for a path (dynamic segments filled from the path); unknown paths give an empty title. */
 export function routeFor(pathname: string): ResolvedRoute {
   // `/` is rewritten to Home, so the browser may report either.
@@ -87,22 +97,33 @@ export function routeFor(pathname: string): ResolvedRoute {
       best = { entry, params };
     }
   }
-  if (!best) return { title: '' };
-  const { entry, params } = best;
-  return {
-    title: entry.title,
-    parent: entry.parent && {
-      label: entry.parent.label,
-      href: fill(entry.parent.pattern, params),
-    },
-  };
+  return best ? resolve(best.entry, best.params) : { title: '' };
+}
+
+/**
+ * The same entry by its pattern, for a loading.tsx (it has no path or params at build time). A parent
+ * that needs a param keeps its `[param]` href; `isResolved` tells it apart.
+ */
+export function routeForPattern(pattern: string): ResolvedRoute {
+  const entry = ROUTES.find((r) => r.pattern === pattern);
+  return entry ? resolve(entry, {}) : { title: '' };
+}
+
+/** True when a parent href has no `[param]` left in it. */
+export const isResolved = (href: string) => !href.includes('[');
+
+type Lookup = (key: string) => ResolvedRoute;
+
+function trail(lookup: Lookup, key: string): { label: string; href: string }[] {
+  const out: { label: string; href: string }[] = [];
+  for (let parent = lookup(key).parent; parent; parent = lookup(parent.href).parent) {
+    out.unshift(parent);
+  }
+  return out;
 }
 
 /** Parents from the top down, for breadcrumbs ("Members / Member"). */
-export function trailFor(pathname: string): { label: string; href: string }[] {
-  const trail: { label: string; href: string }[] = [];
-  for (let parent = routeFor(pathname).parent; parent; parent = routeFor(parent.href).parent) {
-    trail.unshift(parent);
-  }
-  return trail;
-}
+export const trailFor = (pathname: string) => trail(routeFor, pathname);
+
+/** `trailFor` for a pattern: an unresolved parent's href is its own pattern, so the lookup still works. */
+export const trailForPattern = (pattern: string) => trail(routeForPattern, pattern);

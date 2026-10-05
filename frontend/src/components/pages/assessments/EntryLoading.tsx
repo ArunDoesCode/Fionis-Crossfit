@@ -7,7 +7,7 @@ import EntrySkeleton from '@/components/pages/assessments/EntrySkeleton';
 export default function EntryLoading() {
   return (
     <>
-      <PageHeader />
+      <PageHeader pattern="/admin/members/[memberId]/assess" />
       <EntrySkeleton />
     </>
   );

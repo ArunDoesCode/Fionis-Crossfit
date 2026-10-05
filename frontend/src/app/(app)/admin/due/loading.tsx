@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Loading() {
   return (
     <Page width="wide">
-      <PageHeader />
+      <PageHeader pattern="/admin/due" />
       <Skeleton className="h-12 w-full rounded-4xl" />
       <Skeleton className="h-11 w-full rounded-full" />
       <RowSkeletons count={8} />

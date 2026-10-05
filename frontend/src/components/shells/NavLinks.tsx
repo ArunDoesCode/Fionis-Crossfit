@@ -12,9 +12,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { afterHistorySettles } from '@/lib/assessments/leave';
+import { cn } from '@/lib/utils';
 
-// The one place that reads the current path. Active = `aria-current="page"`, an orange-tint pill with
-// orange icon and word and a heavier weight, so it is never colour alone (BR-REC-125, 186).
+// The one place that reads the current path. Active = `aria-current="page"`, an accent pill with an
+// orange icon and a heavier weight, so it is never colour alone (BR-REC-125, 186).
 export default function NavLinks() {
   return <NavMenu pathname={usePathname()} />;
 }
@@ -46,7 +47,7 @@ function NavMenu({ pathname }: { pathname: string }) {
             <SidebarMenuButton
               isActive={active}
               tooltip={item.label}
-              className="h-(--control-height) [&_svg]:size-5 data-active:bg-brand/15 data-active:text-brand"
+              className="h-(--control-height) [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!"
               render={
                 <Link
                   href={item.href}
@@ -55,7 +56,11 @@ function NavMenu({ pathname }: { pathname: string }) {
                 />
               }
             >
-              <HugeiconsIcon icon={item.icon} strokeWidth={active ? 2.5 : 2} />
+              <HugeiconsIcon
+                icon={item.icon}
+                strokeWidth={active ? 2.5 : 2}
+                className={cn(active && 'text-sidebar-primary')}
+              />
               <span>{item.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

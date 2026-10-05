@@ -6,7 +6,7 @@ import { RowSkeletons } from '@/components/common/Skeletons';
 export default function Loading() {
   return (
     <Page width="narrow">
-      <PageHeader />
+      <PageHeader pattern="/admin/settings" />
       <RowSkeletons count={4} />
     </Page>
   );

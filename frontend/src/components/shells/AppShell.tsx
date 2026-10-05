@@ -1,6 +1,7 @@
 import OfflineBanner from '@/components/common/OfflineBanner';
 import ShellProvider from '@/components/shells/ShellProvider';
 import SideNav from '@/components/shells/SideNav';
+import { SIDEBAR_STATE_CSS, SIDEBAR_STATE_SCRIPT } from '@/components/shells/sidebarState';
 import { SidebarInset } from '@/components/ui/sidebar';
 
 interface AppShellProps {
@@ -13,16 +14,22 @@ interface AppShellProps {
 // `data-slot="app-main"` is how the report card's print rules find the content (ReportPrintStyles).
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <ShellProvider>
-      <SideNav />
-      <SidebarInset
-        id="main"
-        data-slot="app-main"
-        className="min-w-0 max-md:has-[[data-slot=action-bar]]:pb-[calc(var(--actionbar-h)+env(safe-area-inset-bottom))]"
-      >
-        <OfflineBanner />
-        {children}
-      </SidebarInset>
-    </ShellProvider>
+    <>
+      {/* Saved sidebar state before first paint: no post-hydration collapse or shift. */}
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant string, no user input; React would escape quotes in a text child */}
+      <script dangerouslySetInnerHTML={{ __html: SIDEBAR_STATE_SCRIPT }} />
+      <style>{SIDEBAR_STATE_CSS}</style>
+      <ShellProvider>
+        <SideNav />
+        <SidebarInset
+          id="main"
+          data-slot="app-main"
+          className="min-w-0 max-md:has-[[data-slot=action-bar]]:pb-[calc(var(--actionbar-h)+env(safe-area-inset-bottom))]"
+        >
+          <OfflineBanner />
+          {children}
+        </SidebarInset>
+      </ShellProvider>
+    </>
   );
 }

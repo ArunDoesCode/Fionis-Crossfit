@@ -17,7 +17,7 @@ export default function SignOutButton() {
         <SidebarMenuButton
           type="button"
           tooltip={UI_TEXT.signOut}
-          className="h-(--control-height) [&_svg]:size-5"
+          className="h-(--control-height) [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!"
           disabled={isPending || isSuccess}
           onClick={() => mutate()}
         >

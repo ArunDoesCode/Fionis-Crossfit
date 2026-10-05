@@ -1,10 +1,20 @@
 import { Suspense } from 'react';
 import ActionBar from '@/components/common/ActionBar';
-import { BackToParent, HeadingText, RouteHeading } from '@/components/common/RouteHeading';
+import {
+  BackToParent,
+  PatternBack,
+  PatternHeading,
+  RouteHeading,
+} from '@/components/common/RouteHeading';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
+  /**
+   * A loading.tsx passes its route pattern (`/admin/members/[memberId]`) so the title, crumbs and back link are in
+   * the first frame; a screen leaves it off and the same entry is found from the path.
+   */
+  pattern?: string;
   /** Only for a title the route table cannot know (a name from the data); otherwise it comes from `routeFor`. */
   title?: string;
   subtitle?: string;
@@ -24,6 +34,7 @@ interface PageHeaderProps {
 // table (`RouteHeading`), so a loading.tsx and its screen agree. The header stays visible while the content
 // scrolls; below 768 px it is the top bar with ☰.
 export default function PageHeader({
+  pattern,
   title,
   subtitle,
   secondary,
@@ -42,14 +53,18 @@ export default function PageHeader({
         {/* ☰ opens the drawer on phones; from 768 px the same button collapses or expands the sidebar. */}
         <SidebarTrigger className="-ml-2 size-(--control-height) shrink-0" />
         <div className="min-w-0 flex-1">
-          <Suspense fallback={<HeadingText heading={title} subtitle={subtitle} />}>
+          <Suspense
+            fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
+          >
             <RouteHeading title={title} subtitle={subtitle} />
           </Suspense>
         </div>
         {secondary}
-        {action && <div className={cn(form && 'max-md:hidden')}>{action}</div>}
+        {action && (
+          <div className={cn('shrink-0 whitespace-nowrap', form && 'max-md:hidden')}>{action}</div>
+        )}
       </header>
-      <Suspense>
+      <Suspense fallback={<PatternBack pattern={pattern} />}>
         <BackToParent />
       </Suspense>
       {form && action && <ActionBar>{action}</ActionBar>}

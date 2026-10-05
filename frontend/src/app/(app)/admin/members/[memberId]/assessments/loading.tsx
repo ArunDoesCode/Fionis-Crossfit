@@ -7,7 +7,7 @@ import AllAssessmentsSkeleton from '@/components/pages/assessments/AllAssessment
 export default function Loading() {
   return (
     <Page width="narrow">
-      <PageHeader />
+      <PageHeader pattern="/admin/members/[memberId]/assessments" />
       <AllAssessmentsSkeleton />
     </Page>
   );

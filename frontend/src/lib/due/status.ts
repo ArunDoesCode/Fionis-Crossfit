@@ -5,8 +5,6 @@ import { type StatusTone, toneFor } from '@/lib/statusTone';
 import { DUE_TEXT } from './text';
 import type { DueTab, MemberDueItem } from './types';
 
-export type { StatusTone };
-
 export interface DueStatus {
   /** The words of the badge (BR-REC-125: never colour alone). */
   text: string;

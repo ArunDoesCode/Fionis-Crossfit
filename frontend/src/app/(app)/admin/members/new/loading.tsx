@@ -6,7 +6,7 @@ import { FormSkeleton } from '@/components/common/Skeletons';
 export default function Loading() {
   return (
     <Page width="narrow">
-      <PageHeader />
+      <PageHeader pattern="/admin/members/new" />
       <FormSkeleton fields={7} />
     </Page>
   );

@@ -110,8 +110,12 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
       const run = isClose
         ? goToStart
         : () => router.push(`${anchor.pathname}${anchor.search}${anchor.hash}` as Route);
-      if (dirtyRef.current) ask(run);
-      else exitToStart();
+      const go = () => (dirtyRef.current ? ask(run) : exitToStart());
+      // A sheet is open (the phone drawer): let it close first, so its history entry is gone before we ask or leave.
+      if (window.history.state?.sheet) {
+        afterHistorySettles(go);
+        window.history.back();
+      } else go();
     };
 
     // Closing or reloading the tab: the browser's own prompt (iPhones may skip it; the draft is kept anyway).

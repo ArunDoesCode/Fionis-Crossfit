@@ -6,7 +6,7 @@ import ProgressSkeleton from '@/components/pages/progress/ProgressSkeleton';
 export default function Loading() {
   return (
     <Page width="wide">
-      <PageHeader />
+      <PageHeader pattern="/admin/reports" />
       <ProgressSkeleton />
     </Page>
   );

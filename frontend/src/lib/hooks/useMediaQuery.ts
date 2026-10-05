@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-/** The side bar and centred dialogs start here (BR-REC-120, 138); below it the phone layout applies. */
-export const DESKTOP_QUERY = '(min-width: 1024px)';
+export { DESKTOP_QUERY } from '@/lib/breakpoints';
 
 /** Live `matchMedia`. The server snapshot is `false` (phone first), so nothing mismatches on hydration. */
 export function useMediaQuery(query: string): boolean {
