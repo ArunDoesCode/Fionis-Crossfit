@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 12
+version: 13
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -233,7 +233,11 @@ Names fixed so tests and code agree (no rule changed):
 - **Alerts (BR-REC-234 vs 190):** `role="alert"` is allowed in `FormErrorSummary` and in the "Enter at least one value"
   notice (`EntryNotices`) only.
 - **Page titles (BR-REC-234):** root `metadata.title.template` `'%s · Fionis India'`; each `page.tsx` exports `metadata`
-  from the route table; the member pages use `generateMetadata` with the member's name.
+  from the route table; only the member page (S7) uses `generateMetadata` with the member's name (its sub-pages keep
+  the route title); the member read is shared with the page's server prefetch (performance BR-REC-213), never fetched twice.
+- **Review round 1:** the Due table also shows a "What is due" column (BR-REC-226); the member meta line also shows age and
+  sex (BR-REC-224); `common/ActionBar` and `common/MenuButton` stay files (client islands inside the server `PageHeader`,
+  BR-REC-218a).
 - **Loose ends:** count line with 0 left out → "Based on 12 members" only; "1 more has only one reading" (singular).
 
 ## Not now
@@ -262,6 +266,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v13 — clarified during build (review round 1): member-page title + shared prefetch, Due "What is due" column, age · sex in the meta line, two client-island files kept; no rule changed
 - 2026-10-05 v12 — owner removed the logo image: Login and sidebar use the text wordmark "Fionis CrossFit" (BR-REC-235 rewritten, BR-REC-186 logo clause struck)
 - 2026-10-05 v11 — clarified during build (v10): helper module names, alert exception, page-title mechanism, count-line loose ends; no rule changed
 - 2026-10-05 v10 — changed after freeze and re-frozen (owner, D-037): visual refresh "Navy & Flame" from the admin UI audit — new BR-REC-219…235 (tokens, two fonts, one control look, Home number band, avatars, member header, row text, tables, sidebar toggle beside the sidebar, Reports words, report card cards, Record assessment 3 columns + paper tools collapsed, search field from text, typed dates, words, page titles and a11y, Login split); amends 123, 185, 186, 192, U7/U8 clarifications, tap budgets, and members 201, assessments 216, progress 113, due-list 16/98, performance 214; next free ID BR-REC-236
