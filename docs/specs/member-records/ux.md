@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 3
+version: 4
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -60,7 +60,7 @@ date pickers, modals, word list, code-health rules. Every stream follows these r
 |---|---|---|---|
 | BR-REC-177 | The app shell is the shadcn **Sidebar** (`SidebarProvider` + `Sidebar collapsible="icon"` + `SidebarInset`): a left sidebar fixed to the window (logo + gym name, Home, Members, Reports, Settings, theme, Sign out) that never moves; only the content area scrolls; the collapsed/expanded choice is remembered. | Scroll a long Record assessment at 1280 px → sidebar and Sign out stay in place | Viewport test 1280 / 1440 / 1920: sidebar `position` fixed, Sign out visible at 1280 × 600; collapse survives reload |
 | BR-REC-178 | Below 768 px (shadcn default; 768–1023 px gets the sidebar collapsed to icons, Q5) there is no tab bar: a sticky top bar shows ☰, the page title and the main action; ☰ opens the same sidebar items as an off-canvas drawer, which closes on a link, Esc, Back or a tap outside. | 360 px → ☰ → Members → drawer closes, Members shows | Every admin page at 360 px has ☰, at 800 px the icon sidebar; Sign out and theme reachable from the drawer; no `--tabbar-h` / `data-hide-tabs` left |
-| BR-REC-179 | Every page has one parent from one route table: desktop shows breadcrumbs ("Members / Surya Pratap / Record assessment"), phones show "‹ Members" above the title; `loading.tsx` and the screen read the same entry, so the back target never changes while loading. | Open Record assessment slowly → back target is the member page from the first frame | Unit test: each route in the screen index has one entry; loading and view use it; back is a real link (leave guard catches it) |
+| BR-REC-179 | Every page has one parent from one route table: desktop shows breadcrumbs with static parent labels ("Members / Member / Record assessment"; the member's name in the trail is a later refinement, issue #40), phones show "‹ Members" above the title; `loading.tsx` and the screen read the same entry, so the back target never changes while loading. | Open Record assessment slowly → back target is the member page from the first frame | Unit test: each route in the screen index has one entry; loading and view use it; back is a real link (leave guard catches it) |
 | BR-REC-180 | Each screen has at most one main action: on desktop at the right of a page header that stays visible while the content scrolls; on phones in a bottom action bar (48 px, above the keyboard) on forms, and in the top bar elsewhere. | Member page desktop → "Record assessment" top right, stays on scroll | Screen review: never two primary buttons; Save visible at all scroll positions |
 | BR-REC-181 | Desktop density (fine pointer, ≥ 1024 px): controls 40 px, list and table rows 48 px, page header 56 px, page padding 24 px, 16 px between sections; touch keeps BR-REC-122; all sizes are tokens, never typed per component. | Home at 1440 × 900 shows ≥ 30% more rows than v1 | Screenshot diff vs v1 on Home, Members, Member, Assess; CLS ≤ 0.05 |
 | BR-REC-182 | Content width: forms and detail pages up to 896 px, lists, reports and wide forms (Record assessment) up to 1280 px; 768–1023 px uses 2 columns where they fit; nothing scrolls sideways from 360 px. | 1920 px → Members table 1280 px wide | Viewport test 360 / 800 / 1280 / 1440 / 1920 |
@@ -189,6 +189,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v4 — clarified during build (U1 review R-6): breadcrumbs use static parent labels; member name in the trail deferred (#40)
 - 2026-10-05 v3 — clarified during build (U1): module paths and token names for the tone map, route table, density and width tokens (see Build clarifications); no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, new in member-records v2 (user decision: phone + tablet, mobile-first)
