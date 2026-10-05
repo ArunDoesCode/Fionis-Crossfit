@@ -41,9 +41,15 @@ describe('BR-REC-209 freshness', () => {
 
 describe('BR-REC-210 bundle', () => {
   const importsOf = (file: string): string[] =>
-    [...readFileSync(file, 'utf8').matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map((m) => m[1] as string);
+    [...readFileSync(file, 'utf8').matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map(
+      (m) => m[1] as string,
+    );
   const resolve = (from: string, spec: string): string | null => {
-    const base = spec.startsWith('@/') ? join(src, spec.slice(2)) : spec.startsWith('.') ? join(dirname(from), spec) : null;
+    const base = spec.startsWith('@/')
+      ? join(src, spec.slice(2))
+      : spec.startsWith('.')
+        ? join(dirname(from), spec)
+        : null;
     if (!base) return null;
     for (const c of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts')])
       if (existsSync(c) && statSync(c).isFile()) return c;
@@ -94,20 +100,27 @@ describe('BR-REC-211 hot paths', () => {
   test('BR-REC-211 draft autosave is throttled to >= 300 ms and flushed on pagehide', () => {
     const a = read('src/lib/assessments/useDraftAutosave.ts');
     expect(a).toContain('pagehide');
-    const delays = [...a.matchAll(/(?:setTimeout|AUTOSAVE\w*|THROTTLE\w*|DEBOUNCE\w*)[^\n]*?(\d[\d_]*)/g)].map((m) =>
-      Number((m[1] as string).replace(/_/g, '')),
-    );
+    const delays = [
+      ...a.matchAll(/(?:setTimeout|AUTOSAVE\w*|THROTTLE\w*|DEBOUNCE\w*)[^\n]*?(\d[\d_]*)/g),
+    ].map((m) => Number((m[1] as string).replace(/_/g, '')));
     expect(delays.some((n) => n >= 300)).toBe(true);
   });
-  test('BR-REC-211 overlay classes carry no backdrop blur', () => {
-    for (const f of ['sheet', 'alert-dialog', 'drawer', 'dialog'])
-      expect(read(`src/components/ui/${f}.tsx`), f).not.toContain('backdrop-blur');
+  test('BR-REC-211 globals.css switches the backdrop filter off for all four overlay slots', () => {
+    const css = read('src/app/globals.css');
+    for (const slot of ['sheet', 'dialog', 'alert-dialog', 'drawer']) {
+      const rule = new RegExp(
+        `\\[data-slot="${slot}-overlay"\\][^{}]*\\{[^}]*backdrop-filter:\\s*none`,
+      );
+      expect(css, slot).toMatch(rule);
+    }
   });
 });
 
 describe('BR-REC-208 prefetch', () => {
   test('BR-REC-208 no prefetch={false} on row and member links', () => {
-    const offenders = sources.filter((f) => read(f.slice(root.length + 1)).includes('prefetch={false}'));
+    const offenders = sources.filter((f) =>
+      read(f.slice(root.length + 1)).includes('prefetch={false}'),
+    );
     expect(offenders.map((f) => f.slice(root.length + 1))).toEqual([]);
   });
 });

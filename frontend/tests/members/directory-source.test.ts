@@ -25,7 +25,6 @@ const fnBody = (text: string, name: string): string => {
 };
 
 const members = read('lib/api/members/queries.ts');
-const assessments = read('lib/api/assessments/queries.ts');
 
 describe('BR-REC-203 directory query', () => {
   test('memberKeys.directory() exists and sits under the member key root', () => {
@@ -42,7 +41,7 @@ describe('BR-REC-203 directory query', () => {
   });
   test('it is kept fresh for 60 s', () =>
     expect(members).toMatch(/60[_ ]?(000|\s*\*\s*1000)|1000\s*\*\s*60/));
-  test('assessment save invalidates the member root, which covers the directory key', async () => {
+  test('assessment save invalidates a key covering the directory, and never the bare member root (BR-REC-209, 203)', async () => {
     const calls: unknown[][] = [];
     const mod = (await import('@/lib/api/assessments/queries')) as unknown as {
       invalidateAssessmentData(qc: {
@@ -62,6 +61,7 @@ describe('BR-REC-203 directory query', () => {
       k.every((part, i) => JSON.stringify(part) === JSON.stringify(dirKey[i])),
     );
     expect(covered).toBe(true);
+    expect(calls.some((k) => k.length === 1 && k[0] === 'members')).toBe(false);
   });
   test('member create/update/archive/restore refresh writes the directory key', () => {
     const body = fnBody(members, 'useRefreshMembers');
@@ -70,9 +70,6 @@ describe('BR-REC-203 directory query', () => {
   test('membership period writes refresh the directory key', () => {
     const body = fnBody(members, 'useInvalidateMembers');
     expect(body).toMatch(/memberKeys\.directory\(\)|memberKeys\.all\(\)/);
-  });
-  test('assessments file still targets the member root (not only lists)', () => {
-    expect(assessments).toMatch(/MEMBERS_ROOT|memberKeys\.all\(\)/);
   });
   test('the directory is warmed when the shell opens (BR-REC-203)', () => {
     const shell = [

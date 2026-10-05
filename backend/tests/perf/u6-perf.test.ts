@@ -8,7 +8,8 @@ import { dueRepository } from "../../src/repository/dueRepository";
 import { useDueSuite } from "../due/support";
 
 const s = useDueSuite();
-const read = (p: string) => readFileSync(join(import.meta.dir, "..", "..", p), "utf8");
+const read = (p: string) =>
+  readFileSync(join(import.meta.dir, "..", "..", p), "utf8");
 
 describe("BR-REC-212", () => {
   test("BR-REC-212 the due engine's member read leaves archived members out (in SQL)", async () => {

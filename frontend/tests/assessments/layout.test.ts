@@ -27,6 +27,11 @@ beforeAll(async () => {
 
 const plain = (id: string): M => ({ id, tableGroup: null, tablePart: null });
 const grp = (id: string, tableGroup: string, tablePart: Part): M => ({ id, tableGroup, tablePart });
+const at = (blocks: Block[], i: number): Block => {
+  const b = blocks[i];
+  if (!b) throw new Error(`no block at ${i}`);
+  return b;
+};
 const ids = (b: Block) => b.metrics.map((m) => m.id);
 
 describe('layoutMetrics (BR-REC-216)', () => {
@@ -37,14 +42,14 @@ describe('layoutMetrics (BR-REC-216)', () => {
   test('BR-REC-216 metrics without a group form one untitled block in setup order', () => {
     const out = layout.layoutMetrics([plain('c'), plain('a'), plain('b')]);
     expect(out).toHaveLength(1);
-    expect(out[0].title).toBeNull();
-    expect(ids(out[0])).toEqual(['c', 'a', 'b']);
+    expect(at(out, 0).title).toBeNull();
+    expect(ids(at(out, 0))).toEqual(['c', 'a', 'b']);
   });
 
   test('BR-REC-216 a group becomes one titled block named after the group', () => {
     const out = layout.layoutMetrics([grp('x', 'Skeletal muscle %', 'arms')]);
     expect(out).toHaveLength(1);
-    expect(out[0].title).toBe('Skeletal muscle %');
+    expect(at(out, 0).title).toBe('Skeletal muscle %');
   });
 
   test('BR-REC-216 parts are ordered whole body, arms, trunk, legs', () => {
@@ -54,14 +59,18 @@ describe('layoutMetrics (BR-REC-216)', () => {
       grp('arms', 'G', 'arms'),
       grp('whole', 'G', 'whole_body'),
     ]);
-    expect(ids(out[0])).toEqual(['whole', 'arms', 'trunk', 'legs']);
+    expect(ids(at(out, 0))).toEqual(['whole', 'arms', 'trunk', 'legs']);
   });
 
   test('BR-REC-216 members of a group are gathered even when not adjacent in setup order', () => {
-    const out = layout.layoutMetrics([grp('g1', 'G', 'arms'), plain('p'), grp('g2', 'G', 'whole_body')]);
+    const out = layout.layoutMetrics([
+      grp('g1', 'G', 'arms'),
+      plain('p'),
+      grp('g2', 'G', 'whole_body'),
+    ]);
     expect(out.map((b) => b.title)).toEqual(['G', null]);
-    expect(ids(out[0])).toEqual(['g2', 'g1']);
-    expect(ids(out[1])).toEqual(['p']);
+    expect(ids(at(out, 0))).toEqual(['g2', 'g1']);
+    expect(ids(at(out, 1))).toEqual(['p']);
   });
 
   test('BR-REC-216 a block keeps the position of its first metric in setup order', () => {
@@ -74,8 +83,8 @@ describe('layoutMetrics (BR-REC-216)', () => {
     ]);
     // the untitled block (first metric 'a', position 0) comes first, holding all plain metrics in setup order
     expect(out.map((b) => b.title)).toEqual([null, 'Skeletal']);
-    expect(ids(out[0])).toEqual(['a', 'b', 'c']);
-    expect(ids(out[1])).toEqual(['s-whole', 's-arms']);
+    expect(ids(at(out, 0))).toEqual(['a', 'b', 'c']);
+    expect(ids(at(out, 1))).toEqual(['s-whole', 's-arms']);
   });
 
   test('BR-REC-216 two groups keep the order of their first metric', () => {
@@ -95,30 +104,46 @@ describe('layoutMetrics (BR-REC-216)', () => {
       ...parts.map((p) => grp(`mus-${p}`, 'Skeletal muscle %', p)),
     ];
     // shuffle part order within groups to prove ordering is by part, not input
-    const shuffled = [...input.slice(0, 7), input[10], input[8], input[9], input[11], input[14], input[12], input[13], input[7]];
+    const pick = (i: number): M => {
+      const m = input[i];
+      if (!m) throw new Error('bad index');
+      return m;
+    };
+    const shuffled = [
+      ...input.slice(0, 7),
+      pick(10),
+      pick(8),
+      pick(9),
+      pick(11),
+      pick(14),
+      pick(12),
+      pick(13),
+      pick(7),
+    ];
     const out = layout.layoutMetrics(shuffled);
     expect(out).toHaveLength(3);
-    expect(out[0].title).toBeNull();
-    expect(out[0].metrics).toHaveLength(7);
-    expect(out[1].title).toBe('Subcutaneous fat %');
-    expect(ids(out[1])).toEqual(['sub-whole_body', 'sub-arms', 'sub-trunk', 'sub-legs']);
-    expect(out[2].title).toBe('Skeletal muscle %');
-    expect(ids(out[2])).toEqual(['mus-whole_body', 'mus-arms', 'mus-trunk', 'mus-legs']);
+    expect(at(out, 0).title).toBeNull();
+    expect(at(out, 0).metrics).toHaveLength(7);
+    expect(at(out, 1).title).toBe('Subcutaneous fat %');
+    expect(ids(at(out, 1))).toEqual(['sub-whole_body', 'sub-arms', 'sub-trunk', 'sub-legs']);
+    expect(at(out, 2).title).toBe('Skeletal muscle %');
+    expect(ids(at(out, 2))).toEqual(['mus-whole_body', 'mus-arms', 'mus-trunk', 'mus-legs']);
   });
 
   test('BR-REC-216 Fitness test (no groups): one untitled block with every metric', () => {
     const input = ['a', 'b', 'c', 'd', 'e'].map(plain);
     const out = layout.layoutMetrics(input);
     expect(out).toHaveLength(1);
-    expect(out[0].title).toBeNull();
-    expect(ids(out[0])).toEqual(['a', 'b', 'c', 'd', 'e']);
+    expect(at(out, 0).title).toBeNull();
+    expect(ids(at(out, 0))).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 });
 
 describe('Record assessment form source (BR-REC-216, BR-REC-188)', () => {
   const dir = join(import.meta.dir, '../../src/components/pages/assessments');
   const read = (f: string) => readFileSync(join(dir, f), 'utf8');
-  const all = () => ['EntryScreen.tsx', 'EntryFields.tsx', 'EntryDateSection.tsx'].map(read).join('\n');
+  const all = () =>
+    ['EntryScreen.tsx', 'EntryFields.tsx', 'EntryDateSection.tsx'].map(read).join('\n');
 
   test('BR-REC-216 the form screen uses FormGrid with maxCols 4', () => {
     expect(all()).toMatch(/<FormGrid[^>]*maxCols=\{4\}/);
