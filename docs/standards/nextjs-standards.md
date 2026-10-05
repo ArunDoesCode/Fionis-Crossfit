@@ -212,7 +212,7 @@ src/
 │   │       ├── page.tsx            ← server component; redirect if already authed
 │   │       └── loading.tsx
 │   ├── (app)/                      ← authenticated area
-│   │   ├── layout.tsx              ← shell switcher (by role) — NO auth gating here
+│   │   ├── layout.tsx              ← the shell (sidebar/header) lives here and in `_components/` beside it; no `components/shells` folder — NO auth gating here
 │   │   └── [feature]/
 │   │       ├── page.tsx            ← thin server component → View
 │   │       ├── loading.tsx         ← shape-matching skeleton (always)
@@ -226,7 +226,6 @@ src/
 │   ├── common/                     ← reusable widgets (DataTable, TablePagination, SearchBar, ErrorComponent, EmptyState)
 │   ├── pages/[feature]/            ← route-specific UI (FeatureForm, FeatureSearchbar, columns.tsx)
 │   ├── views/[feature]/            ← 'use client' stateful containers rendered by page.tsx
-│   ├── shells/                     ← one layout shell per role/area
 │   └── [role]/                     ← role-specific components (optional)
 │
 ├── lib/
