@@ -3,7 +3,7 @@
 //   BR-REC-104 / C11 S3 loads 25 per page and appends ("Show more"): `useDueList(status, typeId)` is an infinite
 //              query; the assessment filter is part of what it reads.
 //   BR-REC-103 the member page block reads that member's E32 lines: `useMemberDue(memberId)`.
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/api/due/queries`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/api/due/queries`:
 //   `dueKeys`, hooks `useDuePreview(status)` (pageSize 5), `useDueList(status, typeId)` (infinite, 25/page),
 //   `useMemberDue(memberId)`.
 // How: there is no DOM in `bun test`, so each hook is called while rendering to a string with the server renderer

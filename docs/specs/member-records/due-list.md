@@ -125,6 +125,8 @@ rows, 25 per page, "Show more". Row sheet: Record assessment · Assess soon · R
 
 WhatsApp/SMS reminders to members, per-member intervals, a calendar view, sending lists by email.
 
+No automated UI tests for the Home sections, S3, the row sheet or the member "Assessments" block (no DOM test library, #9); covered by the manual checklist.
+
 ## Questions (all answered 2026-10-03)
 
 | # | Question | Options | Answer |
@@ -132,25 +134,6 @@ WhatsApp/SMS reminders to members, per-member intervals, a calendar view, sendin
 | Q1 | "Assess soon" rows are shown… | **A** at the top / B mixed in by date | **A** → BR-REC-97 |
 | Q2 | "Remind me later" choices | **A** 1 week, 2 weeks, 1 month or pick a date / B pick a date only | **A** → BR-REC-99 |
 | Q3 | Someone due today is listed under… | **A** Due soon, "Due today" (matches v1) / B Overdue | **A** → BR-REC-96 |
-
-## Implementation status (2026-10-04, branch `claude/due-date-engine-overdue-871ad4`)
-
-All 17 rules built. Backend tests: `backend/tests/due/`; admin tests: `frontend/tests/due/`; manual: `.pipeline/member-records-due-list/checklist.md`.
-| BR-REC | Test file(s) |
-|---|---|
-| 15, 94, 95, 105 | `compute-due`, `e31-due-list`, `e32-member-due`; `frontend/{remind,status}`; Stream 0 `dates` domain tests |
-| 16, 96 | `compute-due`, `due-list-rows`, `e31-due-list`, `settings-and-today` |
-| 17 | `due-list-rows` (`isListedInDueList`), `e31-due-list` |
-| 18, 98, 99, 100 | `e33-e34-actions`, `override-ending`, `compute-due`; `frontend/{optimistic,mutation-hooks,remind}` |
-| 93 | `settings-and-today`, `e33-e34-actions` |
-| 97 | `due-list-rows`, `e31-due-list`; `frontend/optimistic` (`sortDueRows`) |
-| 101, 102 | `frontend/{status,links,query-hooks,text}`; UI wiring is manual |
-| 103 | `e32-member-due`, `due-list-rows` (`memberDueItems`); `frontend/status` |
-| 104 | `e31-due-list` (`typeId`); `frontend/{list-paging,search-params,queries}` |
-Also BR-REC-158 for E33/E34 (`e33-e34-actions`), gates for 401 / 403 / validation (`http-gates`). Backend files are under `backend/tests/due/*.test.ts`.
-Home sections, S3, the row sheet and the member "Assessments" block have no automated UI test (no DOM test library, #9); manual checklist.
-Review: 1 round (0 blockers; R-1 major for Stream D → #24; R-4, R-5 fixed; R-2, R-5, R-6 → #25; R-7 rejected, D-021 admin "today" = device zone).
-E31 measured on the 1,000-member perf seed: p95 ≈ 157 ms service time (budget 300 ms, BR-REC-147).
 
 ## Changelog
 

@@ -6,7 +6,7 @@
 //   D15       — arrow (up, down, none when equal) + signed amount with unit ("-1.5 kg", "+0.5 %", Time as
 //               "+0:12" / "-1:05", h:mm:ss from one hour) + "better"/"worse" by direction; no word for
 //               "No direction"; equal -> "No change". The difference is rounded to the measurement's decimals.
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/change`: `describeChange({ value, previous, datatype, decimals, unit, better })` ->
 //   `{ arrow: 'up' | 'down' | 'none', amount, verdict: 'better' | 'worse' | null } | null`.
 //   null when value or previous is null. The minus sign is U+2212. Number amount = sign + absolute value with

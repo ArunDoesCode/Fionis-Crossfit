@@ -10,11 +10,11 @@
 //   BR-REC-64  decimals 0-2 (C3: a Time measurement is min:sec with 0 decimals; its check range is in seconds).
 //   BR-REC-65  report-table place = group + body part (whole body, arms, trunk, legs), both or neither.
 //   BR-REC-69  units are labels only (no conversion: "lb" stays "lb").
-// Interface: .pipeline/member-records-setup/contract.md "Request limits" + "Admin app interfaces" —
+// Interface: docs/specs/member-records/setup.md —
 //   `@/lib/validators/setup`: `gymSettingsSchema`, `assessmentFormSchema`, `measurementFormSchema`; they mirror
 //   the backend limits with the same issue `path`s and `message`s. Zod schemas: tested only through `safeParse`
-//   and the issues it reports. A message is asserted wherever the "Request limits" table gives one; where it
-//   says "Zod enum message" / "expected int" only the path is asserted.
+//   and the issues it reports. A message is asserted wherever the spec gives one; for an enum or whole-number
+//   rule only the path is asserted.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import type { ZodType } from 'zod';
 

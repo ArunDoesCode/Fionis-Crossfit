@@ -4,7 +4,7 @@
 //   BR-REC-82 — jump = |new - previous| / |previous| over 30% (skipped if no previous or previous is 0).
 //   D14       — the jump is strictly over 30% (exactly 30% is fine), or the value is below the measurement's
 //               min / above its max when those are set; both can apply.
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/plausibility`: `checkPlausibility({ value, previous, plausibleMin, plausibleMax })` ->
 //   `{ warn, reasons }`; all four inputs `number | null`; `value` null -> no warning; `reasons` order:
 //   `jump` then `range`; equal to the min or the max is fine.

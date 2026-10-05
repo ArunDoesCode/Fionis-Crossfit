@@ -119,6 +119,8 @@ S18 Export data (`/admin/settings/export`): three rows — Members, Memberships,
 Server-made PDF, a date range on the report card, sending cards by WhatsApp/email, charts beyond trend lines
 and bars, comparing two members, CSV import.
 
+BR-REC-109 (print) is a manual check; the BR-REC-119 300,000-value timing is Stream G's `bench`. Follow-ups: issues #26–#31.
+
 ## Questions (all answered 2026-10-03)
 
 | # | Question | Options | Answer |
@@ -127,25 +129,6 @@ and bars, comparing two members, CSV import.
 | Q2 | Age bands | **A** Under 30, 30–39, 40–49, 50+ / B 10-year bands from 20 | **B** → BR-REC-114 |
 | Q3 | Leaderboard length | **A** top 10 with "Show more" / B top 10 only / C top 3 | **A** |
 | Q4 | Report card covers | **A** all time / B the last 12 months | **A** |
-
-## Implementation status (2026-10-04, branch `claude/feature-f-progress-report-6c2bbe`)
-
-All 17 rules built (BR-REC-109 is a manual print check). Backend tests: `backend/tests/progress/` (`domain/*`, `csv`, `access`, `e35`…`e39`); admin tests: `frontend/tests/progress/`; manual: `.pipeline/member-records-progress/checklist.md`.
-| BR-REC | Test file(s) |
-|---|---|
-| 22 | `progress/domain/{best-and-summary,report-card}.test.ts`, `progress/e35-report-card.test.ts`; `frontend/tests/progress/value-text.test.ts` |
-| 23 | `progress/domain/progress-stats.test.ts`, `progress/e36-progress.test.ts`; `frontend/tests/progress/counts.test.ts` |
-| 24, 117, 118 | `progress/{csv,e39-export}.test.ts` |
-| 106, 107, 108 | `progress/{e35-report-card,domain/best-and-summary,domain/report-card}.test.ts`; `frontend/tests/progress/reading-date.test.ts` |
-| 109 | manual print check (Chrome Android + desktop): `.pipeline/member-records-progress/checklist.md` |
-| 110 | `progress/{e36-progress,e37-leaderboard,e38-active-by-plan}.test.ts` (write, then read); `frontend/tests/progress/queries.test.ts` (`staleTime: 0`) |
-| 111, 113 | `progress/e36-progress.test.ts`; `frontend/tests/progress/{filters,default-metric,counts}.test.ts` |
-| 112, 114 | `progress/domain/{progress-stats,age-band}.test.ts`, `progress/e36-progress.test.ts` |
-| 115, 116 | `progress/domain/leaderboard-and-plans.test.ts`, `progress/{e37-leaderboard,e38-active-by-plan}.test.ts` |
-| 119 | `progress/e39-export.test.ts` (30,000 values; the 300,000-value timing is Stream G's `bench`); `frontend/tests/progress/export.test.ts` |
-| 158, 159 (shared rules) | `progress/access.test.ts` (401 without a sign-in, no change-log row) |
-
-Build clarifications P1–P14 confirmed by the owner 2026-10-04 (P1 is the "no server cache" decision; P9 changed the same day, see Changelog). Follow-ups: issues #26–#31.
 
 ## Changelog
 

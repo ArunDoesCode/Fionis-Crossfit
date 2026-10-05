@@ -6,7 +6,7 @@
 //   S12 sketch: Weight kg 98.0 -> 94.0, "v 4.0 better"; Height cm 172.0 -> 172.5, "+0.5"; Fran "v 1:10 better".
 //   BR-REC-127 (ux.md) formats: "95.5 kg", "24.0 %", times "2:02" or "1:05:30".
 //   BR-REC-117 Plank 122 s -> display 2:02.
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/text`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/text`:
 //   `valueText`, `signedValueText` (minus is U+2212), `changeText` (arrows U+2191 / U+2193).
 //   `metric` = { datatype, decimals, unit, better }.
 import { beforeAll, describe, expect, test } from 'bun:test';

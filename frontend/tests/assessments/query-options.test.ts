@@ -2,7 +2,7 @@
 //   BR-REC-20 / 81 — "previous" is read fresh: the entry-form query never serves a cached copy as fresh.
 //   BR-REC-88      — due dates update at once after a write: every successful write (E26, E29, E30) invalidates
 //                    the assessment reads, the member reads (`lastAssessedOn`) and the due reads.
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/api/assessments/queries`:
 //   `entryFormQueryOptions(memberId, typeId, date)` -> TanStack query options: `queryKey` =
 //     `assessmentKeys.entryForm(memberId, typeId, date)`, `staleTime: 0`. It reads E25

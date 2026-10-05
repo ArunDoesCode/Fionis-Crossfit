@@ -1,8 +1,8 @@
 // Spec: docs/specs/member-records/setup.md (v2) and docs/specs/member-records/ux.md (word list)
 //   BR-REC-70  changing a repeat shows "This changes due dates for all members" before saving.
 //   BR-REC-71  changing "better" on a measurement that has values asks for confirmation.
-//              (Wording: contract.md "Admin app" -> Confirmations: "Best results and leaderboards will change
-//              for past results"; the spec itself only says "confirm sheet".)
+//              (Wording is not in the spec, which only says "confirm sheet"; the test expects "Best results and
+//              leaderboards will change for past results".)
 //   BR-REC-126 screens use only the word list; no ids, codes or technical words ("metric", "datatype",
 //              "interval", "snooze", "flag", "payload"); "Turn off" on screen, never "Deactivate".
 //              Word list: Assessment type -> Assessment, metric -> Measurement, interval -> Repeat every,
@@ -10,7 +10,7 @@
 //              Please check, deactivate -> Turn off.
 //   BR-REC-67  "Move up / Move down".
 //   S14 / S16  hub row and screen "Reminders & gym" with the "Due soon" and "Ends soon" days.
-// Interface: .pipeline/member-records-setup/contract.md "Admin app interfaces" — `@/lib/setup/text`:
+// Interface: docs/specs/member-records/setup.md — `@/lib/setup/text`:
 //   `SETUP_TEXT`, setup's own plain-word strings (screen titles, row words, sheet labels, confirm texts).
 //   The key names are not fixed, so the tests read every text value of the dictionary and look for the words.
 import { beforeAll, describe, expect, test } from 'bun:test';

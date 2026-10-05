@@ -6,7 +6,7 @@
 //   BR-REC-115 leaderboard: top 10 with "Show more" (Q3); P6 paged with `page` / `pageSize` (default 10 = "top 10";
 //              "Show more" asks for the next page).
 //   BR-REC-111 E36 query: metric, joined month from-to, plan, sex, age band.
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/api/progress/queries`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/api/progress/queries`:
 //   `progressKeys` (`all`, `reportCard(memberId)`, `stats(query)`, `leaderboard(metricId, sex)`, `activeByPlan()`),
 //   `reportCardQueryOptions(memberId)`, `progressStatsQueryOptions(query)`, `activeByPlanQueryOptions()`,
 //   `leaderboardInfiniteQueryOptions(metricId, sex)`; every option has `staleTime: 0`; leaderboard pages of 10.

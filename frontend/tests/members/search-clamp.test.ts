@@ -1,6 +1,6 @@
 // Spec: docs/specs/member-records/api-contract.md changelog 2026-10-04 v1 — "E16 `q` is 2–100 characters";
 //   docs/specs/member-records/members.md BR-REC-07 (search text).
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/search`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/search`:
 //   `clampSearchText(q)`: the first 100 characters of `q`; shorter input unchanged. So a long paste never
 //   produces a 400 from E16.
 import { beforeAll, describe, expect, test } from 'bun:test';

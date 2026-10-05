@@ -14,6 +14,7 @@
     "db:test:prepare": "bun scripts/prepare-test-db.ts",
     "seed": "bun scripts/seed.ts",
     "seed:perf": "bun scripts/seed-perf.ts",
+    "seed:demo": "bun scripts/seed-demo.ts",
     "bootstrap-admin": "bun scripts/bootstrap-admin.ts",
     "contract:generate": "bun scripts/generate-api-manifest.ts",
     "contract:check": "bun scripts/generate-api-manifest.ts --check",

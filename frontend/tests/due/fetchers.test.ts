@@ -1,14 +1,14 @@
-// Spec: docs/specs/member-records/due-list.md (v2) and .pipeline/member-records-due-list/contract.md
+// Spec: docs/specs/member-records/due-list.md (v2)
 //   BR-REC-18 / 99 / 100 / C8 / C9  Assess soon is PUT {action:"flag"}, Remind me later is PUT
 //              {action:"snooze", until}, either is removed with DELETE (E33, E34).
 //   BR-REC-104 / C11 the lists are E31 (`status` overdue|upcoming, `typeId` only when an assessment is picked,
 //              `page`, `pageSize`); the member page block is E32.
-// Interface: contract "Admin app interfaces" -> `@/lib/api/due/fetchers`:
+// Interface: docs/specs/member-records/due-list.md -> `@/lib/api/due/fetchers`:
 //   `fetchDueList({ status, typeId?, page, pageSize })` returns the `{ data, meta }` envelope of E31 (`typeId` sent
 //   only when set); `fetchMemberDue(memberId)` (E32); `putDueAction(memberId, typeId, body)` sends PUT with the strict
 //   body `{ action: 'flag' }` or `{ action: 'snooze', until }` and returns E33 `data`; `deleteDueAction(memberId,
-//   typeId)` sends DELETE with no body and returns `{}`; writes carry no `Idempotency-Key` (contract "All four
-//   endpoints"; BR-REC-156 covers E17 and E22 only). A non-2xx answer throws `ApiError` with the server's `code`.
+//   typeId)` sends DELETE with no body and returns `{}`; writes carry no `Idempotency-Key` (due-list.md;
+//   BR-REC-156 covers E17 and E22 only). A non-2xx answer throws `ApiError` with the server's `code`.
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { ApiError } from '@/lib/api/errors';
 import { errorResponse, jsonResponse, setAuthEnv } from '../auth/helpers';

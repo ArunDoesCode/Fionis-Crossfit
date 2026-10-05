@@ -20,7 +20,7 @@ SPEC → FREEZE → CONTRACT → RED TESTS (separate agent) → BUILD (backend �
 | Where are we / end of session | Claude | `/status`, `/wrap`, `/map <module>` |
 
 ## Claude Code setup
-- `CLAUDE.md` (root ≤100 lines) + `backend|frontend|member/CLAUDE.md` (≤150), loaded by directory.
+- `CLAUDE.md` + `backend|frontend|member/CLAUDE.md`, loaded by directory (line budgets: `docs/KNOWLEDGE.md`).
 - `.claude/agents/` — 9 agents: explorer, test-runner (haiku); backend-dev, frontend-dev, tv-dev, member-dev,
   test-writer, reviewer (sonnet); spec-analyst (opus). Package agents (hono/nextjs/expo builder + reviewer)
   hold the code conventions, derived from `docs/standards/*`.
@@ -41,7 +41,7 @@ SPEC → FREEZE → CONTRACT → RED TESTS (separate agent) → BUILD (backend �
 | Pilot | UAT at the gym (10+ members, 2 weeks) | defects triaged, perf budgets met |
 | After | membership-payments, second gym | — |
 
-Specs ≤150 lines / ≤25 rules; bigger → split. Raw material for every spec: `docs/design/` (standards and
+Spec and map size budgets: `docs/KNOWLEDGE.md`; bigger → split. Raw material for every spec: `docs/design/` (standards and
 `docs/decisions.md` win on conflict).
 
 ## Day to day

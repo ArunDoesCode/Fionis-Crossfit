@@ -38,6 +38,14 @@ Knowledge is layered by **how often it's needed**; agents load the smallest laye
 5. **Resuming work** reads `docs/STATUS.md` → `.pipeline/<feature>/plan.md` → findings — no
    re-planning.
 
+## Parallel streams (D-017, D-025)
+- A stream PR edits only its own sub-spec (Build clarifications, Changelog), its own sub-map `docs/modules/<module>/<stream>.md`
+  and `.pipeline/<feature>/`. It never edits `docs/STATUS.md`, `docs/decisions.md`, the spec index or the module index.
+- After the merge the coordinator makes ONE docs commit: the index Streams row, STATUS, and the next D-NNN.
+- `last_verified_commit` must be a SHA that is on `main` (squash merges remove branch SHAs).
+- Run folders `.pipeline/<feature>/` are deleted in a docs commit after the PR merges, except `checklist.md` until the owner has run it.
+- A map file is ≤ 250 lines and ≈ 25 KB, else split per stream (one sub-map per stream; the module index stays small).
+
 ## When the codebase grows
 - **New module** → `/map <module>` creates its map; add a row to `docs/STATUS.md`.
 - **Map > 250 lines** → split by sub-area (`docs/modules/results/validation.md`, `…/corrections.md`) with `results.md` as index.

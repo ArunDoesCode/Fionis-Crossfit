@@ -2,7 +2,7 @@
 //   BR-REC-72  every device sees setup changes the next time it opens a form (catalog revalidated with ETag,
 //              304 when unchanged). Example: coach adds Burpees on the tablet -> the phone's next form shows it.
 //   BR-REC-67  the order is read from the catalog, so a fresh read after "Move up / Move down" matters.
-// Interface: .pipeline/member-records-setup/contract.md "Admin app interfaces" + "Admin app" (Catalog freshness,
+// Interface: docs/specs/member-records/setup.md (Catalog freshness,
 //   Catalog page size) — `@/lib/api/setup/queries`: `setupKeys` (`all`, `settings()`, `catalog(includeInactive)`),
 //   `settingsQueryOptions()`, `assessmentTypesQueryOptions(includeInactive)`; both options have `staleTime: 0`
 //   (the app's client defaults to 30 s, so 0 must be explicit); every write invalidates `setupKeys.all`.

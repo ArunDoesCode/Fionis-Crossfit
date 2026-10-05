@@ -1,7 +1,7 @@
 // BR-REC-32 — every refresh replaces the refresh token; the replaced one still works
 // for 60 seconds (two tabs at once); using it later ends that device's sign-in (reason `reuse`).
 // "Time passes" by moving `auth_sessions.rotated_at` back, which is when the replacement happened.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

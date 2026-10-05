@@ -3,7 +3,7 @@
 //   BR-REC-108 the segmental table shows its date "(≈ when estimated)". Example: "Arms missing on 12 Sep".
 //   BR-REC-127 (ux.md) dates: "3 Oct 2026", the year left out when it is this year; "about" is written ≈
 //              (word list: estimated -> About (≈)).
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/text`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/text`:
 //   `readingDateText(on, isEstimated, today)`: estimated -> "≈ Dec 2025" (short month name + year, always the year);
 //   otherwise `formatDay(on, today)`. Calendar days have no zone (BR-REC-153), so the result is the same
 //   in every time zone.

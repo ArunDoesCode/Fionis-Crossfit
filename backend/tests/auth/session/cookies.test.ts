@@ -1,5 +1,5 @@
 // BR-REC-30 (the two sign-in cookies) and the cookie side of BR-REC-31.
-// Spec: docs/specs/member-records/auth.md; wire details: .pipeline/member-records-auth/contract.md.
+// Spec and wire details: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

@@ -25,7 +25,7 @@ Route by **scope** — the narrower the scope, the deeper the layer (full table:
 | Progress, what's next | `docs/STATUS.md` |
 
 Rules:
-- Show the list to the user first; write only what they accept.
+- Show the list to the user first; write only what they accept. In a D-017 stream session do not write STATUS or decisions.md (D-025): the coordinator does after the merge.
 - Deduplicate: search the target file before adding; update an existing line rather than adding a near-copy.
 - Budgets (`docs/KNOWLEDGE.md`): root `CLAUDE.md` ≤ 100 lines, package ≤ 150, map ≤ 250. Over budget →
   propose moving detail down a layer and leaving a one-line pointer.

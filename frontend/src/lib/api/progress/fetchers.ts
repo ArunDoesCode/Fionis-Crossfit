@@ -5,7 +5,7 @@ import { clientEnv } from '@/lib/env';
 import type { ProgressStatsQuery } from '@/lib/progress/filters';
 import type { operations } from '@/types/api.generated';
 
-// E35–E39 (contract.md). Success is `{ success: true, data }`; the fetchers hand back `data`. Failures throw
+// E35–E39 (api-contract.md, progress.md). Success is `{ success: true, data }`; the fetchers hand back `data`. Failures throw
 // ApiError. Types come from the generated contract.
 type Json<T> = T extends { content: { 'application/json': infer B } } ? B : never;
 type Reply<Name extends keyof operations, Status extends number> = operations[Name] extends {

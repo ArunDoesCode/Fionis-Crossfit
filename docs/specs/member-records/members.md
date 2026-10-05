@@ -124,6 +124,8 @@ S9 Renew sheet: plan chips, "Starts on", live "Ends …" line, [Cancel] [Renew];
 
 Custom plans and prices, payments, freezes/pauses, bonus days or manual end dates, member photos, merging duplicates, CSV import.
 
+No automated UI tests for screens S4–S9, Home search and Home sections (no DOM test library, #9); covered by the manual checklist.
+
 ## Questions (all answered 2026-10-03)
 
 | # | Question | Options | Answer |
@@ -135,28 +137,6 @@ Custom plans and prices, payments, freezes/pauses, bonus days or manual end date
 | Q5 | Plan for a new member | **A** no default, trainer picks / B Monthly pre-selected | **A** |
 | Q6 | An archived member is… | **A** read-only until restored / B still editable | **B**, and their page shows when the membership ended (owner) → BR-REC-58, 172 |
 | Q7 | Renewing an archived member… | **A** keeps them archived; the sheet says how to restore (recommended: safe when typing in old binder members) / B restores them when the new membership covers today | **B** → BR-REC-58 |
-
-## Implementation status (2026-10-04, branch `claude/member-records-feature-8fca5b`)
-
-All 23 rules built. Backend tests: `backend/tests/members/`; admin tests: `frontend/tests/members/`; manual: `.pipeline/member-records-members/checklist.md`.
-| BR-REC | Test file(s) |
-|---|---|
-| 03, 05 | `create-member`, `field-rules`, `member-detail`; `frontend/validators-forms` |
-| 04 | `create-member`; `frontend/duplicates` |
-| 06 | `archive-restore`, `list-search` |
-| 07, 56, 57 | `list-search`, `search-text-length`; `frontend/{search,search-clamp}` |
-| 08, 51, 52 | `membership-status`, `create-member`, `add-period`; `frontend/membership-text`; Stream 0 domain golden fixture |
-| 09 | `add-period`, `edit-period`; `frontend/renew` |
-| 45, 46, 49 | `field-rules`; `frontend/{validators-helpers,validators-forms}` |
-| 47 | `list-search` (`phone` filter); `frontend/duplicates`; manual (warning timing) |
-| 48 | `create-member`, `update-member`; `frontend/{validators-forms,date-warning}` |
-| 50 | `create-member`, `add-period`, `edit-period`, `update-member`; `frontend/validators-forms` |
-| 53 | `memberships-ending` |
-| 54 | `add-period`; `frontend/renew`; manual |
-| 55 | `edit-period`; manual |
-| 58 | `archive-restore`, `add-period`, `edit-period`, `update-member`; `frontend/renew` (E26 half belongs to assessments) |
-| 59, 172 | `member-detail`; `frontend/{membership-text,banner}`; manual |
-Backend files are under `backend/tests/members/*.test.ts`. Screens S4–S9, Home search and sections have no automated UI test (no DOM test library, #9); manual checklist.
 
 ## Changelog
 

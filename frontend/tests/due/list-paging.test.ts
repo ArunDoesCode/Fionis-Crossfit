@@ -2,7 +2,7 @@
 //   BR-REC-104 "See all" lists are 25 per page with an assessment filter and the same order.
 //   C11        S3 loads 25 per page ("Show more" adds the next page); its filter chips set `typeId`; the tab
 //              `soon` is asked from the API as `status=upcoming`.
-// Interface: contract "Admin app interfaces" -> `@/lib/api/due/queries`: `useDueList(status, typeId)` is an infinite
+// Interface: docs/specs/member-records/due-list.md -> `@/lib/api/due/queries`: `useDueList(status, typeId)` is an infinite
 //   query that holds `pages` of the E31 envelope `{ data, meta }` under `dueKeys.infinite(status, typeId)`.
 // How: the hook is called in a server render (hookHarness.ts); its `refetch` loads page 1 and `fetchNextPage` is the
 //   "Show more" button; `fetch` is stubbed with a server that answers like E31 (25 rows a page, 60 rows in all).

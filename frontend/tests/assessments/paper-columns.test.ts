@@ -2,7 +2,7 @@
 //   BR-REC-79 — paper-column chips Q1-Q4 set the date to join date + 0 / 3 / 6 / 9 months and tick
 //               "estimated". Example: joined 1 Jun 2025, chip Q3 -> about 1 Dec 2025.
 //   D16       — chips Q1-Q4 = join date + 0 / 3 / 6 / 9 calendar months (`addMonths`, month-end clamp).
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/paperColumns`: `paperColumnDate(joinedOn, column)`, `column` 1 | 2 | 3 | 4.
 //   Month-end clamp: 31 Aug, Q2 -> 30 Nov.
 import { beforeAll, describe, expect, test } from 'bun:test';

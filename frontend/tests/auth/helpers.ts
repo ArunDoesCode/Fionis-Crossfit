@@ -1,5 +1,5 @@
 // Shared helpers for the auth tests (admin-app side of docs/specs/member-records/auth.md).
-// Interface sources: .pipeline/member-records-auth/contract.md "Admin app (frontend)" and the
+// Interface sources: docs/specs/member-records/auth.md and the
 // framework contract of Next.js (`proxy` / `config.matcher`), never the implementation.
 import { mock } from 'bun:test';
 import { AsyncLocalStorage } from 'node:async_hooks';

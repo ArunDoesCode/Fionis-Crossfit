@@ -3,7 +3,7 @@
 //   BR-REC-29 — while locked, Login says, without naming which part was wrong, "Too many wrong tries, so
 //               sign-in is paused. Try again in 9 minutes." (minutes rounded up);
 //               API: 429 with `details.retryAfterSeconds`.
-// Interface: .pipeline/member-records-auth/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/auth.md —
 //   `loginErrorMessage(err: unknown): string` in `@/lib/auth/loginError`:
 //     401 -> "That username or password is not right.";
 //     429 `LOGIN_LOCKED` -> the BR-REC-29 line with minutes = ceil(`details.retryAfterSeconds` / 60);

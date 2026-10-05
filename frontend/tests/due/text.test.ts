@@ -6,8 +6,8 @@
 //              the change is undone with "Couldn't save this. Try again."
 //   BR-REC-126 screens use only the word list; no ids, codes or technical words ("metric", "interval", "snooze",
 //              "flag", "payload"); Upcoming -> Due soon.
-//   BR-REC-137 an icon-only button has a spoken name: the row "..." is "More for <name>" (contract "Row").
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/text`: `DUE_TEXT`,
+//   BR-REC-137 an icon-only button has a spoken name: the row "..." is "More for <name>" (ux.md).
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/text`: `DUE_TEXT`,
 //   due-list's own plain-word strings (section empty lines, sheet choices, toasts). The key names are not fixed, so
 //   the tests read every text value of the dictionary. A value that is a function (a text with a name or a date in
 //   it) is called with sample words and its answer is read.

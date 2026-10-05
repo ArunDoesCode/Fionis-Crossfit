@@ -1,10 +1,10 @@
 // Spec: docs/specs/member-records/due-list.md (v2)
 //   BR-REC-104 "See all" lists have an assessment filter; S3 is `/admin/due?tab=overdue|soon&type=` (C11).
-// Interface: .pipeline/member-records-due-list/contract.md "Admin app interfaces" — `@/lib/due/searchParams`:
+// Interface: docs/specs/member-records/due-list.md — `@/lib/due/searchParams`:
 //   `parseDueTab(value | null)`: `overdue` | `soon`, anything else -> `overdue`.
 //   `dueListSearchParams` (nuqs parsers): `tab` = `overdue` | `soon`, anything else -> `overdue`;
 //   `type` = a uuid string or null (anything else -> null).
-//   The ids the API hands out are "any 8-4-4-4-12 hex uuid" (contract "All four endpoints").
+//   The ids the API hands out are "any 8-4-4-4-12 hex uuid" (due-list.md).
 //   A nuqs parser may fall back to the default itself or answer null and let the default apply, so for "anything
 //   else" the `tab` parser tests accept `overdue` or null, never `soon`.
 import { beforeAll, describe, expect, test } from 'bun:test';

@@ -32,7 +32,7 @@ meets BR-REC-150 and 174 (fonts) in the root layout.
 
 | ID | Rule | Example (given → then) | Check |
 |---|---|---|---|
-| BR-REC-141 | Budgets are measured on the production build with the perf seed (BR-REC-170), Lighthouse mobile settings (mid-range Android, 4× CPU slowdown, 150 ms round trip, 1.6 Mbps), on the D-018 setup: Next + API on one server, database in the same region. | Same numbers on every run ± 10% | Run book in the module map |
+| BR-REC-141 | Budgets are measured on the production build with the perf seed (BR-REC-170), Lighthouse mobile settings (mid-range Android, 4× CPU slowdown, 150 ms round trip, 1.6 Mbps), on the D-018 setup: Next + API on one server, database in the same region. | Same numbers on every run ± 10% | Run book at the end of this file |
 | BR-REC-142 | Largest content shows within 2.0 s on Login, Home, Members, Member page and Record assessment, and within 2.5 s on every other screen. | Home cold open → list visible at 1.8 s | Lighthouse LCP |
 | BR-REC-143 | Nothing jumps while loading: layout shift at most 0.05 on every screen, fonts swapping in included. | Skeleton rows have the real row height | Lighthouse CLS |
 | BR-REC-144 | Every tap answers within 200 ms; typing in Record assessment updates the change line within 50 ms on the test phone. | Type "94" → "v 1.5 kg better" appears at once | INP field data + manual check |
@@ -106,3 +106,14 @@ Edge rendering, a CDN for API responses, offline saving with background sync, im
 - 2026-10-03 v1 — tactic 11 follows data-model v2 (no trigram or exclusion indexes); no rule changed
 - 2026-10-03 v1 — clarified during build (Stream 0): BR-REC-174 counts the `latin` font files (measured: Outfit 31.5 KB, all three 71.5 KB); `next/font/google` emits every unicode subset (166 KB in total) but only `latin` is ever fetched; no rule changed
 - 2026-10-04 v1 — user decision during the Stream F build (progress v2): no server cache for gym progress — BR-REC-147 drops "50 ms cached" (500 ms stays), tactic 19 dropped
+
+## Run book
+
+How to measure BR-REC-141 (moved here from the module map).
+1. `cd backend && docker compose up -d && bun run db:reset && bun run seed:perf` (local only; ~15 s for 1,000 members, ~343k values).
+2. Build and start API and frontend in production mode on one machine, Next forwarding `/api` (as D-018).
+3. `cd backend && bun run bench` → p95 and gzip size per endpoint vs BR-REC-147, 148.
+4. Lighthouse mobile (default throttling) on `/login`, `/admin`, `/admin/members`, a seeded member page and its
+   `/assess` page → LCP, CLS vs BR-REC-142, 143; repeat view for BR-REC-145; bundle and font sizes for
+   BR-REC-146, 174. CI runs the same on every PR once Stream G lands (BR-REC-173).
+5. Write the numbers in the History table of the module map (`docs/modules/member-records.md`).

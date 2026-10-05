@@ -2,7 +2,7 @@
 // retries; one refresh in flight for parallel 401s; if the refresh fails the 401 reaches the app so it can
 // open Login. Also BR-REC-29 / BR-REC-01: the wrapper keeps the server's error code and details so the
 // Login page can build its own error line (E01's 401 INVALID_CREDENTIALS and E06's 400 never refresh).
-// Interface: .pipeline/member-records-auth/contract.md "Admin app (frontend)" — "Fetch wrapper (browser)":
+// Interface: docs/specs/member-records/auth.md — the fetch wrapper (browser):
 // only a 401 with code UNAUTHORIZED triggers a refresh; one `POST /api/auth/refresh` in flight (same
 // origin); retry the call once. Existing exports used: `api` (`@/lib/api/client`), `ApiError` / `isApiError`
 // (`@/lib/api/errors`), `API_ROUTES` (`@/lib/api/routes`). The wrapper is driven only through `fetch`.

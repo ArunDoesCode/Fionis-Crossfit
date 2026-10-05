@@ -7,7 +7,7 @@
 //   BR-REC-125 (ux.md) — status is never shown by colour alone: every badge has words (Active, Ends in 5 days,
 //               Ended, Archived) plus a colour (tone).
 //   BR-REC-127 (ux.md) — "today", "tomorrow", "yesterday", "N days ago" come from `formatRelativeDay`.
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/membershipText`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/membershipText`:
 //   `PLAN_LABELS`, `membershipStatusText(m, today)` -> { label, detail, tone },
 //   `memberListBadge(item, today)` -> { text, tone }.
 import { beforeAll, describe, expect, test } from 'bun:test';

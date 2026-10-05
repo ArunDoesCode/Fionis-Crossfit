@@ -16,7 +16,7 @@ import {
   useDueSuite,
 } from "./support";
 
-// The HTTP edge of E31-E34 (BR-REC-153..159, contract.md "All four endpoints" and "Request limits"):
+// The HTTP edge of E31-E34 (BR-REC-153..159, docs/specs/member-records/due-list.md and api-contract.md):
 // sign-in, the Origin check on writes, and what each request may look like. One error at a time.
 
 const s = useDueSuite();

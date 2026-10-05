@@ -7,9 +7,7 @@ TV-driven class flow for a CrossFit box. Solo developer + Claude Code. One git r
 - `member/` — Expo (React Native) member app: check-in, result entry, history, push.
 This file covers **how work flows**. Tech conventions: the package `CLAUDE.md` (+ `docs/standards/*`).
 
-## Current milestone
-M0 Foundations (scaffold, CI, test DB, contract tooling — exempt from the gate, see `docs/FOUNDATIONS.md`).
-Next: M1 session core (specs → build) → M2 scoring + awards → M3 TV → M4 member app → pilot at the gym.
+Current milestone and next step: `docs/STATUS.md`.
 Roadmap and daily routine: `docs/WORKFLOW.md`. Design drafts (input to specs): `docs/design/`.
 
 ## The loop (every module, no exceptions)

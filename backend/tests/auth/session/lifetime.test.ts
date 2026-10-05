@@ -1,7 +1,7 @@
 // BR-REC-31 — "Keep me signed in": 7 days since last use (sliding) when ticked,
 // 12 hours from sign-in when not. Time is moved by editing the session row
 // (`expires_at`, `last_used_at`, `created_at`), consistently, as if it had passed.
-// Spec: docs/specs/member-records/auth.md; contract: .pipeline/member-records-auth/contract.md.
+// Spec and contract: docs/specs/member-records/auth.md.
 import {
   afterAll,
   beforeAll,

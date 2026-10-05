@@ -4,7 +4,7 @@
 //   D17       — `NumberField` gets `allowNegative` (a +- button next to the decimal keypad), used when the
 //               measurement has no lower check limit or one below 0 (Flexibility); both fields get
 //               `enterKeyHint` ("next", "done" on the last field).
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/assessments/fieldOptions`: `canBeNegative(plausibleMin)`: `null` or below 0 -> true;
 //   `enterKeyHintFor(index, count)`: `'done'` for the last of `count` fields, else `'next'`.
 import { beforeAll, describe, expect, test } from 'bun:test';

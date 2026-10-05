@@ -39,7 +39,7 @@ report card, gym progress, CSV · mobile-first UI · speed budgets · installabl
 ## Sub-specs
 | Sub-spec | What it decides | Rules | Endpoints | Tables | Screens |
 |---|---|---|---|---|---|
-| [data-model](member-records/data-model.md) | every table, constraint, index, seed command | 9 | — | all 13 | — |
+| [data-model](member-records/data-model.md) | every table, constraint, index, seed commands | 10 | — | all 13 | — |
 | [api-contract](member-records/api-contract.md) | conventions, the 40-endpoint table, error codes | 10 | all (list) | — | — |
 | [ux](member-records/ux.md) | shell, navigation, words, fonts, components, a11y, tap budgets, screen index | 21 | — | — | shell |
 | [performance](member-records/performance.md) | speed budgets, fonts budget, CI checks, installable app | 14 | E40 | — | — |
@@ -54,15 +54,15 @@ Why: each feature sub-spec is one build stream with its own files; the four shar
 (Stream 0). The report sub-spec is named `progress` because "report" file names are reserved for run reports.
 
 ## Rule map
-IDs are permanent and unique across sub-specs (strike out, never renumber). 175 rules, each with an example and
-a Check. Next free ID: **BR-REC-176**.
+IDs are permanent and unique across sub-specs (strike out, never renumber). 176 rules, each with an example and
+a Check. Next free ID: **BR-REC-177**.
 | BR-REC | Sub-spec | | BR-REC | Sub-spec |
 |---|---|---|---|---|
 | 01–02, 25–44, 171 | auth | | 15–18, 93–105 | due-list |
 | 03–09, 45–59, 172 | members | | 22–24, 106–119 | progress |
 | 10, 11, 13, 14, 60–72 | setup | | 120–140 | ux |
 | 12, 19–21, 73–92 | assessments | | 141–152, 173, 174 | performance |
-| 153–162 | api-contract | | 163–170, 175 | data-model |
+| 153–162 | api-contract | | 163–170, 175, 176 | data-model |
 v1 rules BR-REC-01…24 moved word for word; the v1 "Metric list" moved to setup.
 
 ## Parallel build plan
@@ -78,10 +78,7 @@ Freeze all ten sub-specs first (Stream 0 needs the contract and shared maths fro
 | F | progress | M0 | E35–E39, S12, S13, S18 |
 | G | performance | M3 | Pass items: service worker + install, CI bundle/font/Lighthouse checks on every PR, vitals (E40), `bench`, deploy to the D-018 server |
 
-Implementation status: **Stream 0 built** (branch `claude/member-records-foundation-57e849`): data-model, api-contract,
-ux shell rules + BR-REC-12, 51, 52, 75, 94, 150, 174 — BR → test file in the map's Tests table; merged to `main` (M0).
-Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Stream F (progress) built on `claude/feature-f-progress-report-6c2bbe` (progress.md v2 → Implementation status). Streams B, D, E, G: see their sub-specs.
-Stream A (auth) built on `claude/member-records-parallel-build-f18292` (auth.md v2 → Implementation status). Stream C (setup) built on `claude/member-records-setup-8ce4cb` (setup.md v2 → Implementation status). Stream D (assessments) built on `claude/member-record-assessment-696977` (assessments.md v2 → Implementation status). Streams E–G: see their sub-specs.
+Implementation status: built and merged: Streams 0, A–F (PRs #10, #11, #22, #23, #35, #33, #34); open: G (performance). Per-rule tests: `git grep -l 'BR-REC-NN' -- '*/tests/*'`; manual checks: `.pipeline/member-records-*/checklist.md`; as-built code: `docs/modules/member-records.md` and `docs/modules/member-records/<stream>.md`.
 
 Merge points: **M0** Stream 0 → **M1** A (needed to click through anything) → **M2** C, B → **M3** D, E, F
 → **M4** G + scenario test (3 real binder members typed in end to end) + owner/coach check → done. A–F may
@@ -100,6 +97,7 @@ Shared files (everyone else reads only; a needed change goes to the coordinator,
 | `backend/src/db/**`, `scripts/seed*`, `routes/end-points.ts`, `routes/index.ts`, `lib/{audit,idempotency,origin-check,etag,server-timing}.ts`, `lib/domain/{dates,duration,membership}.ts` | Stream 0 |
 | `backend/src/{types,routes,controller,service,repository}/<feature>*`, `lib/domain/due.ts` (E), `lib/domain/report.ts` (F) | that stream |
 | `backend/src/lib/{token,auth-middleware,rate-limiter}.ts`, `scripts/bootstrap-admin.ts`, `frontend/src/proxy.ts` | A auth |
+| `backend/src/lib/domain/metric-value.ts` (rounding; D assessments calls it) | C setup |
 | `.contracts/*`, `frontend/src/types/api.generated.ts` | generated — re-run, never hand-merge |
 | `frontend/src/{lib/api/{routes,client}.ts,lib/messages/**,lib/format.ts,lib/domain/**,lib/hooks/**,lib/searchParams.ts,components/common/**,components/shells/**}`, `next.config.ts`, `app/layout.tsx`, `app/(app)/admin/layout.tsx`, the Home and Member-page frames | Stream 0 |
 | `frontend/src/components/pages/home/DueSections.tsx`, `pages/member/DueBlock.tsx` | E due-list |
@@ -120,7 +118,7 @@ personalisation rules (plateau flags, ratios, risk bands, personalised loads), s
 source-photo attachment. Added in v2: personal logins, signed-in device list, email password reset, saving
 offline with later sync, reminders to members (WhatsApp/SMS), scale import, other languages, custom plans, multi-gym.
 
-## v1 rules re-read (please confirm at /freeze)
+## v1 rules re-read (accepted by the owner at the v2 freeze)
 v1 wording is kept; v2 reads it like this:
 1. BR-REC-01 lock: one lock for the whole login, from any device or network (auth Q1 = B; BR-REC-28, 29, 171).
 2. BR-REC-06 "vanish from search": gone from Home, due lists and normal search; listed only under the Members
@@ -142,7 +140,7 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
 | Q3 | Fran, Filthy 50, 5K: are the written numbers min:sec (e.g. "3:20")? Flexibility: what is measured (cm reach)? | **A** mm:ss, flexibility in cm / B other | A |
 | Q4 | Warning at a 30% jump and "plateau" at < 1% change: right for the owner? | **A** yes, adjustable later / B other values | A |
 | Q5 | Lead windows: Upcoming 7 days, Expiring 14 days. | **A** keep / B other | A |
-| Q6 | (developer) Parallel sessions need separate working copies; the root CLAUDE.md allows one branch and one worktree. | **A** one worktree + branch per stream, merged into `work/member-records` at each merge point / B one session at a time | A → D-017 |
+| Q6 | (developer) Parallel sessions need separate working copies; the root CLAUDE.md allows one branch and one worktree. | **A** one worktree + branch per stream, merged into `work/member-records` at each merge point / B one session at a time | A → D-017 (own PR per stream, no integration branch) |
 | Q7 | (developer) Hosting | **A** one small server in Mumbai (ap-south-1) next to Supabase, Next + API behind one address / B Vercel + a separate API host | A → D-018 |
 
 ## Changelog
@@ -158,4 +156,5 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
 - 2026-10-03 v2 — data-model v2 during the Stream 0 build (user: keep the MVP light): BR-REC-167 struck, BR-REC-169
   rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
 - 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.
-- 2026-10-04 v2 — progress v2 during the Stream F build (user: keep the MVP light): BR-REC-110 computed live, no server cache; performance BR-REC-147 / tactic 19 follow; build clarifications P1–P11 in progress.md.
+- 2026-10-04 v2 — progress v2 during the Stream F build (user: keep the MVP light): BR-REC-110 computed live, no server cache; performance BR-REC-147 / tactic 19 follow; build clarifications P1–P14 in progress.md.
+- 2026-10-04 v2 — data-model v3: new BR-REC-176 (`seed:demo`, MVP demo; next free ID BR-REC-177); ownership table: `metric-value.ts` → C setup; "Implementation status" replaced by one status paragraph (duplicate BR→test tables dropped, D-025)

@@ -1,5 +1,5 @@
 // Spec: docs/specs/member-records/ux.md · BR-REC-127 (formats).
-// Interface: .pipeline/member-records-foundation/contract.md, "Frontend shared modules" (lib/format.ts).
+// Interface: docs/specs/member-records/ux.md BR-REC-127 and api-contract.md BR-REC-153 (lib/format.ts).
 // Calendar days are `YYYY-MM-DD` with no zone (BR-REC-153), so every result must be the same whatever
 // time zone the device is in: the zone-sensitive cases below run under several TZ values.
 import { afterAll, describe, expect, test } from 'bun:test';
@@ -76,7 +76,7 @@ describe('BR-REC-127 formatRelativeDay', () => {
     // [date, today, expected]
     ['2026-10-03', TODAY, 'today'],
     ['2026-10-04', TODAY, 'tomorrow'], // example: "Due 4 Oct, today 3 Oct -> Due tomorrow"
-    ['2026-10-02', TODAY, 'yesterday'], // contract.md lists "yesterday"
+    ['2026-10-02', TODAY, 'yesterday'], // members.md example: "Ended yesterday"
     ['2026-10-05', TODAY, 'in 2 days'],
     ['2026-10-06', TODAY, 'in 3 days'],
     ['2026-10-13', TODAY, 'in 10 days'],

@@ -1,7 +1,7 @@
 # member-records/auth · manual test checklist
 
 Spec: `docs/specs/member-records/auth.md` v1 (BR-REC-01, 02, 25…44, 171) + `ux.md` v1 (rules that touch S1 Login and S17 Account).
-Written from the spec rules and `screens.md` (URLs and roles only). `[G]` = golden path, `[N]` = negative path, `[slow]` = needs real waiting,
+Written from the spec rules and the screen notes (URLs and roles only). `[G]` = golden path, `[N]` = negative path, `[slow]` = needs real waiting,
 `[deploy]` = only on the real server (Stream G), `[pilot]` = watch during the gym pilot.
 Fix round 1 (review R-9, R-10) added the items tagged `[R-9]` / `[R-10]` in sections 2, 5, 8 and 13 (no DOM test library yet, #9, so these are manual).
 

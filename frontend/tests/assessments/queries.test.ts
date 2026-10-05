@@ -2,7 +2,7 @@
 //   BR-REC-88 — Delete asks ...; due dates update at once (a write must reach every cached read).
 //   BR-REC-89 — "All assessments" lists 25 per page.
 //   D18       — the member page "Recent" block shows the latest 3 assessments (E27, `pageSize=3`).
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" —
+// Interface: docs/specs/member-records/assessments.md —
 //   `@/lib/api/assessments/queries`: `assessmentKeys` (`all` = `['assessments']`, `entryForm(memberId, typeId,
 //   date)`, `lists()`, `list({ memberId, typeId })`, `recent(memberId)`, `detail(id)`), `ASSESSMENT_PAGE_SIZE`
 //   = 25, `RECENT_SIZE` = 3. Every mutation success invalidates `assessmentKeys.all`, so every key sits under

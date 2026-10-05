@@ -10,7 +10,7 @@
 //   BR-REC-50 — the first membership has no default plan; it may not start before the join date
 //               ("Membership can't start before the join date").
 //   ux.md BR-REC-134 — save with no phone -> "Enter a phone number" on the phone field.
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/validators/members`:
+// Interface: docs/specs/member-records/members.md — `@/lib/validators/members`:
 //   `memberFormSchema(today)` (S6), `memberEditFormSchema(today)` (S8), `periodFormSchema` (S9).
 //   Zod schemas: tested only through `safeParse` and the issues it reports (issue `path` = the field).
 import { beforeAll, describe, expect, test } from 'bun:test';

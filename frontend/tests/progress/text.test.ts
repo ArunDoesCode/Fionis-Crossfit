@@ -6,7 +6,7 @@
 //   "Export data", "Download CSV", "Opens in Excel or Google Sheets".
 //   BR-REC-126 screens use only the word list; no ids, codes or technical words ("metric", "datatype",
 //              "interval", "snooze", "flag", "payload"); "Turn off" never "Deactivate"; Ends soon / Ended.
-// Interface: .pipeline/member-records-progress/contract.md "Admin app interfaces" — `@/lib/progress/text`:
+// Interface: docs/specs/member-records/progress.md — `@/lib/progress/text`:
 //   `PROGRESS_TEXT` (the screens' own plain words) and `AGE_BAND_LABELS`. The key names of PROGRESS_TEXT are not
 //   fixed, so the tests read every text value of the dictionary and look for the words.
 import { beforeAll, describe, expect, test } from 'bun:test';

@@ -9,7 +9,7 @@
 //   BR-REC-126 screens use only the word list; no ids, codes or technical words ("metric", "datatype",
 //              "interval", "snooze", "flag", "payload"); "Turn off", never "Deactivate"; Assessment, not
 //              "assessment type"; Measurement, not "metric".
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" — `@/lib/assessments/text`:
+// Interface: docs/specs/member-records/assessments.md — `@/lib/assessments/text`:
 //   `ASSESSMENT_TEXT`, own plain-word strings. Fixed lines: `numberError`, `noValues`, `notSaved`.
 //   The other key names are not fixed, so the word checks read every text value of the dictionary.
 import { beforeAll, describe, expect, test } from 'bun:test';

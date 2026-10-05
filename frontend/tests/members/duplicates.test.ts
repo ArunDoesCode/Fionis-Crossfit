@@ -3,7 +3,7 @@
 //               marked "archived") with an "Open" link, and never blocks saving.
 //               Example: type Anita's phone -> "Also used by Anita Rao · Open".
 //   BR-REC-04 — families share phones: the same phone is warned about, never refused.
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/duplicates`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/duplicates`:
 //   `duplicatePhoneMatches(items, selfId?)` -> [{ id, label }]: other members only (drops `selfId`); label = full
 //   name, archived ones "Anita Rao (archived)". The form joins the labels with ", " and keeps Save enabled.
 import { beforeAll, describe, expect, test } from 'bun:test';

@@ -2,7 +2,7 @@
 //   D17       — `NumberField` gets `allowNegative` (a +- button next to the decimal keypad, #21); a phone's
 //               decimal keypad has no minus key.
 //   BR-REC-76 — number fields accept "." or ","; anything else shows "Enter a number like 95.5".
-// Interface: .pipeline/member-records-assessments/contract.md "Admin app interfaces" — `@/lib/numberText`:
+// Interface: docs/specs/member-records/assessments.md — `@/lib/numberText`:
 //   `toggleMinus(text)`: "95.5" -> "-95.5", "-95.5" -> "95.5", "" -> "-", "-" -> ""
 //   (ASCII minus only; leading spaces dropped).
 import { describe, expect, test } from 'bun:test';

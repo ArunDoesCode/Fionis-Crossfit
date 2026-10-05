@@ -13,7 +13,7 @@ import { membershipStatus } from "./membership";
 // `today` (the gym day) and the "Due soon" lead days are arguments (BR-REC-93).
 // Dates only; use `addInterval` / `daysBetween` from `./dates`. The service loads
 // the rows, calls these functions and shapes the answer. The types and signatures
-// are the contract (`contract.md`).
+// are the contract (docs/specs/member-records/due-list.md).
 
 export type DueMember = { id: string; fullName: string; joinedOn: IsoDate };
 

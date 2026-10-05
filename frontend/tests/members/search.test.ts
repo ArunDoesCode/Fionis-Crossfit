@@ -1,6 +1,6 @@
 // Spec: docs/specs/member-records/members.md
 //   BR-REC-07 — search needs 2+ characters ("sur" -> both Suryas; the API answers 400 for `q=s`).
-// Interface: .pipeline/member-records-members/contract.md "Admin app interfaces" — `@/lib/members/search`:
+// Interface: docs/specs/member-records/members.md — `@/lib/members/search`:
 //   `isSearchReady(q)`: trimmed length >= 2.
 import { beforeAll, describe, expect, test } from 'bun:test';
 

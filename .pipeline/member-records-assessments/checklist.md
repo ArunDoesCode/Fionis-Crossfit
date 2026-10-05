@@ -1,7 +1,7 @@
 # member-records/assessments · manual test checklist
 
 Spec: `docs/specs/member-records/assessments.md` v2 (BR-REC-12, 19…21, 73…92 + build clarifications D1…D21) + `ux.md` v1 (BR-REC-120…140 on S10, S11, their sheets and the member page's Recent block).
-Written from the spec rules and `screens.md` (URLs, words and roles only). The server rules (E25…E30: limits, upsert, race, change log) and the pure modules (number and time parsing, rounding, change line, please-check rule, paper columns, draft store, save body) have automated tests;
+Written from the spec rules and the build's screen notes (URLs, words and roles only). The server rules (E25…E30: limits, upsert, race, change log) and the pure modules (number and time parsing, rounding, change line, please-check rule, paper columns, draft store, save body) have automated tests;
 this list is for what no test reaches: the screens and sheets, the keypad and keyboard on a real phone, Back and history, drafts in the browser, the leave question, closing the tab, the offline banner, widths, themes, zoom and screen readers
 (no DOM test library yet, #9, so every sheet and layout rule is manual).
 Tags: `[G]` golden path · `[N]` negative path · `[API]` a `curl` check of the same rule · `[slow]` needs real waiting · `[note]` the spec is silent or two texts differ, tell the owner, not a fail ·

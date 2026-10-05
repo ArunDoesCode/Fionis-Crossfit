@@ -7,7 +7,7 @@
 //   BR-REC-70  changing a repeat asks for confirmation ("This changes due dates for all members").
 //   BR-REC-71  changing "better" on a measurement that has values asks for confirmation.
 //   BR-REC-126 / ux word list: Higher is better / Lower is better / No direction, Number / Time (min:sec).
-// Interface: .pipeline/member-records-setup/contract.md "Admin app interfaces" — `@/lib/setup/describe`:
+// Interface: docs/specs/member-records/setup.md — `@/lib/setup/describe`:
 //   `intervalLabel`, `betterLabel`, `datatypeLabel`, `tablePartLabel`, `intervalChangeNeedsConfirm`,
 //   `betterChangeNeedsConfirm`, `moveItem` (pure functions, no DOM).
 import { beforeAll, describe, expect, test } from 'bun:test';

@@ -63,10 +63,14 @@ a finding still open after 2 fixes → stop and summarise to the user.
 
 ## 4. Knowledge update and hand-over
 1. In this branch, so code and knowledge travel together: `docs/modules/<module>.md` (apply devs' "Map
-   updates", gotchas from the fix loop, History row, `last_verified_commit`), spec "Implementation status"
-   (BR → done + test file), GitHub issues for backlogged items, `docs/decisions.md` for decisions made,
+   updates", gotchas from the fix loop, History row, `last_verified_commit`), the spec's Build clarifications and Changelog
+   (per-rule tests: `git grep -l 'BR-REC-NN' -- '*/tests/*'`), GitHub issues for backlogged items, `docs/decisions.md` for decisions made,
    `docs/STATUS.md`. One-line cross-cutting conventions go in the package `CLAUDE.md` only if they would have
    prevented a finding (respect `docs/KNOWLEDGE.md` budgets). Commit `docs(<module>): map, spec status`.
+   **Streams under D-017 (parallel member-records builds):** the PR edits only the stream's sub-spec (Build clarifications,
+   Changelog), its sub-map `docs/modules/<module>/<stream>.md` and `.pipeline/<feature>/`. Never
+   `docs/STATUS.md`, `docs/decisions.md`, the spec index or the module index: list decisions to record under "Build choices" in
+   `plan.md`; the coordinator updates those four in ONE docs commit after the merge (D-025). `last_verified_commit` = a SHA on `main`.
 2. **Batch, don't ship each feature.** Tell the user the feature is committed on the working branch and ask
    whether to add more items or open the PR now.
 3. When asked: `git push -u origin work/<theme>`; `gh pr create --label agent-pipeline` with: spec + version,
@@ -86,3 +90,5 @@ PR; nit → fix or decline. Run section 3 again, push, reply to each comment sta
 ## After merge
 Switch the worktree to a new working branch from fresh `origin/main` (`git switch -c work/<next> origin/main`),
 delete the merged branch locally, note the merge in `docs/STATUS.md` as the first commit of the new branch.
+For a D-017 stream the coordinator makes ONE docs commit after the merge (spec index Streams row, module index, `docs/STATUS.md`,
+next D-NNN from the plan's "Build choices"), and deletes the merged `.pipeline/<feature>/` except `checklist.md` until the owner has run it.
