@@ -47,8 +47,12 @@ function parseDraft(raw: string | null): Draft | null {
 
 const isExpired = (draft: Draft, now: number): boolean => now - draft.savedAt > DRAFT_MAX_AGE_MS;
 
+/** The one write the autosave still owes (BR-REC-211). Clearing a draft cancels it, so a saved form is not rewritten. */
+export const pendingDraftWrite: { current: (() => void) | null } = { current: null };
+
 /** Removes a key, ignoring a storage that refuses. */
 export function clearDraft(storage: DraftStorage, key: string): void {
+  pendingDraftWrite.current = null;
   try {
     storage.removeItem(key);
   } catch {

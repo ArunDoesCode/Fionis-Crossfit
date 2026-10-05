@@ -36,8 +36,10 @@ export function searchMembers(
   if (folded.length < MIN_SEARCH_CHARS) return scope;
 
   if (field === 'phone') {
-    const digits = text.replace(/\D/g, '').slice(-10);
-    if (digits === '') return [];
+    const typed = text.replace(/\D/g, '');
+    if (typed === '') return []; // letters only: no phone matches
+    if (typed.length < MIN_SEARCH_CHARS) return scope; // the 2-character start counts digits
+    const digits = typed.slice(-10);
     return scope.filter((row) => row.phone.replace(/\D/g, '').includes(digits));
   }
   if (field === 'email') {

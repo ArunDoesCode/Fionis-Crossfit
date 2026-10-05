@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { browserDraftStorage, saveDraft } from './draft';
+import { useEffect } from 'react';
+import { browserDraftStorage, pendingDraftWrite, saveDraft } from './draft';
 import type { Inputs } from './types';
 
 interface DraftAutosave {
@@ -22,27 +22,28 @@ const AUTOSAVE_THROTTLE_MS = 300;
  * is empty the draft is removed instead; blocked storage means no drafts and the form works as before.
  */
 export function useDraftAutosave({ key, active, isEstimated, inputs }: DraftAutosave): void {
-  const pending = useRef<(() => void) | null>(null);
-
   useEffect(() => {
-    if (!active || key === null) return;
     const storage = browserDraftStorage();
-    if (!storage) return;
+    if (!active || key === null || !storage) {
+      pendingDraftWrite.current = null;
+      return;
+    }
     const write = () => {
-      pending.current = null;
+      if (pendingDraftWrite.current !== write) return; // cancelled (draft cleared) or replaced
+      pendingDraftWrite.current = null;
       saveDraft(storage, key, { savedAt: Date.now(), isEstimated, values: inputs });
     };
-    pending.current = write;
+    pendingDraftWrite.current = write;
     const timer = setTimeout(write, AUTOSAVE_THROTTLE_MS);
     return () => clearTimeout(timer);
   }, [key, active, isEstimated, inputs]);
 
   useEffect(() => {
-    const flush = () => pending.current?.();
+    const flush = () => pendingDraftWrite.current?.();
     window.addEventListener('pagehide', flush);
     return () => {
       window.removeEventListener('pagehide', flush);
-      flush(); // leaving the screen (or changing key) keeps the last edit
+      flush(); // leaving the screen keeps the last edit, unless the draft was just cleared
     };
   }, []);
 }

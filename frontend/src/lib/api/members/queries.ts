@@ -192,7 +192,6 @@ function useRefreshMembers() {
   return (member: MemberDetail) => {
     queryClient.setQueryData(memberKeys.detail(member.id), member);
     void queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
-    void queryClient.invalidateQueries({ queryKey: memberKeys.directory() });
     void queryClient.invalidateQueries({ queryKey: membershipKeys.all() });
   };
 }
