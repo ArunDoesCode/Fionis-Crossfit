@@ -2,13 +2,13 @@
 
 > Entry point for "where are we and what's next". Updated by `/status`, `/wrap` and, after each merge, by the coordinator in one docs commit (D-025).
 
-**Updated:** 2026-10-04 · **Milestone:** member-records: Streams 0, A–F merged to `main` (M0–M3); Stream G (performance, M4) still open
+**Updated:** 2026-10-05 · **Milestone:** member-records: Streams 0, A–F merged to `main` (M0–M3); Stream G (performance, M4) still open
 **Next action:** run the manual checklists on a phone (start: `cd backend && bun run db:reset && bun run seed:demo && bun run bootstrap-admin`), then build Stream G.
 
 ## Modules
 | Module | Spec | Map | Code | Next step |
 |---|---|---|---|---|
-| member-records (assessment entry, due list, report card, gym progress, membership terms) | frozen v2: index + 10 sub-specs | current (Streams 0, A–F) | Streams 0, A–F on `main`; G open | G (M4), scenario test, owner/coach check |
+| member-records (assessment entry, due list, report card, gym progress, membership terms) | frozen v3: index + 10 sub-specs (ux v2 desktop-first, frozen 2026-10-05) | current (Streams 0, A–F) | Streams 0, A–F on `main`; G open | G (M4), scenario test, owner/coach check |
 | auth-members (login, invites, roles, permissions) | none | — | none | after member-records; first `/spec auth-members` |
 | workouts (library, benchmarks, versions, timer config) | none | — | none | after member-records |
 | sessions (templates, schedule, lifecycle, jobs) | none | — | none | after member-records |
@@ -27,6 +27,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
+| UX v2 redesign (#59) slices U1–U6 | `claude/ui-ux-responsive-redesign-1de4d4` | U1 shell + theme starting | not opened | — |
 | docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | built; DB tests not yet run (no env files in this worktree) | not opened | owner creates the env files, then tests + PR |
 
 ## Waiting on you

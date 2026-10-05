@@ -1128,10 +1128,9 @@ export function useJobStore<T>(selector: (s: JobUiStore) => T): T {
 ```tsx
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { FloatingLabelInput, FormControl, FormField, FormGrid, FormItem, FormMessage } from '@/components/common/form';
 import { useCreateClient } from '@/lib/api/clients/queries';
 import { type CreateClientInput, createClientSchema } from '@/lib/validators/clients';
 
@@ -1147,36 +1146,25 @@ export default function CreateClientForm({ onSuccess }: CreateClientFormProps) {
   });
 
   const onSubmit = (data: CreateClientInput) =>
-    mutate(data, {
-      onSuccess: () => {
-        form.reset();
-        onSuccess();
-      },
-    }); // toasts live in the mutation hook
+    mutate(data, { onSuccess }); // toasts live in the mutation hook
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Controller
+    <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
+      <FormGrid>
+        <FormField
           control={form.control}
-          name="name"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>
-                Name <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Input id={field.name} aria-invalid={fieldState.invalid} {...field} />
-              <div className="h-4">
-                <FieldError errors={[fieldState.error]} />
-              </div>
-            </Field>
+          name="email"
+          render={({ field }) => (
+            <FormItem className="min-h-19">
+              <FormControl>
+                <FloatingLabelInput {...field} id="email" label="Email" type="email" required />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
         />
-      </div>
+      </FormGrid>
       <div className="flex justify-end gap-2 mt-4">
-        <Button variant="secondary" type="button" onClick={() => form.reset()}>
-          Reset
-        </Button>
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Saving...' : 'Save'}
         </Button>
@@ -1190,15 +1178,17 @@ export default function CreateClientForm({ onSuccess }: CreateClientFormProps) {
 
 - Schema imported from `lib/validators/` — **never** inline in the component. The same schema validates in the Server Action / Route Handler (fullstack) or mirrors the backend's (separate backend repo). Server re-validates always.
 - `defaultValues` for every field.
-- Loading state from `isPending` (mutation or `useActionState`) — no separate `useState`.
-- Toasts in the mutation hook; component-specific success (reset, close modal) via `mutate(data, { onSuccess })`.
-- Required marker: `<span className="text-destructive">*</span>` after the label.
-- Error slot: `<div className="h-4">…</div>` reserves space → no layout shift.
-- Buttons right-aligned (`flex justify-end gap-2 mt-4`); Reset = `variant="secondary" type="button"`; Submit disabled while pending with `'Saving...'` label.
-- Grid: `grid grid-cols-1 md:grid-cols-2 gap-4`.
-- New code uses shadcn `Field` + RHF `Controller`; legacy `<Form>/<FormField>` MAY remain in existing code.
-- Zod v4: `z.email()` (not `z.string().email()`), `error:` param (not `message:`). If schema has `.default()`/transforms, type `useForm<z.input<typeof S>, unknown, z.output<typeof S>>`.
+- Loading state from `isPending` (mutation or `useActionState`) — no separate `useState`. (If the Save button sits outside the `<form>`, `useIsMutating` is allowed.)
+- Toasts in the mutation hook; component-specific success (reset, close modal) via `mutate(data, { onSuccess })`. Never a toast in the form component.
+- **Field shape (owner's format, one primitive set):** `FormField` (RHF `Controller`) → `<FormItem className="min-h-19">` → `<FormControl>` wrapping a `FloatingLabelInput` → `<FormMessage />`. `min-h-19` (76 px) is on the whole item (control + message) so an error never resizes the form. Applies to every field type (text, number, date trigger, Time, chips, switch, checkbox) on desktop and touch.
+- The five parts (`FormField`, `FormItem`, `FormControl`, `FormMessage`, `FloatingLabelInput`) live **once** in `components/common/form`, built on shadcn `Field` / `FieldError` + RHF `Controller`. Do not install the legacy shadcn `form` component and do not hand-roll a label + error `<p>`.
+- Required marker `*` (in the floating label) plus `aria-required`; `aria-invalid` and `aria-describedby` are set by the primitives.
+- Layout: `FormGrid` is a container-query grid (1 / 2 / 3 / 4 columns by the form's own width, cells ≥ 240 px), not window breakpoints. Group related fields with `FormSection`.
+- Submit disabled while pending with `'Saving...'`; main action right-aligned (desktop header / action bar on phones); **no Reset button**.
+- On a failed Save: errors at every field, a top summary when ≥ 3, focus the first problem (`useFocusFirstProblem`; no smooth scroll under reduced motion). One implementation, never per form.
+- Zod v4: `z.email()` (not `z.string().email()`), `error:` param (not `message:`). If schema has `.default()`/transforms, type `useForm<z.input<typeof S>, unknown, z.output<typeof S>>`. Text-to-number via a zod pipe, one number parser.
 - Server Action forms: `useActionState(action, initial)` with `ActionResult` + `fieldErrors`, or RHF `handleSubmit` → action → map `fieldErrors` with `form.setError`.
+- Colours: never raw hex/oklch or arbitrary colour values in components — only semantic Tailwind classes backed by tokens in `globals.css` (`bg-primary`, `text-brand`, `bg-info-soft`, …).
 
 ---
 
@@ -1585,7 +1575,7 @@ Declared in the project profile; project `CLAUDE.md` adds domain specifics.
 - [ ] `'use client'` at leaves; heavy widgets lazy-loaded.
 - [ ] nuqs (if used): shared parsers, one data owner, debounced text inputs, offset reset in same update.
 - [ ] Zustand (if used): UI state only, provider pattern in SSR, atomic selectors, devtools dev-only, reset action.
-- [ ] Forms: shared schema, `defaultValues`, `isPending`, `h-4` error slot, required `*`, server re-validation.
+- [ ] Forms: shared schema, `defaultValues`, `isPending`, owner's `FormItem min-h-19` field shape, required `*`, server re-validation, no raw colours.
 - [ ] Realtime: coalesced invalidations, cleanup closes connection.
 - [ ] Cookies/auth per §8; no tokens in JS storage; no secrets in `NEXT_PUBLIC_*`.
 - [ ] Images/fonts/scripts via Next components; `sizes` set.
