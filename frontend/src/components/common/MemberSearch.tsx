@@ -1,22 +1,15 @@
 'use client';
 
-import { Cancel01Icon, Search01Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
 import { useId, useRef } from 'react';
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group';
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { MemberSearchField } from '@/lib/members/directory';
 import { UI_TEXT } from '@/lib/messages/words';
 
@@ -27,90 +20,80 @@ interface MemberSearchProps {
   onFieldChange: (field: MemberSearchField) => void;
 }
 
-// Value -> label, so the trigger shows "Email", not "email".
-const FIELDS: Record<MemberSearchField, string> = { name: 'Name', email: 'Email', phone: 'Phone' };
+interface FieldItem {
+  value: MemberSearchField;
+  label: string;
+}
 
+const FIELDS: FieldItem[] = [
+  { value: 'name', label: 'Name' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+];
+
+// The keyboard follows the field (number pad for phone, @ keyboard for email).
 const KEYBOARD = { name: 'search', email: 'email', phone: 'tel' } as const;
+const PLACEHOLDER = {
+  name: 'Search by name',
+  email: 'Search by email',
+  phone: 'Search by phone',
+} as const;
 
-// BR-REC-201: the one member search (Home and Members): a dropdown (Name, Email, Phone) joined to the
-// search input as one control. Controlled and instant: every key changes `text` at once, nothing waits and
-// nothing is asked of the server. Switching the field keeps the text. The keyboard follows the field
-// (number pad for phone).
+// BR-REC-201: the one member search (Home and Members): a shadcn Combobox (Name, Email, Phone) and a plain
+// input side by side. Controlled and instant: every key changes `text` at once, nothing waits and nothing is
+// asked of the server. Switching the field keeps the text and moves focus back to the input.
 export default function MemberSearch({ text, field, onChange, onFieldChange }: MemberSearchProps) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const picked = useRef(false);
 
   return (
-    <search>
+    <search className="flex items-center gap-2">
+      <Combobox
+        items={FIELDS}
+        value={FIELDS.find((item) => item.value === field) ?? FIELDS[0]}
+        onValueChange={(next) => {
+          if (!next) return;
+          onFieldChange(next.value);
+          picked.current = true;
+        }}
+        // Focus the text input once the list has closed: the combobox returns focus to its own input.
+        onOpenChange={(open) => {
+          if (open || !picked.current) return;
+          picked.current = false;
+          requestAnimationFrame(() => inputRef.current?.focus());
+        }}
+      >
+        <ComboboxInput
+          aria-label="Search by"
+          readOnly
+          className="h-[var(--control-height)] min-h-11 w-36 shrink-0"
+        />
+        <ComboboxContent>
+          <ComboboxList>
+            {(item: FieldItem) => (
+              <ComboboxItem key={item.value} value={item}>
+                {item.label}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
       <Label htmlFor={id} className="sr-only">
         {UI_TEXT.searchMembers}
       </Label>
-      <InputGroup className="h-[var(--control-height)] min-h-11">
-        <InputGroupAddon className="h-full self-stretch p-0">
-          <Select
-            items={FIELDS}
-            value={field}
-            onValueChange={(next) => {
-              if (next) onFieldChange(next as MemberSearchField);
-              picked.current = true;
-            }}
-            // Focus the input once the list has closed: the select returns focus to its trigger while closing.
-            onOpenChange={(open) => {
-              if (open || !picked.current) return;
-              picked.current = false;
-              requestAnimationFrame(() => inputRef.current?.focus());
-            }}
-          >
-            <SelectTrigger
-              aria-label="Search by"
-              className="h-full min-w-24 rounded-none rounded-l-4xl border-0 border-r bg-transparent pl-4 dark:bg-transparent"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false} align="start">
-              {Object.entries(FIELDS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </InputGroupAddon>
-        <InputGroupAddon>
-          <HugeiconsIcon
-            icon={Search01Icon}
-            strokeWidth={2}
-            aria-hidden="true"
-            className="size-5"
-          />
-        </InputGroupAddon>
-        <InputGroupInput
-          id={id}
-          ref={inputRef}
-          type="search"
-          inputMode={KEYBOARD[field]}
-          enterKeyHint="search"
-          autoComplete="off"
-          value={text}
-          placeholder={`Search by ${field}`}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        {text !== '' && (
-          <InputGroupAddon align="inline-end" className="pr-1">
-            <InputGroupButton
-              aria-label={UI_TEXT.clearSearch}
-              className="size-11"
-              onClick={() => {
-                onChange('');
-                inputRef.current?.focus();
-              }}
-            >
-              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5" />
-            </InputGroupButton>
-          </InputGroupAddon>
-        )}
-      </InputGroup>
+      <Input
+        id={id}
+        ref={inputRef}
+        type="search"
+        inputMode={KEYBOARD[field]}
+        enterKeyHint="search"
+        autoComplete="off"
+        value={text}
+        placeholder={PLACEHOLDER[field]}
+        className="h-[var(--control-height)] min-h-11 flex-1"
+        onChange={(event) => onChange(event.target.value)}
+      />
     </search>
   );
 }
