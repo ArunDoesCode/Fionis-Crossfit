@@ -1,7 +1,8 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { useAssessmentTypes } from '@/lib/api/setup/queries';
+import { assessmentTypesQueryOptions } from '@/lib/api/setup/queries';
 
 /**
  * How many measurements are turned on for each assessment, by assessment id (BR-REC-225: "All 15
@@ -9,7 +10,8 @@ import { useAssessmentTypes } from '@/lib/api/setup/queries';
  * case a row simply lists its names.
  */
 export function useTurnedOnCounts(): Map<string, number> {
-  const { data } = useAssessmentTypes(false);
+  // The counts only change when the catalog does: 30 s is fresh enough, and rows on a list don't each ask again.
+  const { data } = useQuery({ ...assessmentTypesQueryOptions(false), staleTime: 30_000 });
   return useMemo(
     () =>
       new Map((data ?? []).map((type) => [type.id, type.metrics.filter((m) => m.isActive).length])),

@@ -13,7 +13,6 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import ChipList from '@/components/common/ChipList';
 import EmptyState from '@/components/common/EmptyState';
 import ListRow, { RowList } from '@/components/common/ListRow';
 import Section from '@/components/common/Section';
@@ -33,10 +32,11 @@ import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { IsoDate } from '@/lib/domain/dates';
 import { recordHref } from '@/lib/due/links';
 import { memberDueStatus } from '@/lib/due/status';
-import { type DueTarget, lineTarget } from '@/lib/due/target';
-import { DUE_TEXT } from '@/lib/due/text';
+import { type DueTarget, isSheetOpenFor, lineTarget } from '@/lib/due/target';
+import { DUE_TEXT, dueItemsText } from '@/lib/due/text';
 import type { MemberDueItem } from '@/lib/due/types';
 import { useDueSheet } from '@/lib/due/useDueSheet';
+import { useTurnedOnCounts } from '@/lib/due/useTurnedOnCounts';
 import { formatDay, formatPhone } from '@/lib/format';
 import { memberBannerText } from '@/lib/members/banner';
 import { SEX_LABELS } from '@/lib/members/labels';
@@ -139,9 +139,11 @@ function RestoreMemberButton({ memberId }: { memberId: string }) {
 // BR-REC-224: under the name, "18 y · Male · [Active] Annual · 98450 22171 · Joined 05 Oct 2026": the membership
 // status in words (badge), the plan, the phone to tap and call, the join date. Grey shapes while loading.
 export function MemberMeta({ memberId }: MemberBlockProps) {
-  const { data: member } = useMember(memberId);
+  const { data: member, isError } = useMember(memberId);
   const today = useToday();
 
+  // A failed read shows nothing here (the page's own blocks carry the retry), never a skeleton that never ends.
+  if (!member && isError) return null;
   if (!member) {
     return <Skeleton aria-hidden="true" className="mt-1 h-5 w-72 max-w-full" />;
   }
@@ -389,28 +391,42 @@ export function MembershipBlock({ memberId }: MemberBlockProps) {
 
 // One assessment on the member page (BR-REC-103, 125; C10): its name, ONE status in words (Assess soon,
 // Reminder on 20 Oct, Never recorded, Overdue 34 days, Due in 5 days, Next due 12 Dec), the due measurements
-// as chips when there are some, and a "⋯" for the same choices as the lists (plus Remove reminder).
+// as one line of quiet text when there are some (BR-REC-225), and a "⋯" for the same choices as the lists (plus Remove reminder).
 function MemberDueRow({
   memberId,
   line,
   today,
   onMore,
+  openTarget,
 }: {
   memberId: string;
   line: MemberDueItem;
   today: IsoDate;
   onMore: (target: DueTarget) => void;
+  openTarget: DueTarget | null;
 }) {
   const status = memberDueStatus(line, today);
+  const turnedOn = useTurnedOnCounts();
   return (
     <ListRow
       title={line.typeName}
       status={<StatusBadge tone={status.tone}>{status.text}</StatusBadge>}
       trailing={
-        <DueMoreButton name={line.typeName} onOpen={() => onMore(lineTarget(memberId, line))} />
+        <DueMoreButton
+          name={line.typeName}
+          onOpen={() => onMore(lineTarget(memberId, line))}
+          expanded={isSheetOpenFor(openTarget, memberId, line.typeId)}
+        />
       }
     >
-      {line.items.length > 0 && <ChipList items={line.items.map((chip) => chip.name)} />}
+      {line.items.length > 0 && (
+        <span className="block text-sm text-muted-foreground">
+          {dueItemsText(
+            line.items.map((chip) => chip.name),
+            turnedOn.get(line.typeId) ?? Number.POSITIVE_INFINITY,
+          )}
+        </span>
+      )}
     </ListRow>
   );
 }
@@ -445,6 +461,7 @@ export function DueBlock({ memberId }: MemberBlockProps) {
                   line={line}
                   today={today}
                   onMore={sheet.show}
+                  openTarget={sheet.openTarget}
                 />
               ))}
             </RowList>

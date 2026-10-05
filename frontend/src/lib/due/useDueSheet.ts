@@ -18,5 +18,14 @@ export function useDueSheet() {
     setState((current) => ({ target, session: current.session + 1 }));
     setOpen(true);
   }, []);
-  return { target: state.target, session: state.session, open, show, onOpenChange: setOpen };
+  // `openTarget` is the row whose sheet is showing right now (null when closed): a row's "⋯" reads it for
+  // `aria-expanded`, so the button never claims "open" for a sheet that has closed.
+  return {
+    target: state.target,
+    openTarget: open ? state.target : null,
+    session: state.session,
+    open,
+    show,
+    onOpenChange: setOpen,
+  };
 }

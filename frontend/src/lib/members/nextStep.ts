@@ -40,8 +40,10 @@ export function nextStepFor({ overdue, membershipStatus, endOn }: NextStepInput)
 }
 
 /**
- * The member's most overdue assessment from the E32 lines: late by the dates (`state` = overdue) and not
- * on a reminder. `null` when there is none.
+ * The member's most overdue assessment from the E32 lines (BR-REC-224): late by the dates only
+ * (`state` = overdue; a flagged "Assess soon" line that is not late does not count, one that is late
+ * does), never-recorded lines count when their dates say overdue, a "Remind me later" line does not.
+ * Equal days: the first line wins, and E32 lists them in setup order. `null` when there is none.
  */
 export function mostOverdue(
   lines: readonly MemberDueItem[],

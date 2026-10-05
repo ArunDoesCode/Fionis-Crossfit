@@ -33,11 +33,12 @@ interface DueListProps {
   /** The assessment filter, or null for "All". */
   typeId: string | null;
   onMore: (target: DueTarget) => void;
+  openTarget: DueTarget | null;
 }
 
 // One tab of S3 (BR-REC-104): 25 rows, then "Show more", in the server's order (Assess soon first, then
 // the earliest due date, then the name). Nobody on it is one sentence.
-function DueList({ tab, typeId, onMore }: DueListProps) {
+function DueList({ tab, typeId, onMore, openTarget }: DueListProps) {
   const query = useDueList(tabToStatus(tab), typeId);
   const turnedOn = useTurnedOnCounts();
 
@@ -51,13 +52,16 @@ function DueList({ tab, typeId, onMore }: DueListProps) {
           title={emptyDueLine(tab)}
         />
       }
-      renderTable={(items) => <DueTable items={items} turnedOn={turnedOn} onMore={onMore} />}
+      renderTable={(items) => (
+        <DueTable items={items} turnedOn={turnedOn} onMore={onMore} openTarget={openTarget} />
+      )}
       renderRow={(item) => (
         <DueRow
           key={`${item.memberId}:${item.typeId}`}
           item={item}
           turnedOnCount={turnedOn.get(item.typeId)}
           onMore={onMore}
+          openTarget={openTarget}
         />
       )}
     />
@@ -105,10 +109,10 @@ export default function DueListPanel() {
           className="mt-2"
         />
         <TabsContent value="overdue">
-          <DueList tab="overdue" typeId={type} onMore={sheet.show} />
+          <DueList tab="overdue" typeId={type} onMore={sheet.show} openTarget={sheet.openTarget} />
         </TabsContent>
         <TabsContent value="soon">
-          <DueList tab="soon" typeId={type} onMore={sheet.show} />
+          <DueList tab="soon" typeId={type} onMore={sheet.show} openTarget={sheet.openTarget} />
         </TabsContent>
       </Tabs>
       <DueSheet

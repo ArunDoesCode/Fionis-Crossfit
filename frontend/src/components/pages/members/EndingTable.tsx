@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import ActionsHeader from '@/components/common/ActionsHeader';
 import DataTable, { createDataTableColumnHelper } from '@/components/common/DataTable';
 import PersonCell from '@/components/common/PersonCell';
 import StatusBadge from '@/components/common/StatusBadge';
@@ -55,7 +54,7 @@ export default function EndingTable({ items, status, today, onRenew }: EndingTab
         }),
         helper.display({
           id: 'renew',
-          header: () => <ActionsHeader />,
+          header: () => <span className="sr-only">Actions</span>, // no empty table header (BR-REC-226)
           cell: ({ row }) => (
             <Button
               type="button"

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import ActionsHeader from '@/components/common/ActionsHeader';
 import DataTable, { createDataTableColumnHelper } from '@/components/common/DataTable';
 import PersonCell from '@/components/common/PersonCell';
 import StatusBadge from '@/components/common/StatusBadge';
@@ -9,7 +8,7 @@ import DueMoreButton from '@/components/pages/due/DueMoreButton';
 import { useMemberDirectory } from '@/lib/api/members/queries';
 import { recordHref } from '@/lib/due/links';
 import { dueRowStatus } from '@/lib/due/status';
-import { type DueTarget, listTarget } from '@/lib/due/target';
+import { type DueTarget, isSheetOpenFor, listTarget } from '@/lib/due/target';
 import { dueItemsText } from '@/lib/due/text';
 import type { DueListItem } from '@/lib/due/types';
 import { formatPhone } from '@/lib/format';
@@ -19,6 +18,8 @@ interface DueTableProps {
   /** Measurements turned on per assessment id, for "All 15 measurements". */
   turnedOn: Map<string, number>;
   onMore: (target: DueTarget) => void;
+  /** The row whose sheet is open now, if any. */
+  openTarget: DueTarget | null;
 }
 
 const helper = createDataTableColumnHelper<DueListItem>();
@@ -26,7 +27,7 @@ const helper = createDataTableColumnHelper<DueListItem>();
 // The due list from 1024 px (BR-REC-183, 226, lg): name with avatar (the row's link to Record assessment),
 // phone (from the cached member directory, blank until it loads), assessment, what is due, due status, and
 // the "⋯" row action.
-export default function DueTable({ items, turnedOn, onMore }: DueTableProps) {
+export default function DueTable({ items, turnedOn, onMore, openTarget }: DueTableProps) {
   const directory = useMemberDirectory();
   const phones = useMemo(
     () => new Map((directory.data ?? []).map((member) => [member.id, member.phone])),
@@ -77,18 +78,19 @@ export default function DueTable({ items, turnedOn, onMore }: DueTableProps) {
         }),
         helper.display({
           id: 'more',
-          header: () => <ActionsHeader />,
+          header: () => <span className="sr-only">Actions</span>, // no empty table header (BR-REC-226)
           cell: ({ row }) => (
             <div className="relative z-10 flex justify-end">
               <DueMoreButton
                 name={row.original.fullName}
                 onOpen={() => onMore(listTarget(row.original))}
+                expanded={isSheetOpenFor(openTarget, row.original.memberId, row.original.typeId)}
               />
             </div>
           ),
         }),
       ]),
-    [onMore, phones, turnedOn],
+    [onMore, openTarget, phones, turnedOn],
   );
   return <DataTable columns={columns} data={items} />;
 }

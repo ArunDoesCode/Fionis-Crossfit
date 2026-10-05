@@ -180,7 +180,7 @@ export const improvedHeadline = (
   total: number,
   measurementName: string,
 ): string =>
-  `${improved} of ${total} members improved ${measurementName} since their first reading`;
+  `${improved} of ${total} ${total === 1 ? 'member' : 'members'} improved ${measurementName} since their first reading`;
 
 /**
  * BR-REC-228: "Body fat down 2.0 % on average · better". The better / worse word follows the measurement's

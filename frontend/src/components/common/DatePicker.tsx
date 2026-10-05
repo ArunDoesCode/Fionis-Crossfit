@@ -33,7 +33,6 @@ const preload = () => {
 
 const INPUT_CLASS = `peer ${FLOATING_BOX_CLASS} pr-12 placeholder:text-transparent focus:placeholder:text-muted-foreground`;
 
-const OPEN_CALENDAR = 'Open calendar';
 const FORMAT_HINT = 'dd/mm/yyyy';
 
 export interface DatePickerProps {
@@ -93,6 +92,8 @@ export default function DatePicker({
   }
   const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The button is named after its field: a form with several dates has several calendar buttons.
+  const openCalendarLabel = `Open calendar for ${label}`;
 
   const change = (next: boolean) => {
     setOpen(next);
@@ -134,7 +135,7 @@ export default function DatePicker({
         ref={inputRef}
         id={id}
         type="text"
-        inputMode="numeric"
+        inputMode="text"
         autoComplete="off"
         placeholder={FORMAT_HINT}
         value={draft ?? (value ? formatDay(value) : '')}
@@ -169,7 +170,7 @@ export default function DatePicker({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label={OPEN_CALENDAR}
+            aria-label={openCalendarLabel}
             aria-expanded={open}
             aria-haspopup="dialog"
             disabled={disabled}
@@ -187,7 +188,7 @@ export default function DatePicker({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={OPEN_CALENDAR}
+                aria-label={openCalendarLabel}
                 aria-expanded={open}
                 aria-haspopup="dialog"
                 disabled={disabled}

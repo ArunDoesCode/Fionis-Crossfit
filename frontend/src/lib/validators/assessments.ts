@@ -11,7 +11,7 @@ import { UI_TEXT } from '@/lib/messages/words';
 // The Record assessment form (S10, BR-REC-76, 78, 82, 83): every box is typed text until Save and the schema
 // turns it into the number (or seconds) the API takes. "Please check" values are warnings, never errors
 // (BR-REC-21), so the only rules are: a readable number (±999,999,999.999 after rounding), a Time with minutes
-// 0-599 and seconds 0-59, a % measurement of at most 100 (BR-REC-230), and a date that is picked and not after today.
+// 0-599 and seconds 0-59, a % measurement from 0 to 100 (BR-REC-230), and a date that is picked and not after today.
 
 /** The two Time boxes as typed. */
 export interface DurationText {
@@ -50,11 +50,14 @@ const durationSchema = z
     return z.NEVER;
   });
 
-// A % measurement above 100 is a field error, never a "Please check" the user can save anyway (BR-REC-230).
+// A % measurement below 0 or above 100 is a field error, never a "Please check" the user can save anyway
+// (BR-REC-230).
+const PERCENT_MIN = 0;
 const PERCENT_MAX = 100;
 const isPercent = (metric: EntryMetric): boolean => metric.unit.trim() === '%';
 const percentRange = z
   .number()
+  .min(PERCENT_MIN, { error: ASSESSMENT_TEXT.percentRange })
   .max(PERCENT_MAX, { error: ASSESSMENT_TEXT.percentRange })
   .nullable();
 

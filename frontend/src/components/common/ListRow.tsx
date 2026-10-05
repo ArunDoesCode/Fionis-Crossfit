@@ -11,7 +11,7 @@ interface ListRowProps<T extends string> {
   detail?: React.ReactNode;
   /** Status at the right, usually a StatusBadge. */
   status?: React.ReactNode;
-  /** Extra line under the detail, usually a ChipList. */
+  /** Extra line under the detail, usually a line of quiet text or chips. */
   children?: React.ReactNode;
   /** Whole row is a link (preferred) ... */
   href?: Route<T>;

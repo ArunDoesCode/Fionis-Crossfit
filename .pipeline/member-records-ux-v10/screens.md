@@ -34,3 +34,11 @@
 - **Home search** (`/admin`): same auto field pick as Members.
 - **Empty states** (all lists): one icon in a 40 px circle (inline 32 px circle when inside a section) + sentence; Overdue empty reads "Nobody is overdue. Nice work." with a tick icon.
 - **Choose assessment dialog** (Record assessment gate, member page): "Never recorded" badge is grey (neutral), same words and colour as on the member page.
+
+## Review round 1 fixes (frontend-dev)
+- `/admin/members/[memberId]` (any signed-in role): Assessments block lists due measurements as one quiet text line ("Height · Weight · +13", "All 15 measurements"), no chips. Meta line shows nothing (not a skeleton) if the member read fails with a non-404 error. One `GET /members/:id` on a cold load.
+- Due "⋯" buttons (Home, `/admin/due`, member page): `aria-expanded` is true only while that row's sheet is open.
+- Every date field: calendar button is named "Open calendar for <field label>"; box uses a text keyboard.
+- Record assessment: a % measurement below 0 or above 100 shows "Use 0 to 100" and blocks Save.
+- Home number band: a tile shows "–" if its section failed to load.
+- Reports headline: "1 of 1 member improved …".
