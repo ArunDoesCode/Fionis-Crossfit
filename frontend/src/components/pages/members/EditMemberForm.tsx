@@ -4,11 +4,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { focusFirstProblem } from '@/components/pages/members/focusFirstProblem';
+import {
+  FormErrorSummary,
+  FormGrid,
+  focusField,
+  useFocusFirstProblem,
+} from '@/components/common/form';
 import MoreDetailsFields from '@/components/pages/members/MoreDetailsFields';
 import PersonFields from '@/components/pages/members/PersonFields';
+import UnsavedChangesSheet from '@/components/pages/members/UnsavedChangesSheet';
 import { useUpdateMember } from '@/lib/api/members/queries';
+import { useLeaveGuard } from '@/lib/assessments/useLeaveGuard';
 import { changedMemberFields } from '@/lib/members/changes';
+import { MEMBER_FIELD_LABELS, MEMBER_FORM_ORDER } from '@/lib/members/formFields';
 import { serverFieldError } from '@/lib/members/serverErrors';
 import type { MemberDetail } from '@/lib/members/types';
 import { useToday } from '@/lib/members/useToday';
@@ -24,8 +32,9 @@ interface EditMemberFormProps {
   member: MemberDetail;
 }
 
-// S8 Edit member (BR-REC-03, 45-49, 58): the S6 form without the membership fields, prefilled. Works for
-// archived members too, and saving never changes whether they are archived. Only changed fields are sent.
+// S8 Edit member (BR-REC-03, 45-49, 58, 189, 190): the S6 form without the membership fields, prefilled. Works
+// for archived members too, and saving never changes whether they are archived. Only changed fields are
+// sent; Save with no change sends nothing and goes back to the member without a word.
 export default function EditMemberForm({ formId, member }: EditMemberFormProps) {
   const router = useRouter();
   const today = useToday();
@@ -45,27 +54,29 @@ export default function EditMemberForm({ formId, member }: EditMemberFormProps) 
       notes: member.notes ?? '',
     },
   });
+  const memberPage = `/admin/members/${member.id}` as const;
+  const focusFirst = useFocusFirstProblem(MEMBER_FORM_ORDER);
+  const guard = useLeaveGuard(form.formState.isDirty, memberPage);
   const { mutate } = useUpdateMember(member.id);
   const inFlight = useRef(false);
-  const memberPage = `/admin/members/${member.id}` as const;
 
   const onSubmit = (values: MemberEditFormValues) => {
     if (inFlight.current) return;
     const changes = changedMemberFields(values, member);
-    // Nothing changed: nothing to save, back to the member.
+    const toMember = () => router.push(memberPage);
     if (Object.keys(changes).length === 0) {
-      router.push(memberPage);
+      guard.exitTo(toMember); // nothing to save: no request, no toast
       return;
     }
     inFlight.current = true;
     mutate(changes, {
-      onSuccess: () => router.push(memberPage),
+      onSuccess: () => guard.exitTo(toMember),
       onError: (err) => {
         inFlight.current = false;
         const problem = serverFieldError(err, 'update');
         if (!problem) return;
         form.setError(problem.field, { message: problem.message });
-        focusFirstProblem(formId, { [problem.field]: true });
+        focusField(problem.field);
       },
     });
   };
@@ -76,11 +87,21 @@ export default function EditMemberForm({ formId, member }: EditMemberFormProps) 
     <form
       id={formId}
       noValidate
-      onSubmit={form.handleSubmit(onSubmit, (errors) => focusFirstProblem(formId, errors))}
+      onSubmit={form.handleSubmit(onSubmit, focusFirst)}
       className="flex flex-col gap-4"
     >
-      <PersonFields formId={formId} control={form.control} today={today} selfId={member.id} />
-      <MoreDetailsFields formId={formId} control={form.control} defaultOpen={hasMoreDetails} />
+      {form.formState.submitCount > 0 && (
+        <FormErrorSummary
+          errors={form.formState.errors}
+          order={MEMBER_FORM_ORDER}
+          labels={MEMBER_FIELD_LABELS}
+        />
+      )}
+      <FormGrid maxCols={2}>
+        <PersonFields control={form.control} today={today} selfId={member.id} />
+        <MoreDetailsFields control={form.control} defaultOpen={hasMoreDetails} />
+      </FormGrid>
+      <UnsavedChangesSheet open={guard.open} onStay={guard.stay} onLeave={guard.leave} />
     </form>
   );
 }

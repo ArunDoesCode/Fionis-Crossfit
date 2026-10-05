@@ -4,6 +4,10 @@ import { FieldLegend, FieldSet } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
+/** One chip: at least 44 px, filled when chosen (BR-REC-122). Shared with the chips inside a form field. */
+export const CHIP_CLASS =
+  'min-h-11 min-w-11 rounded-full px-4 text-base aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground';
+
 interface ChoiceChipsProps<T extends string> {
   /** The question or filter name ("Sex", "Membership", "Show"). */
   legend: string;
@@ -52,7 +56,7 @@ export default function ChoiceChips<T extends string>({
             key={option.value}
             value={option.value}
             variant="outline"
-            className="min-h-11 min-w-11 rounded-full px-4 text-base aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground"
+            className={CHIP_CLASS}
           >
             {option.label}
           </ToggleGroupItem>

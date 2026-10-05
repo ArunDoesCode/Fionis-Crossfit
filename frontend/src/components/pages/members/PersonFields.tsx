@@ -1,20 +1,24 @@
 'use client';
 
-import { Controller, useWatch } from 'react-hook-form';
-import ChoiceChips from '@/components/common/ChoiceChips';
+import { useWatch } from 'react-hook-form';
+import {
+  FloatingLabelInput,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/common/form';
+import ChipGroup from '@/components/pages/members/ChipGroup';
 import MemberDateField from '@/components/pages/members/MemberDateField';
 import type { MemberFormControl } from '@/components/pages/members/memberFormControl';
 import PhoneField from '@/components/pages/members/PhoneField';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import type { IsoDate } from '@/lib/domain/dates';
 import { birthDateWarning } from '@/lib/members/dateWarning';
-import { fieldId } from '@/lib/members/formFields';
+import { MEMBER_FIELD_LABELS } from '@/lib/members/formFields';
 import { SEX_LABELS } from '@/lib/members/labels';
 import { SEXES } from '@/lib/validators/members';
 
 interface PersonFieldsProps {
-  formId: string;
   control: MemberFormControl;
   /** The day after which no date may be picked (BR-REC-48). */
   today: IsoDate;
@@ -27,102 +31,102 @@ interface PersonFieldsProps {
 const SEX_OPTIONS = SEXES.map((value) => ({ value, label: SEX_LABELS[value] }));
 
 // The fields S6 and S8 share (BR-REC-03, 45, 46, 48, 49): full name, phone, date of birth, sex, joined on.
-// One column, label above, required ones marked *, checked when a field is left (BR-REC-134).
+// They are cells of the form's FormGrid, in this order; required ones are marked *, each is checked when
+// it is left (BR-REC-189).
 export default function PersonFields({
-  formId,
   control,
   today,
   selfId,
   onJoinedOnChange,
 }: PersonFieldsProps) {
   const dateOfBirth = useWatch({ control, name: 'dateOfBirth' });
+  const warning = birthDateWarning(dateOfBirth, today);
 
   return (
     <>
-      <Controller
+      <FormField
         control={control}
         name="fullName"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={fieldId(formId, 'fullName')}>
-              <span>
-                Full name<span className="text-destructive"> *</span>
-              </span>
-            </FieldLabel>
-            <Input
-              {...field}
-              id={fieldId(formId, 'fullName')}
-              autoComplete="name"
-              autoCapitalize="words"
-              aria-invalid={fieldState.invalid}
-              aria-describedby={
-                fieldState.error ? `${fieldId(formId, 'fullName')}-error` : undefined
-              }
-            />
-            <div className="min-h-5">
-              <FieldError id={`${fieldId(formId, 'fullName')}-error`} errors={[fieldState.error]} />
-            </div>
-          </Field>
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <FloatingLabelInput
+                {...field}
+                label={MEMBER_FIELD_LABELS.fullName}
+                required
+                autoComplete="name"
+                autoCapitalize="words"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
       />
 
-      <PhoneField id={fieldId(formId, 'phone')} control={control} selfId={selfId} />
+      <PhoneField control={control} selfId={selfId} />
 
-      <Controller
+      <FormField
         control={control}
         name="dateOfBirth"
         render={({ field, fieldState }) => (
-          <MemberDateField
-            id={fieldId(formId, 'dateOfBirth')}
-            label="Date of birth"
-            required
-            value={field.value}
-            max={today}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            error={fieldState.error?.message}
-            warning={birthDateWarning(dateOfBirth, today) ?? undefined}
-          />
+          <FormItem>
+            <FormControl>
+              <MemberDateField
+                {...field}
+                label={MEMBER_FIELD_LABELS.dateOfBirth}
+                required
+                max={today}
+              />
+            </FormControl>
+            <FormMessage />
+            {!fieldState.error && warning && (
+              <p role="status" className="text-sm text-warning">
+                {warning}
+              </p>
+            )}
+          </FormItem>
         )}
       />
 
-      <Controller
+      <FormField
         control={control}
         name="sex"
-        render={({ field, fieldState }) => (
-          <div id={fieldId(formId, 'sex')}>
-            <ChoiceChips
-              legend="Sex"
-              required
-              options={SEX_OPTIONS}
-              value={SEXES.find((option) => option === field.value) ?? null}
-              onChange={(value) => {
-                field.onChange(value);
-                field.onBlur();
-              }}
-              error={fieldState.error?.message}
-            />
-          </div>
+        render={({ field }) => (
+          <FormItem label={MEMBER_FIELD_LABELS.sex} required>
+            <FormControl>
+              <ChipGroup
+                options={SEX_OPTIONS}
+                value={SEXES.find((option) => option === field.value) ?? null}
+                onChange={(value) => {
+                  field.onChange(value);
+                  field.onBlur();
+                }}
+              />
+            </FormControl>
+            <FormMessage className="w-full basis-full" />
+          </FormItem>
         )}
       />
 
-      <Controller
+      <FormField
         control={control}
         name="joinedOn"
-        render={({ field, fieldState }) => (
-          <MemberDateField
-            id={fieldId(formId, 'joinedOn')}
-            label="Joined on"
-            required
-            value={field.value}
-            max={today}
-            onChange={(value) => {
-              field.onChange(value);
-              onJoinedOnChange?.(value);
-            }}
-            onBlur={field.onBlur}
-            error={fieldState.error?.message}
-          />
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <MemberDateField
+                {...field}
+                label={MEMBER_FIELD_LABELS.joinedOn}
+                required
+                max={today}
+                onChange={(event) => {
+                  field.onChange(event);
+                  onJoinedOnChange?.(event.target.value);
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
       />
     </>

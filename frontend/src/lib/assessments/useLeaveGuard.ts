@@ -14,6 +14,8 @@ export interface LeaveGuard {
   leave: () => void;
   /** Go back to where the entry started (after a successful Save), without asking. */
   exitToStart: () => void;
+  /** Go somewhere else without asking (after a successful Save, or when there is nothing to save). */
+  exitTo: (go: () => void) => void;
 }
 
 /**
@@ -70,10 +72,15 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
     else router.replace(closeHref as Route);
   }, [router, closeHref]);
 
-  const exitToStart = useCallback(() => {
-    exiting.current = true;
-    afterHistorySettles(() => unarm(goToStart));
-  }, [unarm, goToStart]);
+  const exitTo = useCallback(
+    (go: () => void) => {
+      exiting.current = true;
+      afterHistorySettles(() => unarm(go));
+    },
+    [unarm],
+  );
+
+  const exitToStart = useCallback(() => exitTo(goToStart), [exitTo, goToStart]);
 
   useEffect(() => {
     dirtyRef.current = dirty;
@@ -146,5 +153,5 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
     unarm(() => onLeave.current());
   }, [unarm]);
 
-  return { open, stay, leave, exitToStart };
+  return { open, stay, leave, exitToStart, exitTo };
 }

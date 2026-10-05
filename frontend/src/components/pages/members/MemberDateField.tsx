@@ -1,68 +1,36 @@
+import { useId } from 'react';
+import { FLOATING_BOX_CLASS, FloatingLabel } from '@/components/common/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-interface MemberDateFieldProps {
-  id: string;
+interface MemberDateFieldProps extends Omit<React.ComponentProps<'input'>, 'type' | 'placeholder'> {
   label: string;
-  required?: boolean;
   /** Calendar day `YYYY-MM-DD` (what a native date input uses, and what the API expects). */
   value: string;
-  onChange: (value: string) => void;
-  /** Called when the field is left: the form checks it then (BR-REC-134). */
-  onBlur?: () => void;
-  /** For "no dates in the future" pass today's `YYYY-MM-DD`. */
-  max?: string;
-  /** A problem: one plain sentence, red, blocks saving. */
-  error?: string;
-  /** A hint that never blocks saving ("Please check the date", BR-REC-48). Shown only when there is no error. */
-  warning?: string;
-  className?: string;
 }
 
-// Same look as the shared DateField (label above, 48 px, the phone's own picker, a reserved line under it),
-// plus the two things S6/S8 need that it does not have: a blur callback and a non-blocking warning.
-// The warning has its own words and icon-free text colour so it is never taken for an error (BR-REC-125).
+// The date control of the member forms: the floating-label look of the other fields (the label always sits
+// up, a date input is never empty-looking). The label, error and warning belong to the FormItem around it.
+// U3 replaces the native input with the shared DatePicker; the FormItem around it stays.
 export default function MemberDateField({
-  id,
   label,
+  id,
   required,
-  value,
-  onChange,
-  onBlur,
-  max,
-  error,
-  warning,
   className,
+  ...props
 }: MemberDateFieldProps) {
-  const noteId = `${id}-note`;
-  const note = error ?? warning;
+  const fallbackId = useId();
+  const inputId = id ?? fallbackId;
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <Label htmlFor={id}>
-        <span>
-          {label}
-          {required && <span className="text-destructive"> *</span>}
-        </span>
-      </Label>
+    <div className="relative">
       <Input
-        id={id}
+        {...props}
+        id={inputId}
         type="date"
-        value={value}
-        max={max}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={note ? noteId : undefined}
-        onChange={(event) => onChange(event.target.value)}
-        onBlur={onBlur}
-        className="min-w-0"
+        aria-required={required || undefined}
+        className={cn('peer min-w-0', FLOATING_BOX_CLASS, className)}
       />
-      <p
-        id={noteId}
-        role={error ? 'alert' : warning ? 'status' : undefined}
-        className={cn('min-h-5 text-sm', error ? 'text-destructive' : 'text-warning')}
-      >
-        {note}
-      </p>
+      <FloatingLabel htmlFor={inputId} label={label} required={required} floated />
     </div>
   );
 }

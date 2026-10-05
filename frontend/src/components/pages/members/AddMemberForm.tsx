@@ -4,12 +4,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { focusFirstProblem } from '@/components/pages/members/focusFirstProblem';
+import {
+  FormErrorSummary,
+  FormGrid,
+  focusField,
+  useFocusFirstProblem,
+} from '@/components/common/form';
 import MembershipFields from '@/components/pages/members/MembershipFields';
 import MoreDetailsFields from '@/components/pages/members/MoreDetailsFields';
 import { asMemberControl, asPeriodControl } from '@/components/pages/members/memberFormControl';
 import PersonFields from '@/components/pages/members/PersonFields';
+import UnsavedChangesSheet from '@/components/pages/members/UnsavedChangesSheet';
 import { useCreateMember } from '@/lib/api/members/queries';
+import { useLeaveGuard } from '@/lib/assessments/useLeaveGuard';
+import { MEMBER_FIELD_LABELS, MEMBER_FORM_ORDER } from '@/lib/members/formFields';
 import { newIdempotencyKey } from '@/lib/members/idempotencyKey';
 import { serverFieldError } from '@/lib/members/serverErrors';
 import { useToday } from '@/lib/members/useToday';
@@ -24,9 +32,12 @@ interface AddMemberFormProps {
   formId: string;
 }
 
-// S6 Add member (BR-REC-03, 05, 45-50): one column; checked when a field is left and on Save; Save stays
-// tappable and jumps to the first problem; no Reset (BR-REC-134). Draw it only in the browser: its defaults
-// ("Joined on = today") are the device's day (see AfterHydration).
+const MEMBERS_LIST = '/admin/members';
+
+// S6 Add member (BR-REC-03, 05, 45-50, 189): two columns on a wide form; each field is checked when it is
+// left and on Save; Save stays tappable and jumps to the first problem; no Reset; leaving with typing that
+// is not saved asks first (#49). Draw it only in the browser: its defaults ("Joined on = today") are the
+// device's day (see AfterHydration).
 export default function AddMemberForm({ formId }: AddMemberFormProps) {
   const router = useRouter();
   const today = useToday();
@@ -34,7 +45,7 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
   const form = useForm<MemberFormInput, unknown, MemberFormValues>({
     resolver: zodResolver(schema),
     mode: 'onBlur',
-    shouldFocusError: false, // focusFirstProblem also handles chips and the closed "More details"
+    shouldFocusError: false, // useFocusFirstProblem also handles chips and the closed "More details"
     defaultValues: {
       fullName: '',
       phone: '',
@@ -48,6 +59,8 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
       notes: '',
     },
   });
+  const focusFirst = useFocusFirstProblem(MEMBER_FORM_ORDER);
+  const guard = useLeaveGuard(form.formState.isDirty, MEMBERS_LIST);
   const { mutate } = useCreateMember();
   const inFlight = useRef(false);
   const startOnChangedByHand = useRef(false);
@@ -66,13 +79,13 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
       { body, idempotencyKey: attempt.current.key },
       {
         // inFlight stays set: the page is about to be replaced by the new member's page.
-        onSuccess: (member) => router.push(`/admin/members/${member.id}`),
+        onSuccess: (member) => guard.exitTo(() => router.push(`/admin/members/${member.id}`)),
         onError: (err) => {
           inFlight.current = false;
           const problem = serverFieldError(err, 'create');
           if (!problem) return;
           form.setError(problem.field, { message: problem.message });
-          focusFirstProblem(formId, { [problem.field]: true });
+          focusField(problem.field);
         },
       },
     );
@@ -88,23 +101,31 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
     <form
       id={formId}
       noValidate
-      onSubmit={form.handleSubmit(onSubmit, (errors) => focusFirstProblem(formId, errors))}
+      onSubmit={form.handleSubmit(onSubmit, focusFirst)}
       className="flex flex-col gap-4"
     >
-      <PersonFields
-        formId={formId}
-        control={asMemberControl(form.control)}
-        today={today}
-        onJoinedOnChange={followJoinDate}
-      />
-      <MembershipFields
-        formId={formId}
-        control={asPeriodControl(form.control)}
-        onStartOnChange={() => {
-          startOnChangedByHand.current = true;
-        }}
-      />
-      <MoreDetailsFields formId={formId} control={asMemberControl(form.control)} />
+      {form.formState.submitCount > 0 && (
+        <FormErrorSummary
+          errors={form.formState.errors}
+          order={MEMBER_FORM_ORDER}
+          labels={MEMBER_FIELD_LABELS}
+        />
+      )}
+      <FormGrid maxCols={2}>
+        <PersonFields
+          control={asMemberControl(form.control)}
+          today={today}
+          onJoinedOnChange={followJoinDate}
+        />
+        <MembershipFields
+          control={asPeriodControl(form.control)}
+          onStartOnChange={() => {
+            startOnChangedByHand.current = true;
+          }}
+        />
+        <MoreDetailsFields control={asMemberControl(form.control)} />
+      </FormGrid>
+      <UnsavedChangesSheet open={guard.open} onStay={guard.stay} onLeave={guard.leave} />
     </form>
   );
 }

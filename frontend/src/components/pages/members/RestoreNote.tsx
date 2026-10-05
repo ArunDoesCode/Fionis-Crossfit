@@ -22,7 +22,7 @@ export default function RestoreNote({ control, fullName, today, verb }: RestoreN
   const restores = end !== null && renewRestoresMember(true, { startOn, endOn: end }, today);
 
   return (
-    <p aria-live="polite" className="min-h-6 text-base font-medium">
+    <p aria-live="polite" className="col-span-full min-h-6 text-base font-medium">
       {restores && `${verb} brings ${fullName} back to the list.`}
     </p>
   );
