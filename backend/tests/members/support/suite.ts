@@ -169,6 +169,7 @@ export type ListItem = {
   id: string;
   fullName: string;
   phone: string;
+  email: string | null;
   lastAssessedOn: IsoDate | null;
   archivedAt: string | null;
   membership: Omit<MembershipView, "startOn">;

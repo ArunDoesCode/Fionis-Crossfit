@@ -42,6 +42,8 @@ const metric = (over: Partial<EntryMetric> & Pick<EntryMetric, 'id' | 'name'>): 
   plausibleMin: null,
   plausibleMax: null,
   previous: null,
+  tableGroup: null,
+  tablePart: null,
   ...over,
 });
 

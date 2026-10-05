@@ -33,6 +33,43 @@ const endsIn = (n: number): SeedPeriod[] => [
   { plan: "annual", startOn: s.day(n - 364), endOn: s.day(n) },
 ];
 
+describe("E16 email on each item (BR-REC-205)", () => {
+  beforeAll(async () => {
+    await s.seedMember({
+      name: "Emailtok Has",
+      email: "emailtok.has@example.com",
+    });
+    await s.seedMember({ name: "Emailtok None", email: null });
+    await s.seedMember({
+      name: "Emailtok Other",
+      email: "other.person@example.org",
+    });
+  });
+
+  const byName = async (name: string) =>
+    mine(await search({ q: "emailtok" })).find(
+      (i) => bare(i.fullName) === name,
+    );
+
+  test("BR-REC-205 a member with an email on file shows that email", async () => {
+    expect((await byName("Emailtok Has"))?.email).toBe(
+      "emailtok.has@example.com",
+    );
+  });
+
+  test("BR-REC-205 a member without an email shows null, the key is present", async () => {
+    const item = (await byName("Emailtok None")) as Record<string, unknown>;
+    expect("email" in item).toBe(true);
+    expect(item.email).toBeNull();
+  });
+
+  test("BR-REC-205 each member shows their own email, not a neighbour's", async () => {
+    expect((await byName("Emailtok Other"))?.email).toBe(
+      "other.person@example.org",
+    );
+  });
+});
+
 describe("E16 search by text (BR-REC-07, 56)", () => {
   let phoneOfK = "";
   beforeAll(async () => {
@@ -77,10 +114,11 @@ describe("E16 search by text (BR-REC-07, 56)", () => {
     expect(mine(items)[0]?.lastAssessedOn).toBeNull();
   });
 
-  test("BR-REC-07 the item holds exactly id, fullName, phone, lastAssessedOn, archivedAt and membership { status, plan, endOn, daysLeft }", async () => {
+  test("BR-REC-205 the item holds exactly id, fullName, phone, email, lastAssessedOn, archivedAt and membership { status, plan, endOn, daysLeft }", async () => {
     const item = mine(await search({ q: "asura" }))[0];
     expect(Object.keys(item ?? {}).sort()).toEqual([
       "archivedAt",
+      "email",
       "fullName",
       "id",
       "lastAssessedOn",
