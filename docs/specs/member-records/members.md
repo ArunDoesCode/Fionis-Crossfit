@@ -2,8 +2,8 @@
 module: member-records/members
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 1
-frozen_on: 2026-10-03
+version: 2
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
 ---
@@ -17,7 +17,7 @@ paper binder's members are all in, search finds anyone in two letters, and Home 
 
 ## Owns
 
-Rules BR-REC-03…09, 45…59, 172 · endpoints E16–E24 · tables `members`, `membership_periods` · screens S4
+Rules BR-REC-03…09, 45…59, 172, 201…205 · the `MemberSearch` component and member directory · endpoints E16–E24 · tables `members`, `membership_periods` · screens S4
 Memberships ending, S5 Members, S6 Add member, S7 Member page (header + membership block; the page frame
 comes from Stream 0), S8 Edit member, S9 Renew/edit period sheet, the two membership sections on Home.
 
@@ -42,7 +42,7 @@ comes from Stream 0), S8 Edit member, S9 Renew/edit period sheet, the two member
 | BR-REC-04 | Same name is allowed. Same phone as another member shows a duplicate warning but can be saved (families share phones). | Two "Surya Pratap", different phones → both saved | E17 with a known phone → 201 |
 | BR-REC-05 | Creating a member also needs a first membership period (plan + start date). Past start dates are allowed for historical entry. | Joined 2025-06-01, annual → saved | E17 without `firstPeriod` → 400 |
 | BR-REC-06 | Members are archived, never deleted. Archived members vanish from search and Home; history stays; they can be restored. | Archive → not in search; restore → back | E16 `q` excludes archived unless `status=archived`; E21 brings back |
-| BR-REC-07 | Search needs 2+ characters and matches part of name, phone or email. Each result shows name, phone, last assessment date and membership status. | "sur" → both Suryas with phones | E16 `q=s` → 400; row fields present |
+| BR-REC-07 | ~~Search needs 2+ characters and matches part of name, phone or email. Each result shows name, phone, last assessment date and membership status.~~ Superseded by BR-REC-201, 202 (v2). | — | — |
 | BR-REC-08 | Plan = Monthly 1, Quarterly 3, Half-annual 6, Annual 12 calendar months. End = start + months − 1 day (clamped to month end). Status: Active; Expiring when end is within the expiry lead days (Setup, default 14); Expired when end has passed and no later period exists. Home lists Expiring and recently Expired. | Monthly from 15 Jan → ends 14 Feb | Pure-function table below |
 | BR-REC-09 | Renewal adds a new period (default start = previous end + 1 day). A member's periods may not overlap. Periods can be edited, not deleted. | Overlap with previous → rejected | E22 overlap → 409 `PERIOD_OVERLAP`; no DELETE route |
 | BR-REC-45 | Name is 2–80 characters (outer spaces trimmed, double spaces collapsed); email must look like an email; notes up to 1,000 characters. | " Surya  Pratap " → "Surya Pratap" | Zod test |
@@ -56,11 +56,16 @@ comes from Stream 0), S8 Edit member, S9 Renew/edit period sheet, the two member
 | BR-REC-53 | Home shows "Memberships ending" (Ends soon, soonest first) and "Recently ended" (ended in the last 30 days, most recent first); archived members are never listed. | Ended 31 days ago → not in Recently ended | E24 tests |
 | BR-REC-54 | Renew opens with the last plan and start = last end + 1 day, both changeable, and shows the new end date before saving. | Annual ended 31 May → Renew → "Ends 31 May 2027" | UI test; E22 with defaults |
 | BR-REC-55 | Editing a period re-calculates its end and is refused if it would overlap another period or start before the join date. | Move start into previous period → refused | E23 → 409 / 400 |
-| BR-REC-56 | Search ignores upper/lower case and spaces in phone numbers; names starting with the text come first, then the rest A–Z; 25 per page with "Show more". | "sur" → "Surya K", "Surya Pratap", then "Asura M" | E16 order test |
+| BR-REC-56 | ~~Search ignores upper/lower case and spaces in phone numbers; names starting with the text come first, then the rest A–Z; 25 per page with "Show more".~~ Superseded by BR-REC-202, 204 (v2); E16 keeps this order for its `q` fallback. | — | — |
 | BR-REC-57 | Members (no search text) lists non-archived members A–Z, 25 per page, with filter chips All · Active · Ends soon · Ended · Archived; Archived is the only list of archived members, and search text under it looks only at them. | Tap "Ended" → only ended members; tap "Archived", type "sur" → archived Suryas only | E16 `status` tests, `q` + `status=archived` |
 | BR-REC-58 | Archive asks "Archive Surya? They'll be hidden from search and Home. You can restore them later."; an archived member stays fully editable (details, memberships, assessments), and saving a membership period that covers today (renew or edit) restores them automatically (Q7 = B); details, assessments and periods that do not cover today (old binder entries) never do, and the Restore button always works. | Archived Surya → fix phone, add an old assessment → still hidden; Renew from today → Surya is back in search and Home | E19, E22, E26 on an archived member succeed; E22/E23 with a period covering today clears `archivedAt` and returns `memberRestored: true`, otherwise not; E21 restores |
 | BR-REC-59 | The member page shows name, age, sex, phone (tap to call), join date, membership (plan, status, days left, end date) and buttons Record assessment, Renew, Report card, All assessments, Edit. | Open Surya → "Annual · Active · 241 days left" | Screen checklist |
 | BR-REC-172 | The page of an archived member, or of one whose membership has ended, starts with a banner saying when: "Archived 2 Jun 2026 · Membership ended 31 May 2026" (archived part only when archived; "ends" when still running), with Restore when archived. | Ended 31 May, not archived → "Membership ended 31 May 2026"; archived while running → "Archived 2 Jun 2026 · Membership ends 31 Dec 2026" [Restore] | UI test of the three cases from E18 `archivedAt` + `membership.endOn` |
+| BR-REC-201 | One `MemberSearch` component is used on Home and Members: a field picker (Name · Email · Phone, default Name) then the search box; the picked field decides what is matched, the hint ("Search by phone") and the keyboard (number pad for phone, email keyboard for email); switching keeps the text and re-filters. Each result shows name, phone, last assessment date and membership status. | Pick Phone, type "45012" → Surya Pratap (98450 12345) | Unit test of the pure `searchMembers`; manual check on Home and S5 |
+| BR-REC-202 | Matching needs 2+ characters. Name: upper/lower case and accents ignored, double spaces collapsed, matches anywhere; names starting with the text first, then the rest A–Z. Phone: only digits compared, matches anywhere in the stored digits (more than 10 typed → last 10). Email: part match ignoring case; members without email never match. Archived members only under the Archived chip; chips and text combine. | Name "rene" → "René Dsouza"; Email "GMAIL" → every gmail address; Phone "+91 98450" → matches 98450… | `searchMembers` table test (accents, case, digits, email, archived, order) |
+| BR-REC-203 | The admin loads every member once into a directory (E16, `status=any`, 100 per page, all pages) when the shell opens, keeps it fresh for 60 s and refreshes it after every member, membership or assessment save; typing never calls the server, shows no spinner and never dims the list (≤ 50 ms per key at 200 members); the duplicate-phone warning (BR-REC-47) reads the same directory. Above 1,000 members the screen falls back to the E16 `q` search and logs a developer warning. | Type "surya" → 0 network requests; add "Kiran" → Kiran found at once | Network log while typing; query-key test that each write refreshes the directory |
+| BR-REC-204 | Members keeps text and field in the address (`q`, `by`; replaced, never one history entry per key); Home keeps them on screen only and reserves room for results so nothing jumps; results show 25, then "Show more" adds 25, reset when the text, field or chip changes; no match shows "No member matches "xyz"." with [Add member] on Members. | `/admin/members?q=sur&by=name` → reload keeps "sur" | URL test; CLS ≤ 0.05 on Home while typing |
+| BR-REC-205 | E16 list items also return `email` (text or null), an additive contract change; E16 `q` keeps matching name, phone or email for the fallback (BR-REC-56 order). | Member with email → row carries it; none → `null` | Contract test; `contract:check` |
 
 ## Membership maths (pure functions, shared with the frontend through a golden fixture)
 
@@ -76,13 +81,13 @@ comes from Stream 0), S8 Edit member, S9 Renew/edit period sheet, the two member
 
 ## Screens
 
-S5 Members (`/admin/members`). Desktop: same rows, 1080 px wide, phone and last assessment in columns. Under
-the Archived chip the detail line reads "Archived 2 Jun · Ended 31 May".
+S5 Members (`/admin/members`). Desktop (v2, ux BR-REC-183): a dense table up to 1280 px — name, phone, status,
+last assessment, row action. Under the Archived chip the detail reads "Archived 02 Jun · Ended 31 May".
 
 ```
 +--------------------------------+
 | Members                        |
-| [ Search name, phone, email  ] |
+| [Name v][ Search by name     ] |
 | (All)(Active)(Ends soon)(Ended)|
 | (Archived)                     |
 | Surya Pratap            Active |
@@ -112,7 +117,8 @@ Archived or ended: the BR-REC-172 banner sits under the title.
 +--------------------------------+
 ```
 
-S6 Add member (`/admin/members/new`; S8 Edit is the same form without membership fields): Full name *, Phone *
+S6 Add member (`/admin/members/new`; S8 Edit is the same form without membership fields; v2: 2 columns on
+desktop, one screen, ux BR-REC-188, dates via the shared DatePicker): Full name *, Phone *
 (duplicate warning "! Also used by Anita Rao · Open" under it), Date of birth *, Sex * (Male)(Female), Joined
 on * (today), Membership * (Monthly)(Quarterly)(Half-annual)(Annual), Starts on * (= joined), live "Ends 31 May
 2026", then "More details": Email, Goal, Notes; action bar [Add member].
@@ -139,7 +145,7 @@ No automated UI tests for screens S4–S9, Home search and Home sections (no DOM
 | Q7 | Renewing an archived member… | **A** keeps them archived; the sheet says how to restore (recommended: safe when typing in old binder members) / B restores them when the new membership covers today | **B** → BR-REC-58 |
 
 ## Changelog
-
+- 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-03…09 from v1 unchanged
 - 2026-10-03 v0 — answers folded: archived members stay editable (BR-REC-58 rewritten, `MEMBER_ARCHIVED` gone),
   reached via the Archived chip (BR-REC-57); new BR-REC-172 ended/archived banner; new Q7; S6 wireframe as text
@@ -153,3 +159,9 @@ No automated UI tests for screens S4–S9, Home search and Home sections (no DOM
   membership start only when the join date is actually changed; `q` in E16 is 2–100 characters; the member page lists every
   membership (also a single one) so BR-REC-55 "periods can be edited" is reachable for a new member; the admin cuts a longer
   search text (pasted or from `?q=`) to its first 100 characters before asking E16.
+- 2026-10-05 v2 — changed after freeze (owner, #44, #17, D-031): search is one `MemberSearch` (field picker Name ·
+  Email · Phone + box) filtering a once-loaded member directory in the browser, no debounce; BR-REC-07 and 56
+  superseded by new BR-REC-201…205 (matching, directory freshness, URL `q` + `by`, empty state, E16 `email`);
+  S5 desktop table; S6 two columns; dates shown `dd MMM yyyy` (ux BR-REC-191)
+- 2026-10-05 v2 — owner answers (ux Q4, Q8): dates always with the year ("03 Oct 2026"); Edit member and Edit
+  membership saved with no change close silently (ux BR-REC-190); no members rule changed

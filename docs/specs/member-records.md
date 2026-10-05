@@ -1,8 +1,8 @@
 ---
 module: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
-frozen_on: 2026-10-03          # v2 frozen with all 10 sub-specs
+version: 3
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
 sub_specs: [data-model, api-contract, ux, performance, auth, members, setup, assessments, due-list, progress]
@@ -14,13 +14,13 @@ sub_specs: [data-model, api-contract, ux, performance, auth, members, setup, ass
 
 ## Summary
 A trainer enters each member's body-composition and fitness-test results, plus their membership term, on a
-phone or tablet on the gym floor (mobile-first; desktop is the same layout, wider). Home shows who is overdue
+laptop at the desk or a phone on the gym floor (desktop-first, phone-responsive; ux v2, D-027). Home shows who is overdue
 for an assessment and whose membership is ending. Each member has a report card; the owner sees gym-wide
 progress. Done = the whole paper binder is entered and the three outputs are right, within the speed budgets.
 
 ## Scope
 In: one shared login · members + memberships · assessment setup · recording results · due dates + Home ·
-report card, gym progress, CSV · mobile-first UI · speed budgets · installable app. Out: see Not now.
+report card, gym progress, CSV · desktop-first, phone-responsive UI · speed budgets · installable app. Out: see Not now.
 
 ## Who can do what
 | Action | Allowed |
@@ -54,15 +54,15 @@ Why: each feature sub-spec is one build stream with its own files; the four shar
 (Stream 0). The report sub-spec is named `progress` because "report" file names are reserved for run reports.
 
 ## Rule map
-IDs are permanent and unique across sub-specs (strike out, never renumber). 176 rules, each with an example and
-a Check. Next free ID: **BR-REC-177**.
+IDs are permanent and unique across sub-specs (strike out, never renumber). 217 IDs, each with an example and
+a Check. Next free ID: **BR-REC-218**.
 | BR-REC | Sub-spec | | BR-REC | Sub-spec |
 |---|---|---|---|---|
 | 01–02, 25–44, 171 | auth | | 15–18, 93–105 | due-list |
-| 03–09, 45–59, 172 | members | | 22–24, 106–119 | progress |
-| 10, 11, 13, 14, 60–72 | setup | | 120–140 | ux |
-| 12, 19–21, 73–92 | assessments | | 141–152, 173, 174 | performance |
-| 153–162 | api-contract | | 163–170, 175, 176 | data-model |
+| 03–09, 45–59, 172, 201–205 | members | | 22–24, 106–119 | progress |
+| 10, 11, 13, 14, 60–72 | setup | | 120–140, 177–200 | ux |
+| 12, 19–21, 73–92, 216, 217 | assessments | | 141–152, 173, 174, 208–215 | performance |
+| 153–162 | api-contract | | 163–170, 175, 176, 206, 207 | data-model |
 v1 rules BR-REC-01…24 moved word for word; the v1 "Metric list" moved to setup.
 
 ## Parallel build plan
@@ -131,8 +131,9 @@ v1 wording is kept; v2 reads it like this:
 8. BR-REC-19 blanks: when editing, emptying a saved field deletes that value (BR-REC-77).
 9. BR-REC-21 warning: checked in the browser only; the server never blocks (BR-REC-82).
 
-## Questions (all answered 2026-10-03)
-All sub-spec questions answered in their files, including members Q7 = B (renewing an archived member restores them).
+## Questions (all answered 2026-10-03; v3 UX questions answered 2026-10-05)
+All sub-spec questions answered in their files, including members Q7 = B (renewing an archived member restores them)
+and the v3 ux Q1–Q8 / performance Q6 (D-034, D-035).
 | # | Question | Options | Answer |
 |---|---|---|---|
 | Q1 | What do SCW and SMW on the paper mean, and are they tracked? | **A** ask the coach, add later / B drop them | B |
@@ -144,6 +145,7 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
 | Q7 | (developer) Hosting | **A** one small server in Mumbai (ap-south-1) next to Supabase, Next + API behind one address / B Vercel + a separate API host | A → D-018 |
 
 ## Changelog
+- 2026-10-05 v3 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft from owner scope discussion (benchmark step skipped: a records tool, not class scoring)
 - 2026-10-03 v1 — frozen; Q1–Q5 answered (SCW/SMW dropped, others as recommended)
 - 2026-10-03 v2 — changed after freeze: split into 10 sub-specs; BR-REC-01…24 moved word for word with the same
@@ -157,4 +159,13 @@ All sub-spec questions answered in their files, including members Q7 = B (renewi
   rewritten (no extensions, no hand-written SQL, dev/test `db:push`); Stream 0 row updated.
 - 2026-10-03 v2 — ownership table completed during Stream 0 (HomeSearch slot → B; shared frontend libs → Stream 0); Stream 0 also added the `sid` claim to auth-owned `token.ts`/`auth-middleware.ts` (D-019). No rule changed.
 - 2026-10-04 v2 — progress v2 during the Stream F build (user: keep the MVP light): BR-REC-110 computed live, no server cache; performance BR-REC-147 / tactic 19 follow; build clarifications P1–P14 in progress.md.
+- 2026-10-05 v3 — UX redesign (owner UAT, #59; D-027…D-033) waits for `/freeze`: ux v2 (177–200), members v2
+  (201–205), data-model v4 (206, 207), performance v2 (208–215), assessments v3 (216, 217), setup v3, api-contract
+  v2 (additive E16 `email`, E25 `tableGroup`/`tablePart`, more ETags); desktop-first replaces "mobile-first" in the
+  Summary and Scope; build slices U0–U6 in ux.md; next free ID BR-REC-218
+- 2026-10-05 v3 — owner answered all 8 v2 questions (ux Q1–Q5, Q7, Q8; performance Q6; D-034, D-035): owner's
+  `FormItem min-h-19` form format, Record assessment on RHF + Zod, sidebar from 768 px, "03 Oct 2026" always,
+  unchanged edits close silently, server prefetch Home + member page, AVIF wordmark; 0 open; no rule IDs added
+- 2026-10-05 v3 — ux Q9–Q11 answered (D-036): Time, chip, switch and checkbox fields all use `FormItem min-h-19`
+  (76 px everywhere); 0 open questions in any sub-spec
 - 2026-10-04 v2 — data-model v3: new BR-REC-176 (`seed:demo`, MVP demo; next free ID BR-REC-177); ownership table: `metric-value.ts` → C setup; "Implementation status" replaced by one status paragraph (duplicate BR→test tables dropped, D-025)

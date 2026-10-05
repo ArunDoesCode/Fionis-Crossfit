@@ -107,6 +107,7 @@ No DOM test library (#9): screen wiring is covered by the manual checklists.
 - PRs: gold badge, results filterable by date ([Wodify PRs](https://help.wodify.com/hc/en-us/articles/209426457-Track-PRs)) → best on the report card.
 - Body composition per date, segmental analysis ([InBody in BRP](https://brpsystems.atlassian.net/wiki/spaces/BM/pages/5594873862/InBody)) → BR-REC-108.
 - Custom body-stat fields, coach-entered kept apart ([ABC Trainerize ideas](https://ideas.abcfitness.com/forums/167887-coach-trainer-abc-trainerize/suggestions/18392212-add-custom-fields-in-body-stats)) → setup catalog; coach entry only.
+- 2026-10-05 (ux v2): gym admin tools are desktop dashboards with a collapsible left menu ([PushPress Dashboard 2.0](https://help.pushpress.com/en/articles/10270346-core-dashboard-2-0-overview), [Wodify left navigation](https://help.wodify.com/hc/en-us/articles/29738980015255-Feb-2025-Left-Navigation-Updates)) → shadcn Sidebar, BR-REC-177. Client lookup by name, email or phone is standard ([Mindbody client fields via API docs](https://pipedream.com/apps/mindbody)) → field picker, BR-REC-201. Official help pages for SugarWOD / Zen Planner search were not reachable (Wodify help 403).
 
 ## History
 | Date | PR | Change |
@@ -121,3 +122,4 @@ No DOM test library (#9): screen wiring is covered by the manual checklists.
 | 2026-10-04 | #34 | Stream F: progress E35–E39, S12, S13, S18; D-022 |
 | 2026-10-04 | — | Map split into this index + one sub-map per stream; verified at `9d78023` |
 | 2026-10-04 | work/mvp-demo-prep | `seed:demo` (BR-REC-176, data-model v3): 25 named, today-relative demo members; D-026 |
+| 2026-10-05 | claude/ui-ux-responsive-redesign | Spec change only (no code): UX redesign #59, BR-REC-177…217, owner answers folded; D-027…D-035. Asset in repo: `frontend/public/Fionis-Logo.avif` (284 × 106 wordmark); follow-ups: square logo, app icon, favicon. Contradiction kept open for the owner: nextjs-standards §14 `h-4` vs the owner's `FormItem min-h-19` (D-034) |

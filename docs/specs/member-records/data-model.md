@@ -2,8 +2,8 @@
 module: member-records/data-model
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 3
-frozen_on: 2026-10-04          # v3: `seed:demo` (BR-REC-176) for the MVP demo; v2: no hand-written SQL (user, during Stream 0)
+version: 4
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
 ---
@@ -18,7 +18,7 @@ database (no hand-written SQL), `bun run seed` adds settings + the catalog, `bun
 
 ## Owns
 
-Rules BR-REC-163…170, 175, 176 · all 13 tables below · commands `db:reset`, `seed`, `seed:perf`, `seed:demo`.
+Rules BR-REC-163…170, 175, 176, 206, 207 · the index map · all 13 tables below · commands `db:reset`, `seed`, `seed:perf`, `seed:demo`.
 
 ## Who can do what
 
@@ -40,6 +40,27 @@ Rules BR-REC-163…170, 175, 176 · all 13 tables below · commands `db:reset`, 
 | BR-REC-170 | `seed:perf` refuses any non-local database and creates 1,000 members (half male, ages 18–65, joined over 3 years, 10% archived) with continuous memberships, monthly body composition and two-monthly fitness tests with realistic noise. | Run against a Supabase URL → exits with an error | Script guard test; row counts printed |
 | BR-REC-175 | Every enum-like column is `text` with a check listing its allowed values (never a Postgres enum), and each list equals the one TS union all layers use. | Insert plan "weekly" → refused by the database | CI schema test compares each check list with its union; grep finds no `pgEnum` |
 | BR-REC-176 | `seed:demo` (run after `db:reset`) creates exactly 25 named demo members whose every date is today (the gym day) plus a fixed offset (each member's newest visit and latest membership period are placed by whole calendar months, so on a day when today minus a month lands on the 29th–31st such a date can be up to 3 days off; every count below still holds), so the same day gives the same rows and the demo always has something on every screen: membership states Active, Expiring, Recently ended (and one ended too long ago for the list) and Archived; assessment states overdue, due today, due soon, never recorded and partly recorded; "Assess soon" and "Remind me later" entries; both sexes in every age band; members with 8 or more monthly Body composition readings, one with a single reading, tied results, estimated dates and two members sharing one phone. Member ids are fixed (`00000000-0000-4000-8000-0000000000NN`, NN = 01…25) so links survive a re-seed. It refuses a non-local database, NODE_ENV production, a `*_test` database and a database that already holds members, and it creates no login. | Run on 4 Oct → "Surya Pratap" is overdue 34 days; run on 5 Oct → still 34 days (every date moves with today). Run twice → second run refused ("run db:reset first") | Script test: bucket counts (4 Expiring, 3 Recently ended, 2 Archived, ≥ 5 overdue, 1 due today, ≥ 3 due soon, 1 never recorded, 2 flagged, 2 snoozed), 25 members of both sexes in all six age bands, the same rows for the same day, all four refusals |
+
+| BR-REC-206 | Every read path in the index map below has its index (a foreign key read per member, every list's filter + sort order, every uniqueness rule); nothing else is indexed, and no extension or trigram index is added (BR-REC-169). At ≤ 1,000 members a full scan of `members` is fine for text search. | E27 "all assessments of Surya" → uses `assessments_member_date_idx` | CI schema test lists the expected index names; `EXPLAIN` on the perf seed for each row of the map |
+| BR-REC-207 | An index that serves a sort uses exactly the query's expression and collation: the name index becomes `lower(full_name) collate "C", id` (the E16 / E39 order, D-021), and stays partial on non-archived members. | E16 `sortBy=name` on 1,000 members → index scan, no sort step | `EXPLAIN` test on the perf seed |
+
+## Index map (v4)
+
+| Query (endpoint) | Filter / order | Index | State |
+|---|---|---|---|
+| Members A–Z, keyset CSV (E16, E39) | non-archived, `lower(full_name) collate "C"`, id | `members_name_active_idx` | **change** (BR-REC-207): today built without `collate "C"`, so it cannot serve the order |
+| Duplicate phone (E16 `phone`) | `right(phone_digits, 10) =` | `members_phone_last10_idx` | ok |
+| Text search (E16 `q` fallback; directory load) | `ilike` on name, email, digits | none — scan (≤ 1,000 rows; browser search is BR-REC-203) | ok, by design |
+| Latest membership per member (E16 status, E18, E24) | `member_id`, `start_on desc` | `membership_periods_member_start_idx` | ok |
+| Ending / recently ended (E24) | `end_on` range | `membership_periods_end_idx` | ok |
+| Member's assessments (E27, E35, due) | `member_id`, `assessed_on desc` | `assessments_member_date_idx` | ok |
+| Same member + type + date (E25, E26, E29) | unique | `assessments_member_type_date_key` (also serves latest per member + type) | ok |
+| Member maths, previous value (E25, E35) | `member_id`, `metric_id`, `measured_on desc` | `measurements_member_metric_date_idx` | ok |
+| Gym progress, leaderboards (E36, E37) | `metric_id`, `measured_on` | `measurements_metric_date_idx` | ok |
+| Overrides (E31–E34) | `member_id`, `type_id` | primary key | ok |
+| Catalog order (E09, E25) | `type_id`, `sort_order` | `metrics_type_sort_idx` | ok |
+| Change log by entity | `entity`, `entity_id`, `at desc` | `audit_log_entity_idx` | ok |
+Not indexed on purpose: `members.email` (no lookup by email on the server), `assessments.type_id` alone (types are never deleted).
 
 ## Tables
 
@@ -103,7 +124,7 @@ members (id uuid pk, full_name text not null, phone text not null,
   email text, date_of_birth date not null, sex text not null check in ('male','female'),
   joined_on date not null, objective text check in ('fat_loss','strength','general_fitness','other'),
   notes text, archived_at timestamptz, created_at, updated_at)   -- archived: hidden, still editable (BR-REC-58)
-  index (right(phone_digits, 10)); index (lower(full_name), id) where archived_at is null
+  index (right(phone_digits, 10)); index (lower(full_name) collate "C", id) where archived_at is null   -- v4: collate "C" (BR-REC-207)
 membership_periods (id uuid pk, member_id uuid not null references members on delete restrict,
   plan text not null check in ('monthly','quarterly','half_annual','annual'),
   start_on date not null, end_on date not null check (end_on >= start_on),  -- end set by service (BR-REC-51)
@@ -144,7 +165,7 @@ soft-delete of assessments.
 | Q1 | (developer) Enum-like columns as Postgres enums or `text` + check? | **A** `text` + check (easier migrations) / B `pgEnum` | **A** → BR-REC-175 |
 
 ## Changelog
-
+- 2026-10-05 v4 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2
 - 2026-10-03 v0 — answers folded: `login_attempts` is one row (global lock), BR-REC-165/168 updated; 7-day
   sign-in noted on `auth_sessions`; archived members stay editable; new BR-REC-175 (text + check, CI test)
@@ -157,3 +178,6 @@ soft-delete of assessments.
 - 2026-10-04 v3 — changed after freeze (MVP demo, user: build `seed:demo` now): new BR-REC-176 (curated, today-relative demo data set); no existing rule changed; re-frozen
 - 2026-10-04 v3 — BR-REC-176 example corrected (a today-relative set shows the same overdue days on any day); no rule changed
 - 2026-10-04 v3 — BR-REC-176 clarified in review: fixed id format, production refusal, month-end placement of the newest visit and period; no rule changed
+- 2026-10-05 v4 — changed after freeze (owner: "make sure indexes are proper", #59): index map per query; new
+  BR-REC-206 (every read path indexed, nothing extra) and BR-REC-207 (name index gets `collate "C"` to match the
+  E16/E39 order — the one gap found); no table or column changes; `members.email` stays unindexed (search is in the browser)

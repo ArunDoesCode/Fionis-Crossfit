@@ -2,8 +2,8 @@
 module: member-records/api-contract
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 1
-frozen_on: 2026-10-03
+version: 2
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/data-model]
 ---
@@ -43,7 +43,7 @@ Rules BR-REC-153…162 · the endpoint table · the error-code list · `.contrac
 | BR-REC-157 | Update bodies reject unknown fields and need at least one field. | `PATCH /members/1 {}` → 400 | Route test |
 | BR-REC-158 | Every write runs in one transaction together with its change-log row (session, action, old → new). | Rename member → one `audit_log` row with before/after name | Service test |
 | BR-REC-159 | Every route needs a sign-in except E01–E03 and health; route descriptors use auth `any-authenticated` (no permission keys yet). | No cookie → 401 `UNAUTHORIZED` | Route-drift test checks every descriptor's auth |
-| BR-REC-160 | E07 settings and E09 catalog send an `ETag`; a matching `If-None-Match` gets 304 with no body. | Re-open entry form, nothing changed → 304 | Route test |
+| BR-REC-160 | E07 settings and E09 catalog send an `ETag`; a matching `If-None-Match` gets 304 with no body. v2: also E16, E18, E24, E31, E35 (performance BR-REC-212). | Re-open entry form, nothing changed → 304 | Route test per listed endpoint |
 | BR-REC-161 | Data responses carry `Cache-Control: private, no-store`, a `Server-Timing` header (`db`, `total`), and are gzip-compressed when over 1 KB. | Member list → `content-encoding: gzip` | Route test on headers |
 | BR-REC-162 | A stream that must change a shape edits only its own `types/<feature>.types.ts`, then re-runs `contract:generate` and `types:api`; merge conflicts in generated files are solved by re-running both, never by hand. | Members adds a field → regenerated files in the same commit | CI `contract:check` |
 
@@ -68,7 +68,7 @@ Errors column lists codes beyond `VALIDATION_ERROR` (400) and `UNAUTHORIZED` (40
 | E13 | POST `/api/assessment-types/:typeId/metrics` | setup | metric fields (see E09) | metric | 404, 409 `NAME_TAKEN` |
 | E14 | PATCH `/api/metrics/:metricId` | setup | any metric field + `isActive` | metric | 404, 409 `NAME_TAKEN`, 409 `METRIC_LOCKED` |
 | E15 | PUT `/api/assessment-types/:typeId/metric-order` | setup | `{ metricIds[] }` | `{}` | 404 |
-| E16 | GET `/api/members` | members | `q` (2–100 chars), `phone` (last-10-digit match), `status` (active·expiring·expired·archived·any; without it archived are left out), page, pageSize, `sortBy` (name·joinedOn·lastAssessedOn), sortDir | list `{ id, fullName, phone, lastAssessedOn, archivedAt, membership{ status, plan, endOn, daysLeft } }` | — |
+| E16 | GET `/api/members` | members | `q` (2–100 chars), `phone` (last-10-digit match), `status` (active·expiring·expired·archived·any; without it archived are left out), page, pageSize, `sortBy` (name·joinedOn·lastAssessedOn), sortDir | list `{ id, fullName, phone, email, lastAssessedOn, archivedAt, membership{ status, plan, endOn, daysLeft } }` (v2: `email`, BR-REC-205) | — |
 | E17 | POST `/api/members` | members | member fields + `firstPeriod{ plan, startOn }`; header `Idempotency-Key` | member (as E18) | 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN`, `IDEMPOTENCY_KEY_MISSING`; 422 `IDEMPOTENCY_KEY_REUSED` |
 | E18 | GET `/api/members/:memberId` | members | — | `{ id, fullName, phone, email, dateOfBirth, age, sex, joinedOn, objective, notes, archivedAt, membership{ status, plan, startOn, endOn, daysLeft }, periods[{ id, plan, startOn, endOn }] }` | 404 |
 | E19 | PATCH `/api/members/:memberId` | members | any member field (archived members too) | member | 404, 400 `DATE_IN_FUTURE`, `START_BEFORE_JOIN` (join date after a membership start) |
@@ -77,7 +77,7 @@ Errors column lists codes beyond `VALIDATION_ERROR` (400) and `UNAUTHORIZED` (40
 | E22 | POST `/api/members/:memberId/periods` | members | `{ plan, startOn }`; header `Idempotency-Key` | period + `memberRestored` | 404, 409 `PERIOD_OVERLAP`, 400 `START_BEFORE_JOIN` |
 | E23 | PATCH `/api/members/:memberId/periods/:periodId` | members | `{ plan?, startOn? }` | period + `memberRestored` | 404, 409 `PERIOD_OVERLAP`, 400 `START_BEFORE_JOIN` |
 | E24 | GET `/api/memberships/ending` | members | `status` (expiring·expired), page, pageSize | list `{ memberId, fullName, phone, plan, endOn, daysLeft }` | — |
-| E25 | GET `/api/members/:memberId/entry-form` | assessments | `typeId`, `date` | `{ member{ id, fullName, joinedOn }, type{ id, name }, existing{ assessmentId, isEstimated, values{ [metricId]: value } } \| null, metrics[{ id, name, unit, datatype, decimals, better, plausibleMin, plausibleMax, previous{ value, on, isEstimated } \| null }] }` | 404 |
+| E25 | GET `/api/members/:memberId/entry-form` | assessments | `typeId`, `date` | `{ member{ id, fullName, joinedOn }, type{ id, name }, existing{ assessmentId, isEstimated, values{ [metricId]: value } } \| null, metrics[{ id, name, unit, datatype, decimals, better, plausibleMin, plausibleMax, tableGroup, tablePart, previous{ value, on, isEstimated } \| null }] }` (v2: `tableGroup`, `tablePart`, BR-REC-217) | 404 |
 | E26 | POST `/api/assessments` | assessments | `{ memberId, typeId, date, isEstimated, values[{ metricId, value \| null }] }` (max 60) | `{ assessmentId, created, saved, removed }` | 404, 400 `DATE_IN_FUTURE`, `NO_VALUES`, `METRIC_NOT_IN_TYPE` |
 | E27 | GET `/api/assessments` | assessments | `memberId` (required), `typeId`, page, pageSize, sortDir (default desc) | list `{ id, typeId, typeName, date, isEstimated, valueCount }` | — |
 | E28 | GET `/api/assessments/:assessmentId` | assessments | — | `{ id, memberId, typeId, typeName, date, isEstimated, values[{ metricId, name, unit, datatype, value }] }` | 404 |
@@ -115,7 +115,7 @@ Cursor/keyset pagination (performance.md), public API keys, webhooks, a change-l
 | Q1 | (developer) Default `pageSize` stays 10 per the standard, screens send 25? | **A** yes / B change the default to 25 | **A** → BR-REC-155 + CI route-drift check |
 
 ## Changelog
-
+- 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2
 - 2026-10-03 v0 — answers folded: `MEMBER_ARCHIVED` removed (E19, E22, E23, E26, code list); E16 returns
   `archivedAt`; E01/E06 lock is global with `Retry-After`; E36 `ageBand` 10-year bands; base URL per D-018
@@ -131,3 +131,6 @@ Cursor/keyset pagination (performance.md), public API keys, webhooks, a change-l
 - 2026-10-04 v1 — clarified during build (Stream B; no rule changed): E19 can answer 400 `START_BEFORE_JOIN` (changed join date
   after a membership start); E16 `q` is 2–100 characters; E16 `sortBy` defaults to `name`.
 - 2026-10-04 v1 — clarified during build (Stream F; no rule changed): E35 measurements carry `id` and `decimals`, types carry `id`, segmental groups are `{ name, unit, decimals }`; E36–E38 are computed live (progress v2).
+- 2026-10-05 v2 — changed after freeze (UX redesign #59, additive only, no field removed): E16 items gain `email`
+  (members BR-REC-205); E25 metrics gain `tableGroup`, `tablePart` (assessments BR-REC-217); BR-REC-160 ETag also on
+  E16, E18, E24, E31, E35 (performance BR-REC-212)

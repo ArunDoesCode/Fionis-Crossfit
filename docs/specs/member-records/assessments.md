@@ -2,8 +2,8 @@
 module: member-records/assessments
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
-frozen_on: 2026-10-03
+version: 3
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/setup, member-records/members, member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
 ---
@@ -18,7 +18,7 @@ whole binder can be typed in without losing a value to a bad connection.
 
 ## Owns
 
-Rules BR-REC-12, 19, 20, 21, 73…92 · endpoints E25–E30 · tables `assessments`, `measurements` · screens S10
+Rules BR-REC-12, 19, 20, 21, 73…92, 216, 217 · endpoints E25–E30 · tables `assessments`, `measurements` · screens S10
 Record assessment (+ choose-assessment and check-values sheets), S11 All assessments, the "Recent" block on
 the member page · the device-side draft store and plausibility check (frontend only).
 
@@ -48,7 +48,7 @@ the member page · the device-side draft store and plausibility check (frontend 
 | BR-REC-75 | Time fields are two boxes, minutes and seconds, with the number keypad; seconds 0–59, minutes 0–599; pasting "2:02" fills both; 60 minutes or more shows as h:mm:ss (Q3).                                                                                                                                         | min 2, sec 75 → "Seconds must be 0 to 59"                      | Field unit test                                                    |
 | BR-REC-76 | Number fields accept "." or ","; the value is rounded to the measurement's decimals (BR-REC-64); anything else shows "Enter a number like 95.5".                                                                                                                                                                    | "95,5" → 95.5                                                  | Parser test                                                        |
 | BR-REC-77 | Only filled fields are saved; when editing, emptying a saved field removes that value, and the field says "will be removed" until Save.                                                                                                                                                                             | Clear Plank on 12 Mar → Plank gone from that date              | E26`value: null` → `removed: 1`                               |
-| BR-REC-78 | Saving with nothing filled is refused ("Enter at least one value"); to remove a whole assessment use Delete.                                                                                                                                                                                                        | Empty form → Save → message                                   | 400`NO_VALUES`                                                   |
+| BR-REC-78 | Saving with nothing filled is refused ("Enter at least one value"); to remove a whole assessment use Delete. v3: the message is a top alert re-announced on every click with focus on the first field (ux BR-REC-190, #45). | Empty form → Save twice → alert read out twice, focus on the first field | 400`NO_VALUES`; save-flow unit test |
 | BR-REC-79 | Paper-column chips Q1–Q4 set the date to join date + 0 / 3 / 6 / 9 months and tick "estimated" (v1 Q2; this spec's Q1).                                                                                                                                                                                            | Joined 1 Jun 2025, chip Q3 → ≈ 1 Dec 2025, estimated          | UI test                                                            |
 | BR-REC-80 | Estimated dates show as "≈ Dec 2025" in forms, lists and the report card, and as`estimated = yes` in CSV.                                                                                                                                                                                                        | Q2 entry → history shows "≈ Sep 2025"                         | Format test                                                        |
 | BR-REC-81 | "Previous" is the latest value of that measurement dated before this assessment's date; change = this − previous with sign and unit, plus an arrow and "better"/"worse" by the measurement's direction (none → no word); times as ±m:ss.                                                                         | Back-filling 2025-12-30 compares with 2025-09-30, not with 2026 | E25 test with later data present                                   |
@@ -63,11 +63,13 @@ the member page · the device-side draft store and plausibility check (frontend 
 | BR-REC-90 | Leaving a form with unsaved changes asks "Leave without saving? Your entries stay as a draft." [Stay] [Leave].                                                                                                                                                                                                      | Back button mid-entry → question                               | UI test                                                            |
 | BR-REC-91 | Every field opens a number keypad; "Next" moves to the next field in order; the last field's key is "Done"; Save stays visible above the keyboard.                                                                                                                                                                  | Type 15 values without touching the screen between them         | `inputmode`, `enterkeyhint` check on a phone                   |
 | BR-REC-92 | Saved assessments can be edited or deleted at any time (Q4); every change is in the change log with old and new values.                                                                                                                                                                                             | Fix a typo from last year → saved, logged                      | Audit test                                                         |
+| BR-REC-216 | On desktop Record assessment is a grid (ux BR-REC-188, page up to 1280 px): first row Date, About, Paper column; then the measurements in setup order, 1/2/3/4 columns by width (cells ≥ 240 px); measurements with a report place sit in titled sub-grids per group ("Subcutaneous fat %", "Skeletal muscle %") with the parts in the order whole body, arms, trunk, legs; each cell = label + unit, input, "prev" and change line, message slot; the form is a real `<form>` so Enter saves; phones stay one column. | Body composition at 1440 × 900 → all 15 fields, Save visible, no scroll | Playwright screenshots 360 / 800 / 1280 / 1440; ≤ 1 screen of scroll at 1280 × 720 |
+| BR-REC-217 | E25 `metrics` also return `tableGroup` and `tablePart` (null when the measurement has no report place), an additive contract change. | "Skeletal muscle % – Arms" → `{ tableGroup: "Skeletal muscle %", tablePart: "arms" }` | Contract test; `contract:check` |
 
 ## Screens
 
-S10 Record assessment (`/admin/members/[memberId]/assess?type=&date=`). Desktop: 720 px; each row is
-label · input · previous · change on one line.
+S10 Record assessment (`/admin/members/[memberId]/assess?type=&date=`). Desktop (v3): the grid of BR-REC-216; the
+wireframe below is the phone layout. Date uses the shared DatePicker (ux BR-REC-192).
 
 ```
 +--------------------------------+
@@ -148,7 +150,7 @@ No automated UI tests for the choose sheet (BR-REC-73), the leave guard (BR-REC-
 | Q5 | Unsaved drafts on a phone are kept for… | **A** 7 days / B until restored or discarded | **A** → BR-REC-85 |
 
 ## Changelog
-
+- 2026-10-05 v3 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-12, 19, 20, 21 from v1 unchanged (BR-REC-75 decides how mm:ss is typed)
 - 2026-10-03 v0 — answers folded: all as recommended; archived members can be recorded for (members Q6 = B)
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
@@ -158,3 +160,10 @@ No automated UI tests for the choose sheet (BR-REC-73), the leave guard (BR-REC-
 - 2026-10-04 v2 — D19 clarified (review R-5, R2-2): flipping About on a saved assessment counts as an unsaved change; a date move does not (the typed values go to that date's draft); no rule changed
 - 2026-10-04 v2 — D12 clarified (review round 1): an About-only edit toasts "Saved."; no rule changed
 - 2026-10-04 v2 — D2 clarified (review round 2, R2-3): Save on a saved assessment with nothing changed sends no request; no rule changed
+- 2026-10-05 v3 — changed after freeze (owner UAT #59, #45, #46): new BR-REC-216 (desktop grid with titled segmental
+  sub-grids, Enter saves) and BR-REC-217 (E25 `tableGroup`/`tablePart`); BR-REC-78 UI follows ux BR-REC-190; the form
+  state model (D-024 reducer vs RHF + Zod) is ux Q3; S10 desktop 720 px line replaced
+- 2026-10-05 v3 — owner answers: ux Q3 = A — the Record form moves to React Hook Form + Zod under the shared
+  `FormItem` / `FloatingLabelInput` format (drafts from `watch`, leave guard from `isDirty`, D-034 supersedes D-024 (3));
+  BR-REC-85, 90 behaviour unchanged; draft key (D13) unchanged; a saved assessment saved with no change closes
+  silently (ux BR-REC-190, Q8 = B; replaces the "Saved." / no-request note of D2 only for the no-change case)
