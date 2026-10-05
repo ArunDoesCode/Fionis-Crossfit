@@ -1,7 +1,8 @@
 // Spec: docs/specs/member-records/performance.md BR-REC-212 (U6 part: E18 parallel reads, pool config, archived skipped in SQL).
+
+import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, test } from "bun:test";
 
 import { db } from "../../src/db/client";
 import { dueRepository } from "../../src/repository/dueRepository";
