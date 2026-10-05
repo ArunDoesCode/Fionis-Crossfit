@@ -126,7 +126,6 @@ describe('BR-REC-180/181/182 density and width tokens', () => {
     ['header-height', 56],
     ['control-height', 40],
     ['row-height', 48],
-    ['page-padding', 24],
     ['section-gap', 16],
   ])('BR-REC-181 --%s is %i px on fine pointer >= 1024 px', (name, want) => {
     expect(px(decl(fine, name) ?? '')).toBe(want);
@@ -135,7 +134,6 @@ describe('BR-REC-180/181/182 density and width tokens', () => {
     ['control-height', 48],
     ['row-height', 64],
     ['tap-min', 44],
-    ['page-padding', 16],
     ['section-gap', 24],
   ])('BR-REC-181 touch default --%s stays %i px', (name, want) => {
     expect(px(decl(rootText, name) ?? '')).toBe(want);
@@ -143,10 +141,8 @@ describe('BR-REC-180/181/182 density and width tokens', () => {
   test('BR-REC-180 --header-height token exists (page header 56 px)', () => {
     expect(css).toMatch(/--header-height:/);
   });
-  test.each([
-    ['page-max-narrow', 896],
-    ['page-max-wide', 1280],
-  ])('BR-REC-182 --%s is %i px', (name, want) => {
-    expect(px(decl(css, name) ?? '')).toBe(want);
+  test('BR-REC-182 (v9) no page-max tokens and no page-narrow/page-wide utilities remain', () => {
+    expect(css).not.toMatch(/--page-max-(narrow|wide)/);
+    expect(css).not.toMatch(/page-narrow|page-wide/);
   });
 });
