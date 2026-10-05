@@ -146,13 +146,14 @@ describe('BR-REC-186 brand surfaces', () => {
     expect(text).toContain('Fionis-Logo.avif');
     expect(text).toMatch(/\bpriority\b/);
   });
-  test('BR-REC-186 collapsed sidebar placeholder is an orange "F" square', () => {
+  test('BR-REC-186 collapsed sidebar placeholder is an "F" square with AA contrast (bg-primary, text-primary-foreground)', () => {
     const t = codeFiles
       .filter((f) => f.endsWith('.tsx') && /shell/i.test(f))
       .map((f) => readFileSync(f, 'utf8'))
       .join('\n');
     expect(t).toMatch(/>\s*F\s*</);
-    expect(t).toContain('bg-brand');
+    expect(t).toContain('bg-primary');
+    expect(t).toContain('text-primary-foreground');
   });
 });
 
