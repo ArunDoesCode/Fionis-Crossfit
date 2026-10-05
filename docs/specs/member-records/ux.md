@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 5
+version: 6
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -164,6 +164,15 @@ Names fixed so tests and code agree (no rule changed):
 - **Density and width tokens (BR-REC-181, 182):** `--header-height` (56 px ≥ 1024 px fine pointer), `--control-height` (40 px), `--row-height` (48 px), `--page-padding` (24 px), `--section-gap` (16 px), `--page-max-narrow` (56rem), `--page-max-wide` (80rem), all in `globals.css`; touch keeps the BR-REC-122 values.
 - **Sidebar remembered state (BR-REC-177):** the choice lives in the cookie `sidebar_state`; before first paint a blocking script copies it (or the first-visit default: open from 1024 px, icons below) to `<html data-sidebar="open|collapsed">`, so a reload never flashes. Logic is one pure function in `frontend/src/components/shells/sidebarState.ts`, `readSidebarOpen()`: attribute first, else the cookie, else the viewport default — so a client-side navigation (login → `/admin`, where the script does not run) honours the cookie too. Ctrl/Cmd+B is not a sidebar shortcut (blocked only when the focus is not in an input, textarea or editable field, so bold still works in fields). Collapsed icon buttons are 44 px; the "F" placeholder keeps AA contrast (`bg-primary`, `text-primary-foreground`).
 
+## Build clarifications (U2, 2026-10-05)
+
+Names fixed so tests and code agree (no rule changed):
+- **Form primitives (BR-REC-187, 199):** `frontend/src/components/common/form/index.ts` exports `FormField`, `FormItem`, `FormControl`, `FormMessage`, `FloatingLabelInput`, `FormGrid`, `FormSection`, `NumberInput`, `DurationInput`, `FormErrorSummary`, `useFocusFirstProblem`. `FormItem` carries `min-h-19`; `FormMessage` renders inside it; nothing outside `components/common/form` builds a label + error line by hand.
+- **One number parser (BR-REC-197):** `frontend/src/lib/forms/numberText.ts` exports `parseNumberText(text, decimals)` returning `{ kind: 'empty' } | { kind: 'ok', value } | { kind: 'invalid' }` (the current `lib/assessments/parseNumber.ts` behaviour, moved; `lib/assessments/parseNumber.ts` and `lib/setup/form.ts`'s own `parseNumberText` are deleted). Setup schemas use it through a Zod pipe; messages: blank required → "Enter a number", not a number → "Enter a number like 7" (whole numbers) / "Enter a number like 95.5" (decimals), out of range keeps "Use 0 to 30 days" style.
+- **First problem (BR-REC-189):** `frontend/src/lib/forms/firstProblem.ts` exports `firstProblem(errors, order: string[]): string | undefined` (first field of `order` that has an error; unknown names last) and `SUMMARY_MIN = 3` (summary shown from 3 errors). The three old helpers (`members/focusFirstProblem.ts`, `setup/focusFirstProblem.ts`, `lib/assessments/focusField.ts`) are removed or become thin callers of it; smooth scroll only when `prefers-reduced-motion` is not set.
+- **Modals (BR-REC-195, 196):** `ResponsiveSheet` no longer imports `@base-ui/react/drawer` (it uses `components/ui/drawer`); `ConfirmSheet` takes `cancelLabel?` and `backToClose?` (default true) and `LeaveDialog` uses it; no native `<select>` in `components/pages/setup/` and no `<details>` in `components/pages/members/`.
+- **Save with nothing (BR-REC-190):** a new Record assessment with no value shows the top alert text "Enter at least one value" (word-list key `needOneValue`), re-announced on every click; an unchanged edit closes with no request and no toast.
+
 ## Not now
 
 Other languages (Hindi), member-facing screens, gym-chosen colours beyond Fionis, onboarding tour, coach-editable
@@ -190,6 +199,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v6 — clarified during build (U2): module paths and names for form primitives, number parser, first-problem helper, modals, empty-save text; no rule changed
 - 2026-10-05 v5 — clarified during build (U1 review round 2): sidebar remembered-state behaviour (`data-sidebar`, `readSidebarOpen` fallback, shortcut), 44 px collapsed targets, AA "F" square; no rule changed
 - 2026-10-05 v4 — clarified during build (U1 review R-6): breadcrumbs use static parent labels; member name in the trail deferred (#40)
 - 2026-10-05 v3 — clarified during build (U1): module paths and token names for the tone map, route table, density and width tokens (see Build clarifications); no rule changed
