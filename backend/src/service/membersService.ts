@@ -137,6 +137,7 @@ export const membersService = {
         id: row.id,
         fullName: row.fullName,
         phone: row.phone,
+        email: row.email,
         lastAssessedOn: row.lastAssessedOn,
         archivedAt: row.archivedAt?.toISOString() ?? null,
         membership: { status, plan: row.plan, endOn: row.endOn, daysLeft },

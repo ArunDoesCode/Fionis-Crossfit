@@ -183,6 +183,30 @@
                                   "null"
                                 ]
                               },
+                              "tableGroup": {
+                                "description": "Report table group, e.g. 'Skeletal muscle %'; null = no report place.",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "tablePart": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "whole_body",
+                                      "arms",
+                                      "trunk",
+                                      "legs"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Report table part; null exactly when tableGroup is null."
+                              },
                               "previous": {
                                 "anyOf": [
                                   {
@@ -221,6 +245,8 @@
                               "better",
                               "plausibleMin",
                               "plausibleMax",
+                              "tableGroup",
+                              "tablePart",
                               "previous"
                             ],
                             "additionalProperties": false
@@ -3577,6 +3603,13 @@
                           "phone": {
                             "type": "string"
                           },
+                          "email": {
+                            "description": "null = no email on file.",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "lastAssessedOn": {
                             "anyOf": [
                               {
@@ -3647,6 +3680,7 @@
                           "id",
                           "fullName",
                           "phone",
+                          "email",
                           "lastAssessedOn",
                           "archivedAt",
                           "membership"

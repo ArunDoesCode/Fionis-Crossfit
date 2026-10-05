@@ -10,7 +10,7 @@ import {
   metrics,
 } from "../db/schemas";
 import type { IsoDate } from "../lib/domain/dates";
-import type { BetterDirection, Datatype } from "../lib/enums";
+import type { BetterDirection, Datatype, TablePart } from "../lib/enums";
 import { AppError } from "../lib/errors";
 import type { PartialUpdate } from "../lib/types";
 import type { SortDirection } from "../types/common.types";
@@ -42,6 +42,8 @@ export type MetricFacts = {
   better: BetterDirection;
   plausibleMin: number | null;
   plausibleMax: number | null;
+  tableGroup: string | null;
+  tablePart: TablePart | null;
   isActive: boolean;
 };
 
@@ -176,6 +178,8 @@ export const assessmentsRepository = {
         better: metrics.better,
         plausibleMin: metrics.plausibleMin,
         plausibleMax: metrics.plausibleMax,
+        tableGroup: metrics.tableGroup,
+        tablePart: metrics.tablePart,
         isActive: metrics.isActive,
       })
       .from(metrics)
@@ -185,6 +189,7 @@ export const assessmentsRepository = {
       ...row,
       datatype: row.datatype as Datatype,
       better: row.better as BetterDirection,
+      tablePart: row.tablePart as TablePart | null,
     }));
   },
 
