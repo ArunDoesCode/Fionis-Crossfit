@@ -2,7 +2,7 @@
 module: member-records/assessments
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 4
+version: 5
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/setup, member-records/members, member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -63,7 +63,7 @@ the member page · the device-side draft store and plausibility check (frontend 
 | BR-REC-90 | Leaving a form with unsaved changes asks "Leave without saving? Your entries stay as a draft." [Stay] [Leave].                                                                                                                                                                                                      | Back button mid-entry → question                               | UI test                                                            |
 | BR-REC-91 | Every field opens a number keypad; "Next" moves to the next field in order; the last field's key is "Done"; Save stays visible above the keyboard.                                                                                                                                                                  | Type 15 values without touching the screen between them         | `inputmode`, `enterkeyhint` check on a phone                   |
 | BR-REC-92 | Saved assessments can be edited or deleted at any time (Q4); every change is in the change log with old and new values.                                                                                                                                                                                             | Fix a typo from last year → saved, logged                      | Audit test                                                         |
-| BR-REC-216 | On desktop Record assessment is a grid (ux BR-REC-188, page up to 1280 px): first row Date, About, Paper column; then the measurements in setup order, 1/2/3/4 columns by width (cells ≥ 240 px); measurements with a report place sit in titled sub-grids per group ("Subcutaneous fat %", "Skeletal muscle %") with the parts in the order whole body, arms, trunk, legs; each cell = label + unit, input, "prev" and change line, message slot; the form is a real `<form>` so Enter saves; phones stay one column. | Body composition at 1440 × 900 → all 15 fields, Save visible, no scroll | Playwright screenshots 360 / 800 / 1280 / 1440; ≤ 1 screen of scroll at 1280 × 720 |
+| BR-REC-216 | On desktop Record assessment is a grid (ux BR-REC-188, page up to 1280 px): first row Date, About, Paper column; then the measurements in setup order, 1 column on phones and 2 columns from 768 px, using the whole page (owner 2026-10-05); measurements with a report place sit in titled sub-grids per group ("Subcutaneous fat %", "Skeletal muscle %") with the parts in the order whole body, arms, trunk, legs; each cell = label + unit, input, "prev" and change line, message slot; the form is a real `<form>` so Enter saves; phones stay one column. | Body composition at 1440 × 900 → all 15 fields, Save visible, no scroll | Playwright screenshots 360 / 800 / 1280 / 1440; ≤ 1 screen of scroll at 1280 × 720 |
 | BR-REC-217 | E25 `metrics` also return `tableGroup` and `tablePart` (null when the measurement has no report place), an additive contract change. | "Skeletal muscle % – Arms" → `{ tableGroup: "Skeletal muscle %", tablePart: "arms" }` | Contract test; `contract:check` |
 
 ## Screens
@@ -154,6 +154,7 @@ No automated UI tests for the choose sheet (BR-REC-73), the leave guard (BR-REC-
 - **Layout helper (BR-REC-216):** `frontend/src/lib/assessments/layout.ts` exports `layoutMetrics(metrics)` returning an ordered list of blocks `{ title: string | null, metrics }`: metrics without a `tableGroup` form one untitled block in setup order; metrics sharing a `tableGroup` form one titled block (title = the group name) whose members are ordered whole body, arms, trunk, legs (the order of the `tablePart` enum values in `backend/src/lib/enums.ts`); blocks keep the position of their first metric in setup order. The Record assessment `<form>` uses `FormGrid` (`maxCols` 4) with `FormSection` for titled blocks; the first row is Date, About, Paper column.
 
 ## Changelog
+- 2026-10-05 — owner review: Record assessment is two columns on the whole page (BR-REC-216 wording), no "due" tag on measurement labels, "About" renamed "Approximate date"; no other rule changed
 - 2026-10-05 v4 — clarified during build (U4): `layoutMetrics` helper for the desktop grid; no rule changed
 - 2026-10-05 v3 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-12, 19, 20, 21 from v1 unchanged (BR-REC-75 decides how mm:ss is typed)
