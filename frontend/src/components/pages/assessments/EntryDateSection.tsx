@@ -1,20 +1,19 @@
 'use client';
 
 import ChoiceChips from '@/components/common/ChoiceChips';
-import DateField from '@/components/common/DateField';
-import { FormControl, FormField, FormGrid, FormItem } from '@/components/common/form';
+import DatePicker from '@/components/common/DatePicker';
+import { FormControl, FormField, FormGrid, FormItem, FormMessage } from '@/components/common/form';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { EntryControl } from '@/lib/assessments/entryErrors';
 import { assessmentDateLabel, entryDateIssue } from '@/lib/assessments/labels';
 import { paperColumnDate } from '@/lib/assessments/paperColumns';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
-import { useDeferredDate } from '@/lib/assessments/useDeferredDate';
 
 const COLUMNS = [1, 2, 3, 4] as const;
 const COLUMN_OPTIONS = COLUMNS.map((column) => ({ value: `q${column}`, label: `Q${column}` }));
 
-interface EntryDateFieldsProps {
+interface EntryDateSectionProps {
   control: EntryControl;
   date: string;
   isEstimated: boolean;
@@ -28,10 +27,9 @@ interface EntryDateFieldsProps {
 
 // The date, About and the paper-column chips (BR-REC-19, 79, 80, 83). A date after today is refused with the
 // sentence of DATE_IN_FUTURE; one before the join date only warns. Q1–Q4 set the date to the join date + 0 / 3
-// / 6 / 9 months and tick About; the chosen chip shows only while both still match. The typed date reaches
-// the form when the box is left or a finished date has stood still for 300 ms (R-6), not on every key.
-// The date box is the plain DateField until the date picker slice (U3) replaces it.
-export default function EntryDateFields({
+// / 6 / 9 months and tick About; the chosen chip shows only while both still match. The picked date goes
+// straight to the session (`onMoveToDate`).
+export default function EntryDateSection({
   control,
   date: current,
   isEstimated,
@@ -39,7 +37,7 @@ export default function EntryDateFields({
   member,
   today,
   onMoveToDate,
-}: EntryDateFieldsProps) {
+}: EntryDateSectionProps) {
   const issue = entryDateIssue({
     date: current,
     today,
@@ -49,7 +47,6 @@ export default function EntryDateFields({
   const chosen = COLUMNS.find(
     (column) => isEstimated && paperColumnDate(member.joinedOn, column) === current,
   );
-  const date = useDeferredDate(current, (picked) => onMoveToDate(picked));
 
   return (
     <div className="flex flex-col gap-2">
@@ -57,18 +54,19 @@ export default function EntryDateFields({
         <FormField
           control={control}
           name="date"
-          render={({ fieldState }) => (
+          render={() => (
             <FormItem>
-              <div ref={date.boxRef}>
-                <DateField
+              <FormControl>
+                <DatePicker
                   id="assess-date"
                   label={ASSESSMENT_TEXT.date}
-                  value={date.shown}
+                  value={current}
                   max={today}
-                  onChange={date.change}
-                  error={fieldState.error?.message}
+                  today={today}
+                  onChange={(picked) => onMoveToDate(picked)}
                 />
-              </div>
+              </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

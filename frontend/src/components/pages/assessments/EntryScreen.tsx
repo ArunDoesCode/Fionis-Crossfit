@@ -6,7 +6,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import ErrorState from '@/components/common/ErrorState';
 import { FormErrorSummary, focusField, useFocusFirstProblem } from '@/components/common/form';
 import PageHeader from '@/components/common/PageHeader';
-import EntryDateFields from '@/components/pages/assessments/EntryDateFields';
+import EntryDateSection from '@/components/pages/assessments/EntryDateSection';
 import EntryFields from '@/components/pages/assessments/EntryFields';
 import { NeedOneValue, OfferNotice, StatusLine } from '@/components/pages/assessments/EntryNotices';
 import EntrySkeleton from '@/components/pages/assessments/EntrySkeleton';
@@ -170,7 +170,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         {session.offer && (
           <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
-        <EntryDateFields
+        <EntryDateSection
           control={control}
           date={date}
           isEstimated={typed.isEstimated}

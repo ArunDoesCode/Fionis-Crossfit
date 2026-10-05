@@ -1,6 +1,7 @@
 'use client';
 
 import { useWatch } from 'react-hook-form';
+import DatePicker from '@/components/common/DatePicker';
 import {
   FloatingLabelInput,
   FormControl,
@@ -9,7 +10,6 @@ import {
   FormMessage,
 } from '@/components/common/form';
 import ChipGroup from '@/components/pages/members/ChipGroup';
-import MemberDateField from '@/components/pages/members/MemberDateField';
 import type { MemberFormControl } from '@/components/pages/members/memberFormControl';
 import PhoneField from '@/components/pages/members/PhoneField';
 import type { IsoDate } from '@/lib/domain/dates';
@@ -27,6 +27,9 @@ interface PersonFieldsProps {
   /** S6 uses this to keep "Starts on" equal to the join date until it is changed on its own. */
   onJoinedOnChange?: (value: string) => void;
 }
+
+/** The oldest birth year the picker offers (BR-REC-192). */
+const BIRTH_FROM_YEAR = 1900;
 
 const SEX_OPTIONS = SEXES.map((value) => ({ value, label: SEX_LABELS[value] }));
 
@@ -71,11 +74,16 @@ export default function PersonFields({
         render={({ field, fieldState }) => (
           <FormItem>
             <FormControl>
-              <MemberDateField
-                {...field}
+              <DatePicker
                 label={MEMBER_FIELD_LABELS.dateOfBirth}
                 required
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
                 max={today}
+                today={today}
+                yearRange={{ from: BIRTH_FROM_YEAR, to: Number(today.slice(0, 4)) }}
+                defaultMonth={`${Number(today.slice(0, 4)) - 30}${today.slice(4)}`}
               />
             </FormControl>
             <FormMessage />
@@ -114,14 +122,16 @@ export default function PersonFields({
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <MemberDateField
-                {...field}
+              <DatePicker
                 label={MEMBER_FIELD_LABELS.joinedOn}
                 required
+                value={field.value}
                 max={today}
-                onChange={(event) => {
-                  field.onChange(event);
-                  onJoinedOnChange?.(event.target.value);
+                today={today}
+                onBlur={field.onBlur}
+                onChange={(value) => {
+                  field.onChange(value);
+                  onJoinedOnChange?.(value);
                 }}
               />
             </FormControl>

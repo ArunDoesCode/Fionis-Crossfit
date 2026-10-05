@@ -15,7 +15,7 @@ interface ReportHeaderProps {
 export default function ReportHeader({ card }: ReportHeaderProps) {
   const { member } = card;
   const plan = `${PLAN_LABELS[member.plan]} (${text.status[member.membershipStatus]})`;
-  const joined = `${text.joined} ${formatDay(member.joinedOn, card.printedOn)}`;
+  const joined = `${text.joined} ${formatDay(member.joinedOn)}`;
 
   return (
     <header className="flex flex-col gap-1">

@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isApiError } from '@/lib/api/errors';
 import { useLeaderboard } from '@/lib/api/progress/queries';
 import { formatDay } from '@/lib/format';
-import { useToday } from '@/lib/members/useToday';
 import { messageForCode } from '@/lib/messages/errors';
 import type { Sex } from '@/lib/progress/filters';
 import { PROGRESS_TEXT, type ValueMetric, valueText } from '@/lib/progress/text';
@@ -41,7 +40,6 @@ function Rows({
   metric: ValueMetric | undefined;
   sex: Sex;
 }) {
-  const today = useToday();
   const board = useLeaderboard(metricId, sex, true);
   const items = board.data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -65,9 +63,7 @@ function Rows({
               <span className="font-mono text-base text-muted-foreground">{item.rank}</span>
               <span className="truncate text-base font-medium">{item.fullName}</span>
               <span className="font-mono text-base">{valueText(item.value, metric)}</span>
-              <span className="text-right text-sm text-muted-foreground">
-                {formatDay(item.on, today)}
-              </span>
+              <span className="text-right text-sm text-muted-foreground">{formatDay(item.on)}</span>
             </div>
           </li>
         ))}

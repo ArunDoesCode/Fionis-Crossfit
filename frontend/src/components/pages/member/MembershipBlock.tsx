@@ -10,7 +10,7 @@ import PeriodSheet, { preloadPeriodSheet } from '@/components/pages/members/Peri
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useMember } from '@/lib/api/members/queries';
-import { formatDayWithYear } from '@/lib/members/dayText';
+import { formatDay } from '@/lib/format';
 import { membershipStatusText, PLAN_LABELS } from '@/lib/members/membershipText';
 import type { MemberPeriod } from '@/lib/members/types';
 import { useToday } from '@/lib/members/useToday';
@@ -49,7 +49,7 @@ export default function MembershipBlock({ memberId }: MemberSlotProps) {
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-base">
-                    {`${member.membership.status === 'expired' ? 'Ended' : 'Ends'} ${formatDayWithYear(member.membership.endOn)}`}
+                    {`${member.membership.status === 'expired' ? 'Ended' : 'Ends'} ${formatDay(member.membership.endOn)}`}
                   </p>
                   <Button
                     type="button"

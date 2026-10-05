@@ -1,6 +1,6 @@
 'use client';
 
-import MonthField from '@/components/pages/progress/MonthField';
+import MonthPicker from '@/components/common/MonthPicker';
 import { FILTER_FIRST, FILTER_GRID } from '@/components/pages/progress/ProgressSkeleton';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,6 +15,7 @@ import {
 import type { AssessmentType } from '@/lib/api/setup/fetchers';
 import { SEX_LABELS } from '@/lib/members/labels';
 import { PLAN_LABELS } from '@/lib/members/membershipText';
+import { useToday } from '@/lib/members/useToday';
 import {
   AGE_BANDS,
   type AgeBand,
@@ -110,6 +111,7 @@ export default function ProgressFilterBar({
   filters,
   onChange,
 }: ProgressFilterBarProps) {
+  const today = useToday();
   const groups = catalog
     .filter((type) => type.isActive)
     .map((type) => ({
@@ -135,16 +137,19 @@ export default function ProgressFilterBar({
         onChange={(value) => onChange({ metricId: value })}
         className={FILTER_FIRST}
       />
-      <MonthField
+      <MonthPicker
         id="progress-joined-from"
         label={text.joinedFrom}
         value={filters.joinedFrom ?? ''}
+        today={today}
         onChange={(value) => onChange({ joinedFrom: value || undefined })}
       />
-      <MonthField
+      <MonthPicker
         id="progress-joined-to"
         label={text.joinedTo}
         value={filters.joinedTo ?? ''}
+        today={today}
+        min={filters.joinedFrom}
         onChange={(value) => onChange({ joinedTo: value || undefined })}
       />
       <FilterSelect

@@ -51,7 +51,7 @@ export default function MemberHeader({ memberId }: MemberSlotProps) {
       <div className="flex flex-col gap-1">
         <h2 className="font-heading text-2xl font-semibold lg:text-3xl">{member.fullName}</h2>
         <p className="text-base text-muted-foreground">
-          {`${member.age} y · ${SEX_LABELS[member.sex]} · Joined ${formatDay(member.joinedOn, today)}`}
+          {`${member.age} y · ${SEX_LABELS[member.sex]} · Joined ${formatDay(member.joinedOn)}`}
         </p>
         <a
           href={`tel:${member.phone}`}

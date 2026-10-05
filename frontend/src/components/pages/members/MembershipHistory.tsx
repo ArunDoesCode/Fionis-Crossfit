@@ -4,7 +4,7 @@ import { ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect, useRef } from 'react';
 import ListRow, { RowList } from '@/components/common/ListRow';
-import { formatDayWithYear } from '@/lib/members/dayText';
+import { formatDay } from '@/lib/format';
 import { PLAN_LABELS } from '@/lib/members/membershipText';
 import type { MemberPeriod } from '@/lib/members/types';
 
@@ -44,7 +44,7 @@ export default function MembershipHistory({ periods, onEdit, onIntent }: Members
           <ListRow
             key={period.id}
             title={PLAN_LABELS[period.plan]}
-            detail={`${formatDayWithYear(period.startOn)} – ${formatDayWithYear(period.endOn)}`}
+            detail={`${formatDay(period.startOn)} – ${formatDay(period.endOn)}`}
             onClick={() => onEdit(period)}
             status={
               <HugeiconsIcon

@@ -47,8 +47,7 @@ export const membershipStatusText = (
   const notStarted = m.startOn !== undefined && m.startOn > today;
   return {
     label: 'Active',
-    detail:
-      notStarted && m.startOn ? `Starts ${formatDay(m.startOn, today)}` : daysLeftText(m.daysLeft),
+    detail: notStarted && m.startOn ? `Starts ${formatDay(m.startOn)}` : daysLeftText(m.daysLeft),
     tone: toneFor('active'),
   };
 };

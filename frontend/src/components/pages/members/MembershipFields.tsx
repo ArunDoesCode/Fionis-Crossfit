@@ -1,14 +1,15 @@
 'use client';
 
 import { useWatch } from 'react-hook-form';
+import DatePicker from '@/components/common/DatePicker';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/common/form';
 import ChipGroup from '@/components/pages/members/ChipGroup';
-import MemberDateField from '@/components/pages/members/MemberDateField';
 import type { PeriodFormControl } from '@/components/pages/members/memberFormControl';
-import { formatDayWithYear } from '@/lib/members/dayText';
+import { formatDay } from '@/lib/format';
 import { MEMBER_FIELD_LABELS } from '@/lib/members/formFields';
 import { PLAN_LABELS } from '@/lib/members/membershipText';
 import { entryEnd } from '@/lib/members/renew';
+import { useToday } from '@/lib/members/useToday';
 import { PLANS } from '@/lib/validators/members';
 
 interface MembershipFieldsProps {
@@ -24,6 +25,7 @@ const PLAN_OPTIONS = PLANS.map((value) => ({ value, label: PLAN_LABELS[value] })
 // may be later but not before it. On Renew / Edit membership both start filled. The end date is worked out
 // live so it can be checked before saving.
 export default function MembershipFields({ control, onStartOnChange }: MembershipFieldsProps) {
+  const today = useToday();
   const [plan, startOn] = useWatch({ control, name: ['plan', 'startOn'] });
   const chosen = PLANS.find((option) => option === plan);
   const end = entryEnd(plan, startOn);
@@ -56,13 +58,15 @@ export default function MembershipFields({ control, onStartOnChange }: Membershi
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <MemberDateField
-                {...field}
+              <DatePicker
                 label={MEMBER_FIELD_LABELS.startOn}
                 required
-                onChange={(event) => {
+                value={field.value}
+                today={today}
+                onBlur={field.onBlur}
+                onChange={(value) => {
                   onStartOnChange?.();
-                  field.onChange(event);
+                  field.onChange(value);
                 }}
               />
             </FormControl>
@@ -72,7 +76,7 @@ export default function MembershipFields({ control, onStartOnChange }: Membershi
       />
 
       <p aria-live="polite" className="min-h-6 self-start pt-3 text-base font-medium">
-        {end && `Ends ${formatDayWithYear(end)}`}
+        {end && `Ends ${formatDay(end)}`}
       </p>
     </>
   );

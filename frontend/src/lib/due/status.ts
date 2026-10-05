@@ -32,13 +32,13 @@ export function dueRowStatus(row: { flagged: boolean; daysOverdue: number }): Du
 /**
  * The one status of an assessment on the member page (BR-REC-103, C10), the first that applies: Assess soon,
  * Reminder on a day, Never recorded, Overdue N days, Due today / tomorrow / in N days, Next due a day.
- * `today` decides whether a day shows its year (BR-REC-127).
+ * Dates always carry the year (BR-REC-191); `_today` is kept for callers.
  */
-export function memberDueStatus(item: MemberDueItem, today: IsoDate): DueStatus {
+export function memberDueStatus(item: MemberDueItem, _today?: IsoDate): DueStatus {
   if (item.flagged) return { text: WORDS.assessSoon, tone: toneFor('soon') };
   if (item.snoozedUntil) {
     return {
-      text: `Reminder on ${formatDay(item.snoozedUntil, today)}`,
+      text: `Reminder on ${formatDay(item.snoozedUntil)}`,
       tone: toneFor('reminder'),
     };
   }
@@ -49,7 +49,7 @@ export function memberDueStatus(item: MemberDueItem, today: IsoDate): DueStatus 
     };
   }
   if (item.state === 'ok') {
-    return { text: `Next due ${formatDay(item.nextDueOn, today)}`, tone: toneFor('active') };
+    return { text: `Next due ${formatDay(item.nextDueOn)}`, tone: toneFor('active') };
   }
   return byDays(item.daysOverdue);
 }

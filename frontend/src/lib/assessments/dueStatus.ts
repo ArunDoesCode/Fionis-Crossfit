@@ -10,7 +10,7 @@ import type { MemberDueRow } from './types';
 /** "Assess soon", "Reminder on 20 Oct", "Never recorded", "Overdue 34 days", "Due in 5 days", "Next due 12 Dec". */
 export function dueStatusText(row: MemberDueRow, today: string): string {
   if (row.flagged) return WORDS.assessSoon;
-  if (row.snoozedUntil) return ASSESSMENT_TEXT.reminderOn(formatDay(row.snoozedUntil, today));
+  if (row.snoozedUntil) return ASSESSMENT_TEXT.reminderOn(formatDay(row.snoozedUntil));
   if (row.neverRecorded) return ASSESSMENT_TEXT.neverRecorded;
   if (row.state === 'overdue') {
     return row.daysOverdue > 0
@@ -24,7 +24,7 @@ export function dueStatusText(row: MemberDueRow, today: string): string {
       ? ASSESSMENT_TEXT.dueTomorrow
       : ASSESSMENT_TEXT.dueIn(ASSESSMENT_TEXT.dayCount(left));
   }
-  return ASSESSMENT_TEXT.nextDue(formatDay(row.nextDueOn, today));
+  return ASSESSMENT_TEXT.nextDue(formatDay(row.nextDueOn));
 }
 
 /** The measurements of one assessment that are due now (they carry the "due" tag). */
