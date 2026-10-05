@@ -93,9 +93,26 @@ describe('BR-REC-211 hot paths', () => {
   test('BR-REC-211 no X-Powered-By', () => {
     expect(read('next.config.ts')).toMatch(/poweredByHeader:\s*false/);
   });
-  test('BR-REC-211 the today hook builds no Intl.DateTimeFormat per call', () => {
-    const t = read('src/lib/members/useToday.ts');
-    expect(t).not.toMatch(/Intl\.DateTimeFormat\(/);
+  test('BR-REC-211 five reads of "today" build at most one Intl.DateTimeFormat', async () => {
+    const Original = Intl.DateTimeFormat;
+    let built = 0;
+    const Spy = function (this: unknown, ...args: ConstructorParameters<typeof Original>) {
+      built += 1;
+      return new Original(...args);
+    } as unknown as typeof Original;
+    Object.setPrototypeOf(Spy, Original);
+    Spy.prototype = Original.prototype;
+    Intl.DateTimeFormat = Spy;
+    try {
+      // a fresh copy of the module, so its module-level cache starts empty and its Intl lookup sees the spy
+      const mod = (await import(`@/lib/members/useToday?u6=${Math.random()}`)) as {
+        gymTodayNow(): string;
+      };
+      for (let i = 0; i < 5; i++) mod.gymTodayNow();
+    } finally {
+      Intl.DateTimeFormat = Original;
+    }
+    expect(built).toBeLessThanOrEqual(1);
   });
   test('BR-REC-211 draft autosave is throttled to >= 300 ms and flushed on pagehide', () => {
     const a = read('src/lib/assessments/useDraftAutosave.ts');

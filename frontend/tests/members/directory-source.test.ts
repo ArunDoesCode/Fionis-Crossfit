@@ -1,9 +1,12 @@
 // Spec: docs/specs/member-records/members.md BR-REC-201, 203, 204 ("Build clarifications (U5)"), ux.md BR-REC-183.
 // Source-level checks (no DOM runner here): what must exist, and what must be gone. Behaviour that needs a
 // browser (no network while typing, <= 50 ms per key, CLS) is manual-only.
+
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { jsonResponse, setAuthEnv } from '../auth/helpers';
+import { appLikeClient, callHook, flush, recordingFetch } from '../due/hookHarness';
 
 const SRC = join(import.meta.dir, '..', '..', 'src');
 const read = (rel: string): string =>
@@ -63,10 +66,30 @@ describe('BR-REC-203 directory query', () => {
     expect(covered).toBe(true);
     expect(calls.some((k) => k.length === 1 && k[0] === 'members')).toBe(false);
   });
-  test('member create/update/archive/restore refresh writes the directory key', () => {
-    const body = fnBody(members, 'useRefreshMembers');
-    expect(body).toMatch(/memberKeys\.directory\(\)|memberKeys\.all\(\)/);
-  });
+  test.each(['useArchiveMember', 'useRestoreMember'])(
+    'BR-REC-203 %s success marks the directory data out of date',
+    async (hookName) => {
+      const restoreEnv = setAuthEnv();
+      const spy = recordingFetch(() =>
+        jsonResponse(200, { success: true, data: { id: 'mm1', fullName: 'Surya Pratap' } }),
+      );
+      try {
+        const m = (await import('@/lib/api/members/queries')) as unknown as {
+          memberKeys: { directory(): readonly unknown[] };
+        } & Record<string, unknown>;
+        const client = appLikeClient();
+        client.setQueryData(m.memberKeys.directory(), [{ id: 'mm1' }]);
+        const useIt = m[hookName] as (id: string) => { mutateAsync(): Promise<unknown> };
+        const mutation = callHook(client, () => useIt('mm1'));
+        await mutation.mutateAsync();
+        await flush();
+        expect(client.getQueryState(m.memberKeys.directory())?.isInvalidated).toBe(true);
+      } finally {
+        spy.restore();
+        restoreEnv();
+      }
+    },
+  );
   test('membership period writes refresh the directory key', () => {
     const body = fnBody(members, 'useInvalidateMembers');
     expect(body).toMatch(/memberKeys\.directory\(\)|memberKeys\.all\(\)/);

@@ -103,6 +103,8 @@ describe('BR-REC-202 phone', () => {
     expect(s('00919845012345', 'phone')).toEqual(['surya']));
   test('letters in the text do not match a name via phone', () =>
     expect(s('surya', 'phone')).toEqual([]));
+  test('BR-REC-202 phone: one digit plus one letter ("a1") is below the 2-digit minimum, so all rows of the scope', () =>
+    expect(s('a1', 'phone')).toEqual(['rene', 'surya', 'asura', 'kiran', 'zed']));
   test('no phone match returns empty', () => expect(s('55555', 'phone')).toEqual([]));
 });
 
