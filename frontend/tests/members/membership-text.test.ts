@@ -26,7 +26,7 @@ interface StatusInput {
 interface StatusText {
   label: 'Active' | 'Ends soon' | 'Ended';
   detail: string;
-  tone: 'success' | 'warning' | 'danger';
+  tone: 'success' | 'warning' | 'neutral';
 }
 
 interface ListItem {
@@ -40,7 +40,7 @@ interface ListItem {
 
 interface Badge {
   text: string;
-  tone: 'success' | 'warning' | 'danger' | 'neutral';
+  tone: 'success' | 'warning' | 'neutral';
 }
 
 interface MembershipText {
@@ -183,13 +183,13 @@ describe('BR-REC-52 membershipStatusText, Ends soon', () => {
 });
 
 describe('BR-REC-52 membershipStatusText, Ended', () => {
-  test('BR-REC-52 ended 2 Oct, today 3 Oct: Ended, "Ended yesterday", danger', () => {
+  test('BR-REC-52 ended 2 Oct, today 3 Oct: Ended, "Ended yesterday", neutral', () => {
     expect(
       text.membershipStatusText(
         { status: 'expired', startOn: '2025-10-03', endOn: '2026-10-02', daysLeft: -1 },
         TODAY,
       ),
-    ).toEqual({ label: 'Ended', detail: 'Ended yesterday', tone: 'danger' });
+    ).toEqual({ label: 'Ended', detail: 'Ended yesterday', tone: 'neutral' });
   });
 
   test('BR-REC-52 ended 28 Sep, today 3 Oct: "Ended 5 days ago"', () => {
@@ -198,7 +198,7 @@ describe('BR-REC-52 membershipStatusText, Ended', () => {
         { status: 'expired', startOn: '2025-09-29', endOn: '2026-09-28', daysLeft: -5 },
         TODAY,
       ),
-    ).toEqual({ label: 'Ended', detail: 'Ended 5 days ago', tone: 'danger' });
+    ).toEqual({ label: 'Ended', detail: 'Ended 5 days ago', tone: 'neutral' });
   });
 
   test('BR-REC-52 ended 31 May (125 days ago): "Ended 125 days ago"', () => {
@@ -223,7 +223,7 @@ describe('BR-REC-52 membershipStatusText, the status decides the label and the c
   const rows: [Status, StatusText['label'], StatusText['tone']][] = [
     ['active', 'Active', 'success'],
     ['expiring', 'Ends soon', 'warning'],
-    ['expired', 'Ended', 'danger'],
+    ['expired', 'Ended', 'neutral'],
   ];
   for (const [status, label, tone] of rows) {
     test(`BR-REC-125 ${status} is "${label}" with the ${tone} tone`, () => {
@@ -288,14 +288,14 @@ describe('BR-REC-125 memberListBadge (S5 Members rows)', () => {
     });
   });
 
-  test('BR-REC-125 an ended membership: "Ended", danger', () => {
+  test('BR-REC-125 an ended membership: "Ended", neutral', () => {
     expect(text.memberListBadge(item('expired', -1), TODAY)).toEqual({
       text: 'Ended',
-      tone: 'danger',
+      tone: 'neutral',
     });
     expect(text.memberListBadge(item('expired', -40), TODAY)).toEqual({
       text: 'Ended',
-      tone: 'danger',
+      tone: 'neutral',
     });
   });
 
