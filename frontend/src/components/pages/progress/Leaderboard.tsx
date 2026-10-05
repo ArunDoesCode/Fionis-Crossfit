@@ -60,9 +60,9 @@ function Rows({
         {items.map((item) => (
           <li key={item.memberId}>
             <div className={ROW}>
-              <span className="font-mono text-base text-muted-foreground">{item.rank}</span>
+              <span className="tabular-nums text-base text-muted-foreground">{item.rank}</span>
               <span className="truncate text-base font-medium">{item.fullName}</span>
-              <span className="font-mono text-base">{valueText(item.value, metric)}</span>
+              <span className="tabular-nums text-base">{valueText(item.value, metric)}</span>
               <span className="text-right text-sm text-muted-foreground">{formatDay(item.on)}</span>
             </div>
           </li>

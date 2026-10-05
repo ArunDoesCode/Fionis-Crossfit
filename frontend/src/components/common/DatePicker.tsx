@@ -23,7 +23,8 @@ const preload = () => {
   void import('@/components/common/DatePickerCalendar');
 };
 
-const TRIGGER_CLASS = `${FLOATING_BOX_CLASS} peer flex w-full min-w-0 items-end rounded-4xl border border-input bg-input/30 px-3 text-left text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40`;
+// `control-trigger` (globals.css) gives it the same white fill, input border and phone height as an input.
+const TRIGGER_CLASS = `control-trigger ${FLOATING_BOX_CLASS} peer flex w-full min-w-0 items-end rounded-4xl border border-input px-3 text-left text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40`;
 
 export interface DatePickerProps {
   /** On the button, so the form's "first problem" and any outside label find it. */

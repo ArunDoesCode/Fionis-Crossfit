@@ -87,7 +87,7 @@ export function FormItem({
             children
           )}
           {showHint ? (
-            <FieldDescription id={ids.hintId} className="text-xs">
+            <FieldDescription id={ids.hintId} className="text-[0.8125rem]">
               {hint}
             </FieldDescription>
           ) : null}

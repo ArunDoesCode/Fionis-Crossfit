@@ -166,7 +166,7 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
           Its space is always kept (two lines) and both regions are always in the page, only their text
           changes, so a screen reader announces it (BR-REC-137). */}
       <div className="min-h-12 text-base">
-        <p role="alert" className="text-destructive">
+        <p aria-live="assertive" className="text-destructive">
           {error}
         </p>
         <p role="status">{notice}</p>

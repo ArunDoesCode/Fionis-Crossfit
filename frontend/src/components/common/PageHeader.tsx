@@ -1,4 +1,6 @@
 import { Suspense } from 'react';
+import ActionBar from '@/components/common/ActionBar';
+import MenuButton from '@/components/common/MenuButton';
 import {
   BackToParent,
   PatternBack,
@@ -31,7 +33,8 @@ interface PageHeaderProps {
 
 // BR-REC-179, 180: the title, breadcrumbs (from 768 px) and "‹ Parent" (phones) all come from the route
 // table (`RouteHeading`), so a loading.tsx and its screen agree. The header stays visible while the content
-// scrolls; below 768 px it is the top bar with ☰.
+// scrolls; below 768 px it is the top bar with ☰ "Open menu". From 768 px the sidebar toggle sits at the left of
+// the header, outside the sidebar (BR-REC-227, shadcn's own placement in the SidebarInset header).
 export default function PageHeader({
   pattern,
   title,
@@ -49,8 +52,8 @@ export default function PageHeader({
           className,
         )}
       >
-        {/* ☰ opens the drawer on phones; from 768 px the sidebar's own header button collapses it. */}
-        <SidebarTrigger className="-ml-2 size-[var(--control-height)] shrink-0 md:hidden" />
+        <SidebarTrigger className="-ml-2 size-11 shrink-0 max-md:hidden" />
+        <MenuButton className="-ml-2 md:hidden" />
         <div className="min-w-0 flex-1">
           <Suspense
             fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
@@ -72,16 +75,10 @@ export default function PageHeader({
       <Suspense fallback={<PatternBack pattern={pattern} />}>
         <BackToParent />
       </Suspense>
-      {/* BR-REC-180: on a phone a form's one main action (Save) is a full-width bar fixed to the bottom edge
-          (above the keyboard); the admin layout pads the content while a bar exists. Hidden from 768 px. */}
-      {form && action && (
-        <div
-          data-slot="action-bar"
-          className="fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t px-4 bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
-        >
-          <div className="flex w-full flex-col *:h-[var(--control-height)] *:w-full">{action}</div>
-        </div>
-      )}
+      {/* BR-REC-180, 234: on a phone a form's one main action (Save) is a full-width bar fixed to the bottom edge
+          (above the keyboard), drawn after the page content so Tab reaches it after the fields; the admin
+          layout pads the content while a bar exists. Hidden from 768 px. */}
+      {form && action && <ActionBar>{action}</ActionBar>}
     </>
   );
 }

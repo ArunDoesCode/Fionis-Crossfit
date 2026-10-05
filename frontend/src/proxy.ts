@@ -118,6 +118,6 @@ export async function proxy(request: NextRequest) {
 // Never on /api (the API has its own 401), static files, images, the service worker or the manifest.
 export const config = {
   matcher: [
-    '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2)$).*)',
   ],
 };

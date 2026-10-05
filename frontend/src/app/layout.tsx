@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist_Mono, Outfit, Poppins } from 'next/font/google';
+import { Outfit, Poppins } from 'next/font/google';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import Providers from '@/lib/providers';
 import './globals.css';
 
-// BR-REC-150 / 174 (tactic 22): three self-hosted fonts, Latin only, size-matched fallback, swap.
-// Only Outfit (all text, inputs, buttons) is preloaded. Poppins (page and section titles, weight 600
-// only) and Geist Mono (number columns only) are fetched by the browser when a screen uses them.
+// BR-REC-150 / 174 / 220 (tactic 22): two self-hosted fonts, Latin only, size-matched fallback, swap.
+// Only Outfit (all text, inputs, buttons, numbers with `tabular-nums`) is preloaded. Poppins (page and
+// section titles, weight 600 only) is fetched by the browser when a screen uses it.
 const outfit = Outfit({
   subsets: ['latin'],
   display: 'swap',
@@ -22,16 +22,9 @@ const poppins = Poppins({
   preload: false,
   variable: '--font-poppins',
 });
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  adjustFontFallback: true,
-  preload: false,
-  variable: '--font-geist-mono',
-});
-
+// BR-REC-234: every page sets its own title; "%s · Fionis India" is the template, "Fionis India" the default.
 export const metadata: Metadata = {
-  title: 'Fionis India',
+  title: { default: 'Fionis India', template: '%s · Fionis India' },
   description: 'Fionis CRM',
 };
 
@@ -48,10 +41,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={`antialiased ${outfit.variable} ${poppins.variable} ${geistMono.variable}`}
+      className={`antialiased ${outfit.variable} ${poppins.variable}`}
     >
       <body>
         <ThemeProvider>
+          {/* BR-REC-234: first stop for the keyboard; the target is the content area of every screen. */}
+          <a href="#main" className="skip-link">
+            Skip to content
+          </a>
           <Providers>{children}</Providers>
         </ThemeProvider>
       </body>

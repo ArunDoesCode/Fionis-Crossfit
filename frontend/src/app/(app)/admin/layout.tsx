@@ -1,3 +1,4 @@
+import { ACTION_BAR_SLOT } from '@/components/common/ActionBar';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { SIDEBAR_STATE_CSS, SIDEBAR_STATE_SCRIPT } from '@/lib/sidebarState';
 import AdminSidebar from './_components/AdminSidebar';
@@ -26,6 +27,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           <OfflineBanner />
           {children}
+          {/* Where a form's phone Save bar is drawn: after the content, so it is last in tab order. */}
+          <div id={ACTION_BAR_SLOT} />
         </SidebarInset>
       </SidebarProvider>
     </>

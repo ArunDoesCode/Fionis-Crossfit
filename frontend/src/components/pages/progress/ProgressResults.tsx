@@ -48,7 +48,7 @@ export default function ProgressResults({ stats }: ProgressResultsProps) {
     >
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">{text.averageChange}</p>
-        <p className="font-mono text-3xl font-semibold">
+        <p className="tabular-nums text-3xl font-semibold">
           {data.avgChange === null ? '–' : signedValueText(data.avgChange, metric)}
         </p>
         <p className="text-sm text-muted-foreground">{`${metric.name} · ${text.sinceFirst}`}</p>
@@ -64,7 +64,7 @@ export default function ProgressResults({ stats }: ProgressResultsProps) {
                 <li key={key} className="flex items-center gap-2">
                   <span aria-hidden="true" className={`size-3 rounded-sm ${color}`} />
                   {`${label} `}
-                  <span className="font-mono">{data[key]}</span>
+                  <span className="tabular-nums">{data[key]}</span>
                 </li>
               ))}
             </ul>

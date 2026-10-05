@@ -23,9 +23,7 @@ function ReadingCell({
 }) {
   return (
     <>
-      <span className="font-mono tabular-nums">
-        {valueText(reading.value, { ...metric, unit: '' })}
-      </span>{' '}
+      <span className="tabular-nums">{valueText(reading.value, { ...metric, unit: '' })}</span>{' '}
       <span className="text-xs text-muted-foreground print:text-[7pt]">
         {readingDateText(reading.on, reading.isEstimated, today)}
       </span>
@@ -51,7 +49,7 @@ function MeasurementRow({ metric, today }: { metric: ReportMetric; today: string
         <>
           <td className="py-2 pr-2 print:py-[0.4mm]">{text.noValue}</td>
           <td className="py-2 pr-2 print:py-[0.4mm]">
-            <span className="font-mono tabular-nums">
+            <span className="tabular-nums">
               {valueText(metric.latest.value, { ...metric, unit: '' })}
             </span>
           </td>

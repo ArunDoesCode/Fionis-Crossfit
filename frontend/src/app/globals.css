@@ -5,52 +5,53 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.982 0.006 80);
-  --foreground: oklch(0.18 0.03 273);
+  --background: oklch(0.958 0.007 268.5);
+  --foreground: oklch(0.183 0.047 271.7);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 273);
+  --card-foreground: oklch(0.183 0.047 271.7);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 273);
-  --primary: oklch(0.664 0.165 58);
-  --primary-foreground: oklch(0.16 0.03 273);
-  --secondary: oklch(0.945 0.01 285);
-  --secondary-foreground: oklch(0.22 0.03 273);
-  --muted: oklch(0.955 0.008 80);
-  --muted-foreground: oklch(0.46 0.02 285);
-  --accent: oklch(0.95 0.05 75);
-  --accent-foreground: oklch(0.22 0.04 60);
-  --destructive: oklch(0.5 0.21 25);
-  --border: oklch(0.9 0.012 80);
-  --input: oklch(0.6 0.02 285);
-  --ring: oklch(0.6 0.17 55);
-  --brand: oklch(0.53 0.15 55);
-  --chart-1: oklch(0.664 0.165 58);
-  --chart-2: oklch(0.5 0.11 255);
-  --chart-3: oklch(0.58 0.1 195);
-  --chart-4: oklch(0.55 0.17 340);
-  --chart-5: oklch(0.45 0.03 273);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.165 0.034 273);
-  --sidebar-foreground: oklch(0.96 0.008 80);
+  --popover-foreground: oklch(0.183 0.047 271.7);
+  --primary: oklch(0.754 0.165 62.7);
+  --primary-foreground: oklch(0.135 0.032 273.4);
+  --primary-edge: oklch(0.585 0.141 57.4);
+  --secondary: oklch(0.937 0.011 269.5);
+  --secondary-foreground: oklch(0.183 0.047 271.7);
+  --muted: oklch(0.943 0.009 264.5);
+  --muted-foreground: oklch(0.463 0.04 270.4);
+  --accent: oklch(0.96 0.032 73.5);
+  --accent-foreground: oklch(0.426 0.107 54);
+  --destructive: var(--danger);
+  --border: oklch(0.906 0.013 266.7);
+  --input: oklch(0.619 0.034 271.4);
+  --ring: oklch(0.585 0.141 57.4);
+  --brand: oklch(0.527 0.136 51.7);
+  --chart-1: oklch(0.677 0.164 57.1);
+  --chart-2: oklch(0.467 0.171 266.2);
+  --chart-3: oklch(0.569 0.1 182.4);
+  --chart-4: oklch(0.559 0.189 354.9);
+  --chart-5: oklch(0.549 0.038 274.1);
+  --radius: 0.3125rem;
+  --sidebar: oklch(0.135 0.032 273.4);
+  --sidebar-foreground: oklch(0.835 0.028 274.6);
   --sidebar-primary: oklch(0.754 0.165 62.7);
-  --sidebar-primary-foreground: oklch(0.16 0.03 273);
-  --sidebar-accent: oklch(0.754 0.165 62.7 / 16%);
-  --sidebar-accent-foreground: oklch(0.84 0.13 72);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-primary-foreground: oklch(0.135 0.032 273.4);
+  --sidebar-accent: oklch(0.275 0.043 65.7);
+  --sidebar-accent-foreground: oklch(0.834 0.126 67.5);
+  --sidebar-border: oklch(0.248 0.048 273.8);
   --sidebar-ring: oklch(0.754 0.165 62.7);
 
   /* Status colours (BR-REC-124/125/184). `--x` is text and icon colour (>= 4.5:1 on the page,
      the card and on its own `-soft` fill); `-soft` is the badge fill. Always paired with words and an icon. */
-  --success: oklch(0.42 0.12 150);
-  --success-soft: oklch(0.955 0.045 150);
-  --warning: oklch(0.45 0.1 75);
-  --warning-soft: oklch(0.96 0.07 92);
-  --danger: oklch(0.48 0.2 25);
-  --danger-soft: oklch(0.955 0.03 22);
-  --info: oklch(0.45 0.12 255);
-  --info-soft: oklch(0.955 0.03 255);
-  --neutral: oklch(0.44 0.02 285);
-  --neutral-soft: oklch(0.945 0.008 285);
+  --success: oklch(0.489 0.121 152.2);
+  --success-soft: oklch(0.952 0.027 157.4);
+  --warning: oklch(0.488 0.11 64.2);
+  --warning-soft: oklch(0.962 0.051 91.4);
+  --danger: oklch(0.5 0.182 29.5);
+  --danger-soft: oklch(0.948 0.023 20.9);
+  --info: oklch(0.471 0.188 263.6);
+  --info-soft: oklch(0.943 0.027 267.5);
+  --neutral: oklch(0.441 0.039 269.8);
+  --neutral-soft: oklch(0.946 0.007 268.5);
 
   /* Sizes and rhythm (BR-REC-181, 182): 4 px steps (Tailwind --spacing). These are the touch values
      (48 px controls, 44 px tap targets, 64 px rows, 16 px page padding); a desktop mouse gets denser
@@ -76,57 +77,59 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.03 273);
-  --foreground: oklch(0.965 0.006 80);
-  --card: oklch(0.21 0.032 273);
-  --card-foreground: oklch(0.965 0.006 80);
-  --popover: oklch(0.235 0.034 273);
-  --popover-foreground: oklch(0.965 0.006 80);
+  --background: oklch(0.175 0.038 272.5);
+  --foreground: oklch(0.956 0.01 273.4);
+  --card: oklch(0.224 0.044 271);
+  --card-foreground: oklch(0.956 0.01 273.4);
+  --popover: oklch(0.259 0.059 272.1);
+  --popover-foreground: oklch(0.956 0.01 273.4);
   --primary: oklch(0.754 0.165 62.7);
-  --primary-foreground: oklch(0.16 0.03 273);
-  --secondary: oklch(0.29 0.03 275);
-  --secondary-foreground: oklch(0.965 0.006 80);
-  --muted: oklch(0.26 0.03 275);
-  --muted-foreground: oklch(0.74 0.02 285);
-  --accent: oklch(0.31 0.055 60);
-  --accent-foreground: oklch(0.93 0.05 75);
-  --destructive: oklch(0.8 0.15 22);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(0.62 0.03 280);
+  --primary-foreground: oklch(0.135 0.032 273.4);
+  --primary-edge: oklch(0.754 0.165 62.7);
+  --secondary: oklch(0.288 0.051 271.9);
+  --secondary-foreground: oklch(0.956 0.01 273.4);
+  --muted: oklch(0.254 0.044 271.8);
+  --muted-foreground: oklch(0.74 0.035 272.6);
+  --accent: oklch(0.27 0.041 72);
+  --accent-foreground: oklch(0.87 0.101 70.2);
+  --destructive: var(--danger);
+  --border: oklch(0.319 0.06 272.3);
+  --input: oklch(0.572 0.046 271.4);
   --ring: oklch(0.754 0.165 62.7);
-  --brand: oklch(0.754 0.165 62.7);
+  --brand: oklch(0.798 0.15 64);
   --chart-1: oklch(0.754 0.165 62.7);
-  --chart-2: oklch(0.72 0.1 255);
-  --chart-3: oklch(0.78 0.1 195);
-  --chart-4: oklch(0.72 0.15 340);
-  --chart-5: oklch(0.75 0.03 273);
-  --sidebar: oklch(0.135 0.032 273);
-  --sidebar-foreground: oklch(0.96 0.008 80);
+  --chart-2: oklch(0.71 0.15 269.3);
+  --chart-3: oklch(0.754 0.121 181.3);
+  --chart-4: oklch(0.707 0.18 351);
+  --chart-5: oklch(0.711 0.034 272.1);
+  --sidebar: oklch(0.135 0.032 273.4);
+  --sidebar-foreground: oklch(0.835 0.028 274.6);
   --sidebar-primary: oklch(0.754 0.165 62.7);
-  --sidebar-primary-foreground: oklch(0.16 0.03 273);
-  --sidebar-accent: oklch(0.754 0.165 62.7 / 16%);
-  --sidebar-accent-foreground: oklch(0.84 0.13 72);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-primary-foreground: oklch(0.135 0.032 273.4);
+  --sidebar-accent: oklch(0.275 0.043 65.7);
+  --sidebar-accent-foreground: oklch(0.834 0.126 67.5);
+  --sidebar-border: oklch(0.248 0.048 273.8);
   --sidebar-ring: oklch(0.754 0.165 62.7);
 
-  --success: oklch(0.82 0.15 155);
-  --success-soft: oklch(0.3 0.07 155);
-  --warning: oklch(0.85 0.14 85);
-  --warning-soft: oklch(0.32 0.07 80);
-  --danger: oklch(0.8 0.14 22);
-  --danger-soft: oklch(0.32 0.09 22);
-  --info: oklch(0.8 0.1 255);
-  --info-soft: oklch(0.3 0.06 255);
-  --neutral: oklch(0.78 0.015 285);
-  --neutral-soft: oklch(0.3 0.015 285);
-  --control-fill: oklch(1 0 0 / 6%);
+  --success: oklch(0.788 0.151 154.8);
+  --success-soft: oklch(0.273 0.047 159.9);
+  --warning: oklch(0.844 0.14 84.8);
+  --warning-soft: oklch(0.283 0.046 88.1);
+  --danger: oklch(0.768 0.137 25.6);
+  --danger-soft: oklch(0.258 0.059 17.1);
+  --info: oklch(0.779 0.112 264.3);
+  --info-soft: oklch(0.27 0.073 265.6);
+  --neutral: oklch(0.787 0.028 271.8);
+  --neutral-soft: oklch(0.285 0.047 274.5);
+  --control-fill: oklch(0.224 0.044 271);
 }
 
 @theme inline {
   --font-sans: var(--font-outfit);
   --font-heading: var(--font-poppins);
-  --font-mono: var(--font-geist-mono);
   --color-brand: var(--brand);
+  --color-primary-edge: var(--primary-edge);
+  --color-control-fill: var(--control-fill);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-success: var(--success);
@@ -194,6 +197,14 @@
   }
   html {
     @apply font-sans;
+    /* BR-REC-234: a focused field is never hidden under the sticky page header or the phone Save bar. */
+    scroll-padding-top: calc(var(--header-height) + var(--offline-h, 0px) + 2rem);
+    scroll-padding-bottom: calc(var(--actionbar-h) + 1.5rem);
+  }
+  /* Numbers are Outfit with true tabular figures (BR-REC-220). */
+  table,
+  dl {
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -272,14 +283,89 @@
 [data-slot="tabs-list"][data-variant] {
   height: var(--control-height);
 }
-/* Inputs keep a 3:1 border (--input) with a plain fill; shadcn's `bg-input/30` would tint the whole box. */
+/* BR-REC-221: one control look. Every input, textarea, select, input group, date / month / time-zone trigger
+   has the white `--control-fill` and the `--input` border; shadcn's `bg-input/30` would tint the whole box.
+   Grey (`--muted`) means disabled only. */
 [data-slot="input"],
+[data-slot="textarea"],
 [data-slot="select-trigger"],
+[data-slot="input-group"],
+.control-trigger,
 [data-slot="button"][class*="bg-input/30"] {
   background-color: var(--control-fill);
 }
-[data-slot="button"][class*="bg-input/30"]:hover {
+[data-slot="input"]:disabled,
+[data-slot="textarea"]:disabled,
+[data-slot="select-trigger"][data-disabled],
+[data-slot="input-group"]:has([data-slot="input-group-control"]:disabled),
+.control-trigger:disabled,
+[data-slot="button"][class*="bg-input/30"]:disabled {
   background-color: var(--muted);
+}
+[data-slot="button"][class*="bg-input/30"]:hover:not(:disabled) {
+  background-color: var(--muted);
+}
+
+/* BR-REC-221: focus is a solid 2 px ring outline with a 2 px offset (>= 3:1 on page, card and fill). */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* BR-REC-219: primary buttons carry a darker edge; cards lift with a soft shadow in light only (dark separates
+   by a lighter card and a stronger border); badges stay pills although the radius is 5 px. */
+[data-slot="button"].bg-primary {
+  border-color: var(--primary-edge);
+}
+[data-slot="card"] {
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 1px 2px color-mix(in oklab, var(--foreground) 8%, transparent),
+    0 4px 12px -6px color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+.dark [data-slot="card"] {
+  box-shadow: 0 0 0 1px var(--border);
+}
+[data-slot="badge"] {
+  border-radius: 9999px;
+}
+
+/* BR-REC-220: table headers and KPI labels are 12 px 600 uppercase, muted, on a muted band. */
+[data-slot="table-head"] {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* BR-REC-221: on phones the date, month and time-zone triggers are as tall as the other controls. */
+@media (max-width: 1023px), (pointer: coarse) {
+  .control-trigger,
+  [data-slot="input-group"] {
+    min-height: var(--control-height);
+  }
+  [data-slot="textarea"] {
+    font-size: 1rem;
+  }
+}
+
+/* BR-REC-234: "Skip to content" shows on keyboard focus only. */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: var(--radius);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+}
+.skip-link:focus {
+  transform: none;
 }
 input[type="search"]::-webkit-search-cancel-button {
   appearance: none;
@@ -317,4 +403,12 @@ input[type="search"]::-webkit-search-cancel-button {
 [data-slot="drawer-overlay"] {
   /* biome-ignore lint/complexity/noImportantStyles: must beat the utility class on the shadcn overlay */
   backdrop-filter: none !important;
+}
+
+/* BR-REC-227: before React applies the saved collapsed state (lib/sidebarState.ts), the footer row already
+   stacks as it does when collapsed. */
+@media (min-width: 768px) {
+  html[data-sidebar="collapsed"] [data-slot="sidebar-footer"] {
+    flex-direction: column;
+  }
 }

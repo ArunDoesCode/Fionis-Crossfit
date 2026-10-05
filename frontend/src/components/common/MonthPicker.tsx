@@ -74,7 +74,7 @@ export default function MonthPicker({
               variant="outline"
               onPointerDown={preload}
               onFocus={preload}
-              className="w-full justify-between px-3 text-base font-normal"
+              className="control-trigger border-input h-[var(--control-height)] w-full justify-between px-3 text-base font-normal"
             />
           }
         >

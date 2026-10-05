@@ -23,7 +23,7 @@ export default function MeasurementCard({ metric, today }: MeasurementCardProps)
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="min-w-0 text-base font-medium">{metric.name}</h3>
         <p className="shrink-0 text-right">
-          <span className="font-mono text-lg font-semibold">
+          <span className="tabular-nums text-lg font-semibold">
             {valueText(metric.latest.value, metric)}
           </span>
           <span className="ml-2 text-sm text-muted-foreground">
@@ -37,12 +37,12 @@ export default function MeasurementCard({ metric, today }: MeasurementCardProps)
         <>
           <p className="text-sm text-muted-foreground">
             {`${text.firstShort} `}
-            <span className="font-mono">{valueText(metric.first.value, bare)}</span>
+            <span className="tabular-nums">{valueText(metric.first.value, bare)}</span>
             {` (${readingDateText(metric.first.on, metric.first.isEstimated, today)})`}
             {metric.best && (
               <>
                 {` · ${text.bestShort} `}
-                <span className="font-mono">{valueText(metric.best.value, bare)}</span>
+                <span className="tabular-nums">{valueText(metric.best.value, bare)}</span>
                 {` (${readingDateText(metric.best.on, metric.best.isEstimated, today)})`}
               </>
             )}

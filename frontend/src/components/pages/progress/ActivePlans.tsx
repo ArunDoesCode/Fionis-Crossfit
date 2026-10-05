@@ -36,12 +36,12 @@ export default function ActivePlans() {
           {PLANS.map((plan) => (
             <div key={plan} className="flex min-h-12 items-center justify-between gap-3 px-4">
               <dt className="text-base">{PLAN_LABELS[plan]}</dt>
-              <dd className="font-mono text-base">{data[COUNT_KEY[plan]]}</dd>
+              <dd className="tabular-nums text-base">{data[COUNT_KEY[plan]]}</dd>
             </div>
           ))}
           <div className="flex min-h-12 items-center justify-between gap-3 px-4 font-semibold">
             <dt className="text-base">{text.total}</dt>
-            <dd className="font-mono text-base">{data.total}</dd>
+            <dd className="tabular-nums text-base">{data.total}</dd>
           </div>
         </dl>
       )}

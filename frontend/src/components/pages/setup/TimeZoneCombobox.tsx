@@ -50,7 +50,7 @@ export default function TimeZoneCombobox({
             aria-invalid={invalid}
             aria-describedby={describedBy}
             onBlur={onBlur}
-            className="h-[var(--control-height)] w-full justify-start px-3 text-base font-normal"
+            className="control-trigger border-input h-[var(--control-height)] w-full justify-start px-3 text-base font-normal"
           />
         }
       >

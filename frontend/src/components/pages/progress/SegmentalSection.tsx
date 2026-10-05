@@ -39,7 +39,7 @@ export default function SegmentalSection({ segmental, today }: SegmentalSectionP
               {segmental.rows.map((row) => (
                 <div key={row.part} className="flex items-baseline justify-between gap-3">
                   <dt className="text-sm text-muted-foreground">{text.parts[row.part]}</dt>
-                  <dd className="font-mono">{cellText(row.values[group.name], group)}</dd>
+                  <dd className="tabular-nums">{cellText(row.values[group.name], group)}</dd>
                 </div>
               ))}
             </dl>
@@ -72,10 +72,7 @@ export default function SegmentalSection({ segmental, today }: SegmentalSectionP
                 {text.parts[row.part]}
               </th>
               {segmental.groups.map((group) => (
-                <td
-                  key={group.name}
-                  className="py-2 pr-2 text-right font-mono tabular-nums print:py-[0.4mm]"
-                >
+                <td key={group.name} className="py-2 pr-2 text-right tabular-nums print:py-[0.4mm]">
                   {cellText(row.values[group.name], group)}
                 </td>
               ))}
