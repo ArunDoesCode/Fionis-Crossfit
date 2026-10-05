@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 6
+version: 7
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -173,6 +173,14 @@ Names fixed so tests and code agree (no rule changed):
 - **Modals (BR-REC-195, 196):** `ResponsiveSheet` no longer imports `@base-ui/react/drawer` (it uses `components/ui/drawer`); `ConfirmSheet` takes `cancelLabel?` and `backToClose?` (default true) and `LeaveDialog` uses it; no native `<select>` in `components/pages/setup/` and no `<details>` in `components/pages/members/`.
 - **Save with nothing (BR-REC-190):** a new Record assessment with no value shows the top alert text "Enter at least one value" (word-list key `needOneValue`), re-announced on every click; an unchanged edit closes with no request and no toast.
 
+## Build clarifications (U3, 2026-10-05)
+
+Names fixed so tests and code agree (no rule changed):
+- **Day bridge (BR-REC-193):** `frontend/src/lib/dates/dayPicker.ts` exports `isoToDate(iso: IsoDate): Date` (local midnight: `new Date(y, m - 1, d)`), `dateToIso(d: Date): IsoDate` (from the LOCAL year/month/day fields) and `WEEK_STARTS_ON = 1` (Monday). `lib/domain/dates.ts` is untouched (it is mirrored in the backend).
+- **One formatter (BR-REC-191):** `frontend/src/lib/format.ts` `formatDay(iso)` returns `dd MMM yyyy` ("03 Oct 2026", day zero-padded, year always); `lib/members/dayText.ts` `formatDayWithYear` is removed and its callers use `formatDay`; "≈ Dec 2025" for estimated dates and the relative words of BR-REC-127 are unchanged.
+- **Components (BR-REC-192, 194):** `components/common/DatePicker.tsx` and `components/common/MonthPicker.tsx`; the only file that imports `components/ui/calendar` is `components/common/DatePickerCalendar.tsx`, loaded with `next/dynamic` (on-demand chunk, BR-REC-215). Month logic that needs no DOM lives in `frontend/src/lib/dates/month.ts`: `isMonthDisabled(candidate: 'YYYY-MM', min?: 'YYYY-MM', max?: 'YYYY-MM'): boolean` (a month before `min` or after `max` is disabled) and `shiftYear(value: 'YYYY-MM', delta: number): 'YYYY-MM'`.
+- **No native pickers:** no `type="date"`, `type="month"`, `type="datetime-local"` or `type="time"` anywhere in `frontend/src`; `components/common/DateField.tsx`, `MemberDateField.tsx`, `MonthField.tsx` and `lib/assessments/useDeferredDate.ts` are removed (their callers use `DatePicker` / `MonthPicker` inside the `FormField` primitives).
+
 ## Not now
 
 Other languages (Hindi), member-facing screens, gym-chosen colours beyond Fionis, onboarding tour, coach-editable
@@ -199,6 +207,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v7 — clarified during build (U3): day bridge, formatter, DatePicker/MonthPicker module names, lazy calendar chunk; no rule changed
 - 2026-10-05 v6 — clarified during build (U2): module paths and names for form primitives, number parser, first-problem helper, modals, empty-save text; no rule changed
 - 2026-10-05 v5 — clarified during build (U1 review round 2): sidebar remembered-state behaviour (`data-sidebar`, `readSidebarOpen` fallback, shortcut), 44 px collapsed targets, AA "F" square; no rule changed
 - 2026-10-05 v4 — clarified during build (U1 review R-6): breadcrumbs use static parent labels; member name in the trail deferred (#40)
