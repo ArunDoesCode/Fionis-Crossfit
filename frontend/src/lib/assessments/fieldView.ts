@@ -1,8 +1,8 @@
 import { formatDuration } from '@/lib/domain/duration';
 import { formatValue } from '@/lib/format';
+import { parseNumberText } from '@/lib/forms/numberText';
 import { type Change, describeChange } from './change';
 import { assessmentDateLabel } from './labels';
-import { parseNumberText } from './parseNumber';
 import { checkPlausibility, type PlausibilityReason } from './plausibility';
 import { ASSESSMENT_TEXT } from './text';
 import { asDecimals, type EntryMetric, type FieldInput, type Inputs } from './types';

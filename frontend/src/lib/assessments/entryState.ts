@@ -1,6 +1,6 @@
 import type { DurationStatus } from '@/lib/durationStatus';
+import { exactNumber } from '@/lib/forms/numberText';
 import type { Draft } from './draft';
-import { exactNumber } from './parseNumber';
 import type { EntryMetric, ExistingAssessment, FieldInput, Inputs } from './types';
 import { storedNumberText } from './valueText';
 

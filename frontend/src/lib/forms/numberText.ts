@@ -1,4 +1,4 @@
-import type { Decimals } from './types';
+import type { Decimals } from '@/lib/assessments/types';
 
 // A number field is text until Save (BR-REC-76): "95,5" is 95.5, "95." is 95, anything else is not a
 // number. Rounding works on the typed digits, never on a binary float ("1.005" at 2 decimals is 1.01).
