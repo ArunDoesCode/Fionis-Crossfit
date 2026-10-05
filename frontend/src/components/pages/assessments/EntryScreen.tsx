@@ -161,7 +161,6 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
       <PageHeader
         title={data?.type.name ?? UI_TEXT.screens.recordAssessment}
         subtitle={data?.member.fullName}
-        backHref={memberHref}
         form
         action={
           data ? (

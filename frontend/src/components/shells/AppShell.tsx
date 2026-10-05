@@ -1,29 +1,28 @@
 import OfflineBanner from '@/components/common/OfflineBanner';
-import BottomTabBar from '@/components/shells/BottomTabBar';
+import ShellProvider from '@/components/shells/ShellProvider';
 import SideNav from '@/components/shells/SideNav';
+import { SidebarInset } from '@/components/ui/sidebar';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
-// The frame of every signed-in screen (ux.md "App shell"): side bar from 1024 px, bottom tab bar
-// below it, offline banner on top, content in the middle. No auth gating here (layouts do not re-render
-// on navigation); proxy.ts and the API are the guards.
+// The frame of every signed-in screen (BR-REC-177, 178): a fixed sidebar (icon-collapsed from 768 px,
+// an off-canvas drawer below), the offline banner on top, and the content, the only part that scrolls.
+// No auth gating here (layouts do not re-render on navigation); proxy.ts and the API are the guards.
+// `data-slot="app-main"` is how the report card's print rules find the content (ReportPrintStyles).
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-svh bg-background lg:flex">
+    <ShellProvider>
       <SideNav />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <SidebarInset
+        id="main"
+        data-slot="app-main"
+        className="min-w-0 max-md:has-[[data-slot=action-bar]]:pb-[calc(var(--actionbar-h)+env(safe-area-inset-bottom))]"
+      >
         <OfflineBanner />
-        <main
-          id="main"
-          data-slot="app-main"
-          className="flex-1 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] lg:pb-8 max-lg:has-[[data-slot=action-bar]]:pb-[calc(var(--tabbar-h)+var(--actionbar-h)+env(safe-area-inset-bottom))]"
-        >
-          {children}
-        </main>
-      </div>
-      <BottomTabBar />
-    </div>
+        {children}
+      </SidebarInset>
+    </ShellProvider>
   );
 }

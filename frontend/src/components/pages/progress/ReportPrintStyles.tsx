@@ -10,23 +10,22 @@ const PRINT_CSS = `
 @media print {
   :root, :root.dark {
     color-scheme: light !important;
-    --background: #fff;
-    --foreground: #000;
-    --card: #fff;
-    --card-foreground: #000;
-    --muted: #fff;
-    --muted-foreground: #000;
-    --border: #000;
+    --background: white;
+    --foreground: black;
+    --card: white;
+    --card-foreground: black;
+    --muted: white;
+    --muted-foreground: black;
+    --border: black;
     --page-padding: 0px;
     --section-gap: 3mm;
   }
-  html, body { background: #fff; color: #000; }
-  [data-slot="side-nav"],
-  [data-slot="bottom-tab-bar"],
+  html, body { background: white; color: black; }
+  [data-slot="sidebar"],
   [data-slot="action-bar"],
   [data-sonner-toaster],
-  div:has(> [data-slot="app-main"]) > [role="status"] { display: none; }
-  div:has(> div > [data-slot="app-main"]) { min-height: 0; }
+  [data-slot="app-main"] > [role="status"] { display: none; }
+  [data-slot="sidebar-wrapper"] { min-height: 0; }
   [data-slot="app-main"] { padding: 0; }
 }
 `;

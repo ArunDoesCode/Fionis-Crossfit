@@ -16,7 +16,7 @@ export interface NavItem {
   prefixes: readonly string[];
 }
 
-// BR-REC-120: the same four places in the bottom tab bar (phones) and the side bar (desktop).
+// BR-REC-177, 197: the one list behind the sidebar and the phone drawer.
 // Due list and Memberships ending are reached from Home ("See all"), so they keep Home marked.
 export const NAV_ITEMS: readonly NavItem[] = [
   {

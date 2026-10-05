@@ -4,7 +4,6 @@ import ChangePasswordButton from '@/components/pages/auth/ChangePasswordButton';
 import ChangePasswordForm from '@/components/pages/auth/ChangePasswordForm';
 import SignedInAs from '@/components/pages/auth/SignedInAs';
 import SignOutSection from '@/components/pages/auth/SignOutSection';
-import { UI_TEXT } from '@/lib/messages/words';
 
 const FORM_ID = 'change-password-form';
 
@@ -13,12 +12,7 @@ const FORM_ID = 'change-password-form';
 export default function AccountView() {
   return (
     <Page width="narrow">
-      <PageHeader
-        title={UI_TEXT.screens.account}
-        backHref="/admin/settings"
-        form
-        action={<ChangePasswordButton formId={FORM_ID} />}
-      />
+      <PageHeader form action={<ChangePasswordButton formId={FORM_ID} />} />
       <SignedInAs />
       <ChangePasswordForm formId={FORM_ID} />
       <SignOutSection />

@@ -38,8 +38,6 @@ export default function ReportCardView({ memberId }: ReportCardViewProps) {
       <ReportPrintStyles />
       <div className="contents print:hidden">
         <PageHeader
-          title={text.title}
-          backHref={`/admin/members/${memberId}`}
           action={
             hasResults ? (
               <Button type="button" onClick={() => window.print()}>

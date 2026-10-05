@@ -29,8 +29,6 @@ export default function AssessmentSetupView() {
   return (
     <Page width="narrow">
       <PageHeader
-        title={text.title}
-        backHref="/admin/settings"
         action={
           assessments ? (
             <Button type="button" onClick={() => sheet.show(null)}>

@@ -43,7 +43,8 @@ export interface ResponsiveSheetProps {
   children?: React.ReactNode;
 }
 
-const FOOTER = 'mt-6 flex flex-col-reverse gap-2 *:h-12 lg:flex-row lg:justify-end lg:*:w-auto';
+const FOOTER =
+  'mt-6 flex flex-col-reverse gap-2 *:h-(--control-height) lg:flex-row lg:justify-end lg:*:w-auto';
 
 // BR-REC-138: short choices open as a bottom sheet on phones (swipe down or Back closes it) and as a
 // centred dialog from 1024 px. Same props either way. Both are loaded with the screen that uses them.
@@ -91,7 +92,7 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="absolute top-3 right-3 size-11"
+                className="absolute top-3 right-3 size-(--control-height)"
               />
             }
           >
@@ -134,7 +135,7 @@ export default function ResponsiveSheet({
                       variant="ghost"
                       size="icon"
                       aria-label={UI_TEXT.close}
-                      className="-mt-1 -mr-2 size-11 shrink-0"
+                      className="-mt-1 -mr-2 size-(--control-height) shrink-0"
                     />
                   }
                 >

@@ -69,7 +69,7 @@ export default function GymProgressView() {
 
   return (
     <Page width="wide">
-      <PageHeader title={text.title} />
+      <PageHeader />
       {catalog.data ? (
         <ProgressFilterBar
           catalog={catalog.data}

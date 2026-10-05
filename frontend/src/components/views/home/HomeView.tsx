@@ -3,7 +3,6 @@ import PageHeader from '@/components/common/PageHeader';
 import DueSections from '@/components/pages/home/DueSections';
 import HomeSearch from '@/components/pages/home/HomeSearch';
 import MembershipSections from '@/components/pages/home/MembershipSections';
-import { DEFAULT_GYM_NAME } from '@/lib/messages/words';
 
 // FRAME of Home (S2, `/admin`), owned by Stream 0. Order on a phone is BR-REC-101: Overdue, Due soon,
 // Memberships ending, Recently ended, under the search field. From 1024 px: due sections left, membership
@@ -11,7 +10,7 @@ import { DEFAULT_GYM_NAME } from '@/lib/messages/words';
 export default function HomeView() {
   return (
     <Page width="wide">
-      <PageHeader title={DEFAULT_GYM_NAME} />
+      <PageHeader />
       <HomeSearch />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">
         <div className="section-gap flex flex-col">

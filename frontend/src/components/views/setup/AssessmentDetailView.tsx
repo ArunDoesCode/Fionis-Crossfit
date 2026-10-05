@@ -35,7 +35,7 @@ export default function AssessmentDetailView({ typeId }: { typeId: string }) {
   if (catalog.data !== undefined && assessment === undefined) {
     return (
       <Page width="narrow">
-        <PageHeader title={text.title} backHref={LIST_HREF} />
+        <PageHeader />
         <EmptyState
           title={text.notFound}
           action={
@@ -52,7 +52,6 @@ export default function AssessmentDetailView({ typeId }: { typeId: string }) {
     <Page width="narrow">
       <PageHeader
         title={assessment?.name ?? text.title}
-        backHref={LIST_HREF}
         secondary={
           assessment && (
             <Button type="button" variant="ghost" onClick={() => assessmentSheet.show(assessment)}>

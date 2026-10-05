@@ -29,6 +29,7 @@ export const DEFAULT_GYM_NAME = 'Fionis CrossFit';
 /** Plain strings the shared shell and components show (BR-REC-126, 129, 131, 132). */
 export const UI_TEXT = {
   nav: { home: 'Home', members: 'Members', reports: 'Reports', settings: 'Settings' },
+  signIn: 'Sign in',
   signOut: 'Sign out',
   back: 'Back',
   close: 'Close',

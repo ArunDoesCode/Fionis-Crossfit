@@ -1,22 +1,21 @@
 import { cn } from '@/lib/utils';
 
 interface PageProps {
-  /** `narrow` = forms and detail pages (720 px), `wide` = lists and reports (1080 px). BR-REC-139. */
+  /** `narrow` = forms and detail pages (896 px), `wide` = lists, reports and Record assessment (1280 px). BR-REC-182. */
   width?: 'narrow' | 'wide';
   className?: string;
   children: React.ReactNode;
 }
 
-// Centres the screen on desktop and gives it the page padding (16 px phone, 24 px desktop).
-// Sections inside are 24 px apart.
+// Centres the screen and gives it the page padding and section gap from the density tokens (BR-REC-181).
 export default function Page({ width = 'wide', className, children }: PageProps) {
   return (
     <div
       className={cn(
-        'section-gap page-px mx-auto flex w-full flex-col pb-6',
+        'section-gap page-px mx-auto flex w-full flex-col pb-(--page-padding)',
         width === 'narrow'
-          ? 'max-w-[calc(720px+2*var(--page-padding))]'
-          : 'max-w-[calc(1080px+2*var(--page-padding))]',
+          ? 'max-w-[calc(var(--page-max-narrow)+2*var(--page-padding))]'
+          : 'max-w-[calc(var(--page-max-wide)+2*var(--page-padding))]',
         className,
       )}
     >

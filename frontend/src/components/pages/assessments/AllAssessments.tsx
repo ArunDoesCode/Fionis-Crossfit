@@ -22,7 +22,6 @@ import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { AssessmentListItem } from '@/lib/assessments/types';
 import { useToday } from '@/lib/members/useToday';
 import { messageForCode } from '@/lib/messages/errors';
-import { UI_TEXT } from '@/lib/messages/words';
 
 interface AllAssessmentsProps {
   memberId: string;
@@ -75,11 +74,7 @@ export default function AllAssessments({ memberId }: AllAssessmentsProps) {
 
   return (
     <>
-      <PageHeader
-        title={UI_TEXT.screens.allAssessments}
-        subtitle={member.data?.fullName}
-        backHref={`/admin/members/${memberId}`}
-      />
+      <PageHeader subtitle={member.data?.fullName} />
       {memberMissing ? (
         <ErrorState message={messageForCode('NOT_FOUND')} />
       ) : (

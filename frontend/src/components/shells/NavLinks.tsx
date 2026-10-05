@@ -1,62 +1,66 @@
 'use client';
 
 import { HugeiconsIcon } from '@hugeicons/react';
+import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { isNavItemActive, NAV_ITEMS } from '@/components/shells/navItems';
-import { cn } from '@/lib/utils';
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { afterHistorySettles } from '@/lib/assessments/leave';
 
-interface NavLinksProps {
-  /** `tabs` = phone bottom bar (icon over word); `side` = desktop side bar (icon beside word). */
-  variant: 'tabs' | 'side';
+// The one place that reads the current path. Active = `aria-current="page"`, an orange-tint pill with
+// orange icon and word and a heavier weight, so it is never colour alone (BR-REC-125, 186).
+export default function NavLinks() {
+  return <NavMenu pathname={usePathname()} />;
 }
 
-// The one place that reads the current path. Active = `aria-current="page"`, a filled pill and a
-// heavier word, so it is never colour alone (BR-REC-125). Tabs prefetch by default (tactic 6).
-export default function NavLinks({ variant }: NavLinksProps) {
-  return <NavLinksFor variant={variant} pathname={usePathname()} />;
+/** Same links with nothing marked current: the Suspense fallback, so the sidebar never changes size. */
+export function NavLinksStatic() {
+  return <NavMenu pathname="" />;
 }
 
-/** Same links with nothing marked current: the Suspense fallback, so the bar never changes size. */
-export function NavLinksStatic({ variant }: NavLinksProps) {
-  return <NavLinksFor variant={variant} pathname="" />;
-}
+function NavMenu({ pathname }: { pathname: string }) {
+  const router = useRouter();
+  const { isMobile, setOpenMobile } = useSidebar();
 
-function NavLinksFor({ variant, pathname }: NavLinksProps & { pathname: string }) {
+  // In the drawer a link closes it first; the drawer's own history entry (useBackToClose) must be gone
+  // before the page changes, or the new page would replace the wrong entry.
+  const closeDrawerThenGo = (event: React.MouseEvent<HTMLAnchorElement>, href: Route) => {
+    if (!isMobile || event.defaultPrevented) return;
+    event.preventDefault();
+    setOpenMobile(false);
+    afterHistorySettles(() => router.push(href));
+  };
+
   return (
-    <>
+    <SidebarMenu>
       {NAV_ITEMS.map((item) => {
         const active = isNavItemActive(item, pathname);
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? 'page' : undefined}
-            className={cn(
-              'flex items-center outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
-              variant === 'tabs'
-                ? 'min-h-tap min-w-tap flex-1 flex-col justify-center gap-0.5 rounded-xl text-xs'
-                : 'h-12 gap-3 rounded-full px-4 text-base',
-              active
-                ? 'font-semibold text-foreground'
-                : 'font-medium text-muted-foreground hover:text-foreground',
-              variant === 'side' && active && 'bg-sidebar-accent text-sidebar-accent-foreground',
-              variant === 'side' && !active && 'hover:bg-sidebar-accent/60',
-            )}
-          >
-            <span
-              className={cn(
-                'flex items-center justify-center',
-                variant === 'tabs' && 'h-8 w-14 rounded-full',
-                variant === 'tabs' && active && 'bg-secondary',
-              )}
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              isActive={active}
+              tooltip={item.label}
+              className="h-(--control-height) [&_svg]:size-5 data-active:bg-brand/15 data-active:text-brand"
+              render={
+                <Link
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={(event) => closeDrawerThenGo(event, item.href)}
+                />
+              }
             >
-              <HugeiconsIcon icon={item.icon} strokeWidth={active ? 2.5 : 2} className="size-6" />
-            </span>
-            {item.label}
-          </Link>
+              <HugeiconsIcon icon={item.icon} strokeWidth={active ? 2.5 : 2} />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         );
       })}
-    </>
+    </SidebarMenu>
   );
 }

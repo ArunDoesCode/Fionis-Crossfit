@@ -24,7 +24,7 @@ const Chevron = () => (
 export default function SettingsHubView() {
   return (
     <Page width="narrow">
-      <PageHeader title={text.title} />
+      <PageHeader />
       <RowList>
         <ListRow
           title={text.assessments.title}

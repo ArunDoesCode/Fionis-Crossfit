@@ -23,8 +23,6 @@ export default function MemberView({ memberId }: MemberViewProps) {
   return (
     <Page width="narrow">
       <PageHeader
-        title={UI_TEXT.screens.member}
-        backHref="/admin/members"
         secondary={
           <LinkButton href={`${base}/edit`} variant="ghost" size="default">
             {UI_TEXT.screens.edit}

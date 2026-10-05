@@ -7,7 +7,6 @@ import { FormSkeleton } from '@/components/common/Skeletons';
 import GymSettingsForm from '@/components/pages/setup/GymSettingsForm';
 import GymSettingsSaveButton from '@/components/pages/setup/GymSettingsSaveButton';
 import { useSettings } from '@/lib/api/setup/queries';
-import { SETUP_TEXT } from '@/lib/setup/text';
 
 const FORM_ID = 'gym-settings-form';
 
@@ -20,12 +19,7 @@ export default function GymSettingsView() {
 
   return (
     <Page width="narrow">
-      <PageHeader
-        title={SETUP_TEXT.general.title}
-        backHref="/admin/settings"
-        form
-        action={data ? <GymSettingsSaveButton formId={FORM_ID} /> : undefined}
-      />
+      <PageHeader form action={data ? <GymSettingsSaveButton formId={FORM_ID} /> : undefined} />
       {data ? (
         // A change made on another device (or just saved here) starts the form again from the new values.
         <GymSettingsForm key={JSON.stringify(data)} settings={data} formId={FORM_ID} />

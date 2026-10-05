@@ -15,8 +15,6 @@ export default function AddMemberView() {
   return (
     <Page width="narrow">
       <PageHeader
-        title={UI_TEXT.screens.addMember}
-        backHref="/admin/members"
         form
         action={
           <MemberSaveButton

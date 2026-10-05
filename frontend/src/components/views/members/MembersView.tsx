@@ -12,7 +12,6 @@ export default function MembersView() {
   return (
     <Page width="wide">
       <PageHeader
-        title={UI_TEXT.screens.members}
         action={
           <LinkButton href="/admin/members/new">
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} aria-hidden="true" />

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import ThemeToggle from '@/components/common/ThemeToggle';
 import LoginForm from '@/components/pages/auth/LoginForm';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,12 +14,21 @@ interface LoginViewProps {
 // the real name comes from settings, which need a sign-in.
 export default function LoginView({ next, expired }: LoginViewProps) {
   return (
-    <main className="relative flex min-h-svh items-center justify-center p-4">
-      <ThemeToggle className="absolute top-4 right-4 size-11" />
+    <main className="relative flex min-h-dvh items-center justify-center p-4">
+      <ThemeToggle className="absolute top-4 right-4 size-(--control-height)" />
       <Card className="w-full max-w-[400px]">
         <CardContent className="flex flex-col gap-6">
-          <header className="flex flex-col gap-1 text-center">
-            <h1 className="font-heading text-2xl font-semibold">{DEFAULT_GYM_NAME}</h1>
+          <header className="flex flex-col items-center gap-3 text-center">
+            {/* The wordmark is the brand name, so the heading below stays for screen readers only. */}
+            <Image
+              src="/Fionis-Logo.avif"
+              alt=""
+              width={284}
+              height={106}
+              priority
+              className="h-auto w-40"
+            />
+            <h1 className="sr-only">{DEFAULT_GYM_NAME}</h1>
             <p className="text-base text-muted-foreground">Sign in to continue</p>
           </header>
           <LoginForm next={next} expired={expired} />

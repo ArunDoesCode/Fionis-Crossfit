@@ -3,7 +3,6 @@ import PageHeader from '@/components/common/PageHeader';
 import EditMemberLoader from '@/components/pages/members/EditMemberLoader';
 import MemberSaveButton from '@/components/pages/members/MemberSaveButton';
 import { memberMutationKeys } from '@/lib/api/members/queries';
-import { UI_TEXT } from '@/lib/messages/words';
 
 interface EditMemberViewProps {
   memberId: string;
@@ -17,8 +16,6 @@ export default function EditMemberView({ memberId }: EditMemberViewProps) {
   return (
     <Page width="narrow">
       <PageHeader
-        title={UI_TEXT.screens.editMember}
-        backHref={`/admin/members/${memberId}`}
         form
         action={
           <MemberSaveButton
