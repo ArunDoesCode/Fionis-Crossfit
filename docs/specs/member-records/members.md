@@ -2,7 +2,7 @@
 module: member-records/members
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
+version: 3
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -144,7 +144,16 @@ No automated UI tests for screens S4–S9, Home search and Home sections (no DOM
 | Q6 | An archived member is… | **A** read-only until restored / B still editable | **B**, and their page shows when the membership ended (owner) → BR-REC-58, 172 |
 | Q7 | Renewing an archived member… | **A** keeps them archived; the sheet says how to restore (recommended: safe when typing in old binder members) / B restores them when the new membership covers today | **B** → BR-REC-58 |
 
+## Build clarifications (U5, 2026-10-05)
+
+Names fixed so tests and code agree (no rule changed):
+- **Pure search (BR-REC-201, 202):** `frontend/src/lib/members/directory.ts` exports `type MemberSearchField = 'name' | 'email' | 'phone'`, `MIN_SEARCH_CHARS = 2`, `foldText(text)` (lower case, accents removed, spaces collapsed and trimmed) and `searchMembers(rows, { text, field, archived })` returning the matching E16 items in the BR-REC-202 order (`archived` true = only archived members, false = only active ones; text shorter than 2 characters returns all rows of that scope in the given order).
+- **Directory (BR-REC-203):** `frontend/src/lib/api/members/queries.ts` exports `memberDirectoryQuery()` (loops E16 `status=any`, `pageSize=100` over all pages) with key `memberKeys.directory()`; every member, membership and assessment write refreshes it. Typing in `MemberSearch` never calls the server.
+- **Component (BR-REC-201, 204):** `frontend/src/components/common/MemberSearch.tsx` (field picker + input, controlled: `text`, `field`, `onChange`); Members keeps `q` and `by` in the address (nuqs, replace); Home keeps them in state.
+- **Tables (ux BR-REC-183):** from 1024 px Members, Due list and Memberships ending render the existing `components/common/DataTable.tsx` (whole row is one link); below 1024 px the current rows stay.
+
 ## Changelog
+- 2026-10-05 v3 — clarified during build (U5): names for directory/search module, query, MemberSearch and tables; no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-03…09 from v1 unchanged
 - 2026-10-03 v0 — answers folded: archived members stay editable (BR-REC-58 rewritten, `MEMBER_ARCHIVED` gone),

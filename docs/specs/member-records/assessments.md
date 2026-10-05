@@ -2,7 +2,7 @@
 module: member-records/assessments
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 3
+version: 4
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/setup, member-records/members, member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
@@ -149,7 +149,12 @@ No automated UI tests for the choose sheet (BR-REC-73), the leave guard (BR-REC-
 | Q4 | Old assessments can be changed… | **A** any time, every change logged / B only within 30 days | **A** → BR-REC-92 |
 | Q5 | Unsaved drafts on a phone are kept for… | **A** 7 days / B until restored or discarded | **A** → BR-REC-85 |
 
+## Build clarifications (U4, 2026-10-05)
+
+- **Layout helper (BR-REC-216):** `frontend/src/lib/assessments/layout.ts` exports `layoutMetrics(metrics)` returning an ordered list of blocks `{ title: string | null, metrics }`: metrics without a `tableGroup` form one untitled block in setup order; metrics sharing a `tableGroup` form one titled block (title = the group name) whose members are ordered whole body, arms, trunk, legs (the order of the `tablePart` enum values in `backend/src/lib/enums.ts`); blocks keep the position of their first metric in setup order. The Record assessment `<form>` uses `FormGrid` (`maxCols` 4) with `FormSection` for titled blocks; the first row is Date, About, Paper column.
+
 ## Changelog
+- 2026-10-05 v4 — clarified during build (U4): `layoutMetrics` helper for the desktop grid; no rule changed
 - 2026-10-05 v3 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-12, 19, 20, 21 from v1 unchanged (BR-REC-75 decides how mm:ss is typed)
 - 2026-10-03 v0 — answers folded: all as recommended; archived members can be recorded for (members Q6 = B)

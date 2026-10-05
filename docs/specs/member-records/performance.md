@@ -2,7 +2,7 @@
 module: member-records/performance
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
+version: 3
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/ux, member-records/api-contract, member-records/data-model]
@@ -105,7 +105,12 @@ Edge rendering, a CDN for API responses, offline saving with background sync, im
 | Q3 | (developer) Lighthouse and bundle checks | **A** in CI on every PR / B by hand before hand-over | **A** → BR-REC-173, tactics 27–28 |
 | Q6 | (v2) Server prefetch (tactic 1, #20) | **A** Home and member page only / B every screen / C drop to Later | **A** (owner, 2026-10-05) → BR-REC-213 |
 
+## Build clarifications (U6, owner scope cut 2026-10-05)
+
+The owner asked for U6 to stay simple: minimal code, the biggest wins, lazy loading where cheap, no complicated fetching or caching. Delivered in U6: BR-REC-208 (row and member links no longer opt out of prefetching, plus the existing hover prefetch of the member's data; no sibling-tab or form preloading), BR-REC-209 (no refetch on window focus; 30 s default freshness; entry forms always fresh; the assessment save refreshes the member list and directory instead of every `members` key), BR-REC-210 (no Zod in the shared client bundle; CI runs `next build`; dead packages removed), BR-REC-211 (icons, powered-by header, one cached day formatter, 300 ms draft autosave, no overlay blur), BR-REC-212 in part (E18 reads in parallel; pool size and idle timeout; due engine skips archived members in SQL). Deferred by the owner, still open: BR-REC-212 ETag on lists and the shared Home due computation, BR-REC-213 server prefetch (#20), sibling-tab prefetch (BR-REC-208 tail).
+
 ## Changelog
+- 2026-10-05 v3 — owner scope cut for U6 (simple, minimal): which of BR-REC-208…213 ship now and which are deferred; no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, new in member-records v2
 - 2026-10-03 v0 — answers folded: three fonts kept (BR-REC-150 rewritten, new BR-REC-174 font bytes, tactic 22);
