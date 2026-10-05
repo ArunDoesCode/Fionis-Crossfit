@@ -223,7 +223,7 @@ src/
 │
 ├── components/
 │   ├── ui/                         ← shadcn primitives — never edit
-│   ├── common/                     ← reusable widgets (DataTable, TablePagination, SearchBar, ErrorComponent, EmptyState)
+│   ├── common/                     ← reusable widgets (DataTable, SearchBar, ErrorComponent, EmptyState)
 │   ├── pages/[feature]/            ← route-specific UI (FeatureForm, FeatureSearchbar, columns.tsx)
 │   ├── views/[feature]/            ← 'use client' stateful containers rendered by page.tsx
 │   └── [role]/                     ← role-specific components (optional)
@@ -1236,7 +1236,7 @@ const table = useTable({ features, columns, data }); // features/columns module-
 
 **Rules:**
 
-- Always the shared `components/common/DataTable` + `TablePagination` (`offset, limit, total, onPageChange, onLimitChange?`).
+- Always the shared `components/common/DataTable`; add a pagination component only when a screen really pages (the member lists use "Show more").
 - Column **factory** receiving action callbacks (pure column defs); build with `createDataTableColumnHelper<T>()`.
 - Columns stable across renders: `useMemo(() => createColumns(onView), [onView])` unless React Compiler is on. `data` must be stable too (module-level `EMPTY` fallback, not `?? []` inline).
 - Codes/ids `font-mono text-sm`; status → badge component; actions column `helper.display({ id: 'actions', header: '' })`, ghost/sm buttons.

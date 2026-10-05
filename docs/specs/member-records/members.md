@@ -154,7 +154,7 @@ Names fixed so tests and code agree (no rule changed):
 - **Tables (ux BR-REC-183):** from 1024 px Members, Due list and Memberships ending render the existing `components/common/DataTable.tsx` (whole row is one link); below 1024 px the current rows stay.
 
 ## Changelog
-- 2026-10-05 v3 — owner (U7): the field picker is a dropdown joined to the search box (BR-REC-201 wording); no rule change
+- 2026-10-05 v4 — owner (U7): the field picker is a dropdown joined to the search box (BR-REC-201 wording); no rule change
 - 2026-10-05 v3 — clarified during build (U5): names for directory/search module, query, MemberSearch and tables; no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-03…09 from v1 unchanged
