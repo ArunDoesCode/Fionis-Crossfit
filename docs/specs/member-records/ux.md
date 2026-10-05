@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 10
+version: 11
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -220,6 +220,22 @@ Names fixed so tests and code agree (no rule changed):
 - **Whole page (BR-REC-182):** `Page` has no centred max-width from 768 px; padding is `p-4` on every side.
 - **Default shadcn first (BR-REC-218):** toasts are shadcn `sonner`; custom components are kept only when used in three or more places; where a shadcn default (form, badge, card, skeleton, toggle-group, table, alert) does the job it replaces the custom one.
 
+## Build clarifications (v10, 2026-10-05)
+
+Names fixed so tests and code agree (no rule changed):
+- **Helpers:** `@/lib/members/initials` `initialsOf(name)` (BR-REC-223); `@/lib/members/searchField` `fieldForText(text)`,
+  `activeSearchField(text, manual | null)` (231); `@/lib/dates/typedDate` `parseTypedDate(text): IsoDate | null` (232);
+  `@/lib/due/text` `dueItemsText(names[], turnedOnCount)` (225); `@/lib/progress/text` `improvedHeadline(improved, total, name)`,
+  `averageChangeText(name, change, metric)`, `firstReadingText(value, metric)` (228, 229); `@/lib/assessments/labels`
+  `savedMessage(count, memberName, stillDue?)` — full name when `stillDue` > 0 (230); `@/lib/setup/timezones`
+  `timeZoneLabel(id)` (233); `@/lib/members/nextStep` `nextStepFor({ overdue: { assessmentName, daysOverdue } | null,
+  membershipStatus })` → `{ kind: 'record' | 'renew', text } | null` (224).
+- **Alerts (BR-REC-234 vs 190):** `role="alert"` is allowed in `FormErrorSummary` and in the "Enter at least one value"
+  notice (`EntryNotices`) only.
+- **Page titles (BR-REC-234):** root `metadata.title.template` `'%s · Fionis India'`; each `page.tsx` exports `metadata`
+  from the route table; the member pages use `generateMetadata` with the member's name.
+- **Loose ends:** count line with 0 left out → "Based on 12 members" only; "1 more has only one reading" (singular).
+
 ## Not now
 
 Other languages (Hindi), member-facing screens, gym-chosen colours beyond Fionis, onboarding tour, coach-editable
@@ -246,6 +262,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v11 — clarified during build (v10): helper module names, alert exception, page-title mechanism, count-line loose ends; no rule changed
 - 2026-10-05 v10 — changed after freeze and re-frozen (owner, D-037): visual refresh "Navy & Flame" from the admin UI audit — new BR-REC-219…235 (tokens, two fonts, one control look, Home number band, avatars, member header, row text, tables, sidebar toggle beside the sidebar, Reports words, report card cards, Record assessment 3 columns + paper tools collapsed, search field from text, typed dates, words, page titles and a11y, Login split); amends 123, 185, 186, 192, U7/U8 clarifications, tap budgets, and members 201, assessments 216, progress 113, due-list 16/98, performance 214; next free ID BR-REC-236
 - 2026-10-05 v9 — owner review of the built screens: errors only on Save and in plain words (BR-REC-189), whole-page width with p-4 on all sides (BR-REC-182/181), reuse threshold three places and shadcn defaults first (BR-REC-218), Record assessment two columns, no "due" label tag, "Approximate date"; next free ID BR-REC-219
 - 2026-10-05 v8 — owner simplification (U7): sidebar brand is text (logo stays on Login), toggle in the sidebar, Home title "Home", joined search control, new BR-REC-218 (simple code: inline single-use components, no shells folder, plain Tailwind, `cn` only to merge); next free ID BR-REC-219
