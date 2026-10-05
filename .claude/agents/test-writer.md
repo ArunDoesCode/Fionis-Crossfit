@@ -57,6 +57,9 @@ code happens to do — so they can catch the developer being wrong.
   - Fixtures: unique `TEST_<module>_` prefix, create what you need, clean up in `afterAll` in FK-safe order.
     Never rely on rows another test created. Never delete non-TEST data.
   - Assert the error class/code for negative paths (`AppError` subclasses in `backend/src/lib/errors.ts`).
+- **No look tests (D-038):** never write a test that reads source files or CSS to assert classes, token values,
+  fonts, sizes or layout. For a visual rule, add an item to the manual checklist instead (and a Playwright/axe
+  check only if the brief asks). Kept guards: `check:colors`, no hand-edited `components/ui`.
 - **TV / frontend logic** — `frontend/tests/**/*.test.ts` with `bun test`: timer (`timer-cases.json`),
   event reducer, achievement queue, formatting. Visual/scene checks: Playwright against `/tv/lab`
   scenarios in `frontend/e2e/`.

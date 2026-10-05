@@ -24,6 +24,9 @@ behaviour go through `/bug`; a bug that reveals a missing rule becomes a spec ch
 context with a pointers-only brief (never a fork, never your summary). Developer agents and the coordinator
 never create or edit tests; tests and code go in separate `test(…)` / `feat(…)`/`fix(…)` commits.
 Details: `.claude/pipeline/PROTOCOL.md` → Test independence.
+**No look tests (D-038):** frontend tests cover logic only (formatters, parsers, validators, save rules, queries).
+Visual rules (colours, fonts, sizes, layout, class names) are checked by screenshots, axe and the manual checklist —
+never by source-scan tests. Kept guards: `check:colors` (no raw colour), no hand-edited `components/ui`.
 
 ## How to write (every agent, every reply, report and doc)
 - Answer or result first, in 1–2 lines. Then only what the user needs to decide or act.

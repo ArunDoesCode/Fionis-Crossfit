@@ -236,3 +236,10 @@ Mono; (2) number band and avatars now (spec v10, not later); (3) Record assessme
 1440 × 900; (4) the sidebar toggle sits outside the sidebar as shadcn ships it (reverses the U7 placement). Why: the app
 looked bland — muddy #DC7400 orange, page vs card 1.05:1, grey inputs that read as disabled, no numbers or faces.
 Rejected: a new palette (D-029 stays), photo upload, chart libraries (BR-REC-215). Detail: ux BR-REC-219…235.
+
+**D-038 · 2026-10-05 · No look tests: frontend tests cover logic only; visual rules are checked by screenshots, axe and the manual checklist.**
+Owner, after seeing ~150 source-scan tests in `frontend/tests/ux/` (fonts, token lightness, class names) that broke on
+every restyle and had to be rewritten for ux v10. Why: they test strings in files, not what the owner sees, and they
+slow every visual change. Kept: logic tests (formatters, parsers, validators, save rules, queries, proxy) and two guards
+(`check:colors` — no raw colour; no hand-edited `components/ui`). Rejected: keeping scan tests as "cheap coverage".
+Note: tests never ship to the browser (`frontend/tests/**` is run by `bun test` only; nothing in `src` imports it).
