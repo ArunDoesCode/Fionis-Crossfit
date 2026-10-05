@@ -27,10 +27,12 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
-| UX v2 redesign (#59) slices U1–U6 | `claude/ui-ux-responsive-redesign-1de4d4` | U1, U2, U3, U5-backend built + reviewed; U4 (assessment grid), U5-frontend (member search, desktop tables), U6 (performance) next; manual checklists pending | not opened | — |
+| UX v2 redesign (#59) slices U1–U6 | `claude/ui-ux-responsive-redesign-1de4d4` | U1–U6 built + reviewed (U6 owner-scoped minimal); nothing pushed, no PR yet; manual browser checklists pending; open: #60 (Zod bundle budget, deferred perf items) | not opened | — |
 | docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | built; DB tests not yet run (no env files in this worktree) | not opened | owner creates the env files, then tests + PR |
 
 ## Waiting on you
+- [ ] Browser-check U1–U6 (checklists in `.pipeline/member-records-ux-v2-u*/checklist.md`; U1 has one; others: screens.md + manual-only lists in the tests' reports), then say if you want the PR.
+- [ ] Pick the bundle fix (#60): `zod/mini` on the client (recommended), or amend the per-screen budget.
 - [ ] Existing databases (dev, staging, prod): run `drop index members_name_active_idx` once, then `bun run db:push` (collate-only index change is invisible to drizzle-kit; BR-REC-207).
 - [ ] Run the manual checklists `.pipeline/member-records-*/checklist.md` on a phone (progress: also the print check, BR-REC-109).
 - [ ] Confirm the build choices and spec clarifications: members D-021, progress D-022 (P1–P14), due-list D-023 (C1–C13), assessments D-024 (D1–D21). Decide if the move-date screen (#32) is needed for the pilot.
