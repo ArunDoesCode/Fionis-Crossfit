@@ -12,7 +12,9 @@ separate auditors) is in `~/codes/ERP-diecast/.claude/` if you ever need it back
    ├─ explorer (haiku)      code lookup
    ├─ backend-dev ∥ frontend-dev | tv-dev | member-dev   (sonnet; disjoint file ownership)
    ├─ test-writer (sonnet)  tests + manual checklist, independent of the developers
+   ├─ ux-designer (opus)    DESIGN step: mock-ups on the real app → .pipeline/<feature>/design.md (D-039)
    ├─ reviewer (sonnet)     one read-only pass: spec, correctness, security, performance, contract
+   ├─ visual-qa (sonnet)    screenshots 1440/390 light/dark + axe vs design.md and docs/standards/design.md
    └─ test-runner (haiku)   runs every automated check, never fixes
 ```
 Subagents cannot spawn subagents and never talk to each other; everything goes through the coordinator.
@@ -28,6 +30,7 @@ The TV is a client too: `GET /v1/tv/snapshot` + the SSE stream are in the contra
 | `contract.md` | backend-dev | endpoints and SSE events added/changed: method, path, request, response, errors, permissions |
 | `screens.md` | surface devs (append) | per screen/scene: URL or scene name, permission, controls/states — input for the manual checklist |
 | `findings.md` | coordinator | only if a fix loop runs: open findings and their resolution |
+| `design.md` | ux-designer | DESIGN step: per screen layout, words, states, tap count, mock-up paths, owner answers |
 
 Resume = read `plan.md` + `git log` on the working branch. No other state file.
 
@@ -60,7 +63,7 @@ reason. Findings table: `# | severity | area | file:line | finding | fix`.
 - tv-dev: `frontend/src/tv/**`, `frontend/src/app/tv/**`, `frontend/src/lib/timer/**` except tests · member-dev: `member/**` except tests
 - test-writer: only test files and the manual checklist. Test files = `**/*.test.ts(x)`, `backend/tests/**`
   (incl. `fixtures/`), `backend/src/scenarios/**`, `frontend/tests/**`, `frontend/e2e/**`, `member/tests/**`, `member/.maestro/**`
-- coordinator: `.pipeline/**`, `docs/**`, GitHub issues · reviewer, test-runner, explorer: read-only
+- ux-designer: `.pipeline/<feature>/design.md`, `docs/design/<feature>/`, `tools/ui-audit/out/` · coordinator: `.pipeline/**`, `docs/**`, GitHub issues · reviewer, test-runner, explorer, visual-qa: read-only
 - While agents have uncommitted work in the worktree, the coordinator commits with explicit paths, never `git commit -a`.
 
 ## Test independence (non-negotiable)

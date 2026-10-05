@@ -42,7 +42,8 @@ Load yourself (cheap, no exploring): `docs/STATUS.md`, the spec, `docs/modules/<
 3. **In parallel, one Agent call per surface** (disjoint ownership): **backend-dev** (make the slice tests
    green) plus the surface devs the slice needs — **frontend-dev** (admin), **tv-dev** (TV), **member-dev**
    (Expo) — each against `contract.md`. No brief mentions test-writer's reasoning, only "make these test files
-   pass" and the spec. Surface devs append to `.pipeline/<module>/screens.md`.
+   pass" and the spec. Surface devs append to `.pipeline/<module>/screens.md`. Admin briefs also point to
+   `docs/standards/design.md` and, when it exists, `.pipeline/<module>/design.md` (approved mock-ups, D-039).
 4. BLOCKED → answer from spec/decisions or ask the user, then re-brief the same agent. A developer who says a
    test is wrong must quote the contradicting spec rule; decide against the spec; if the test really is wrong,
    re-brief **test-writer** (not the developer) and commit as `test(<module>): …`.
@@ -52,6 +53,8 @@ Load yourself (cheap, no exploring): `docs/STATUS.md`, the spec, `docs/modules/<
 ```
 loop:
   A. spawn in parallel: reviewer (whole diff vs base) + test-runner (compare with baseline)
+     + visual-qa when admin screens changed (brief: touched route keys, `.pipeline/<module>/design.md`;
+     D-039 — it runs the isolated ui-audit copy, screenshots 1440/390 light/dark + axe)
   B. triage into findings.md: fix now (blockers, majors) | issue (minor/out of scope) | reject (say why —
      check the code yourself, the reviewer can be wrong). Route fixes by area: backend → backend-dev,
      admin → frontend-dev, TV → tv-dev, member → member-dev, test → test-writer (only with a spec-rule

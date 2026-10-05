@@ -243,3 +243,11 @@ every restyle and had to be rewritten for ux v10. Why: they test strings in file
 slow every visual change. Kept: logic tests (formatters, parsers, validators, save rules, queries, proxy) and two guards
 (`check:colors` — no raw colour; no hand-edited `components/ui`). Rejected: keeping scan tests as "cheap coverage".
 Note: tests never ship to the browser (`frontend/tests/**` is run by `bun test` only; nothing in `src` imports it).
+
+**D-039 · 2026-10-05 · UI/UX is a pipeline step: DESIGN (`/design`, ux-designer) before freeze and VISUAL QA (visual-qa) in verify, both on an isolated copy of the real admin and judged against `docs/standards/design.md`.**
+Owner, after the ux v10 refresh worked where earlier rounds did not. Why it worked: the agents looked at the real
+running app (screenshots on seeded data), measured instead of guessing, ran several lenses in parallel, and showed
+before/after mock-ups before any code. The new step keeps that: `tools/ui-audit/` (own DB `gym_ui_audit`, ports
+3100/4100, `shots.mjs` with CSS preview, `axe.mjs`), one design-rules file, one recommended design per screen,
+owner picks, then the spec. VISUAL QA replaces the look tests removed by D-038. Rejected: a Figma hand-off (no
+designer on the team), visual-diff snapshots in CI (brittle on every restyle, same problem as D-038).
