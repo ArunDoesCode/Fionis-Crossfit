@@ -1,12 +1,54 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useQueryState } from 'nuqs';
-import EndingList from '@/components/pages/members/EndingList';
+import EmptyState from '@/components/common/EmptyState';
+import EndingRow from '@/components/pages/members/EndingRow';
+import PagedRows from '@/components/pages/members/PagedRows';
 import PeriodSheet from '@/components/pages/members/PeriodSheetLazy';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { endingTabParser, isEndingTab } from '@/lib/members/endingParams';
+import { useEndingList } from '@/lib/api/members/queries';
+import { ENDING_EMPTY, endingTabParser, isEndingTab } from '@/lib/members/endingParams';
+import type { EndingStatus } from '@/lib/members/types';
 import { useRenewTarget } from '@/lib/members/useRenewTarget';
+import { useToday } from '@/lib/members/useToday';
 import { WORDS } from '@/lib/messages/words';
+
+// From 1024 px (lg) the rows become a DataTable (BR-REC-183); its code loads only then.
+const EndingTable = dynamic(() => import('@/components/pages/members/EndingTable'));
+
+// One tab of S4 (BR-REC-08, 52, 53, 57): 25 rows, then "Show more". "Ends soon" is soonest first, "Ended"
+// is the last 30 days, most recent first (the server's order). Archived members are never listed.
+function EndingList({
+  status,
+  onRenew,
+}: {
+  status: EndingStatus;
+  onRenew: (memberId: string) => void;
+}) {
+  const query = useEndingList(status);
+  const today = useToday();
+
+  return (
+    <PagedRows
+      query={query}
+      skeletonChips
+      empty={<EmptyState title={ENDING_EMPTY[status]} />}
+      renderTable={(items) => (
+        <EndingTable items={items} status={status} today={today} onRenew={onRenew} />
+      )}
+      renderRow={(item) => (
+        <EndingRow
+          key={item.memberId}
+          item={item}
+          status={status}
+          today={today}
+          onRenew={onRenew}
+        />
+      )}
+    />
+  );
+}
 
 // S4 (BR-REC-08, 53): the tabs "Ends soon" and "Ended". The tab is in the URL (`?tab=ending|ended`) so the
 // Home "See all" links land on the right one and Back from a member returns to the same list. Renew on a

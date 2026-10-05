@@ -36,7 +36,7 @@ interface DataTableProps<TData extends RowData> {
   emptyDescription?: string;
 }
 
-// Server-paginated by design: pair with TablePagination; sorting/filtering happen on the server.
+// Server-paginated by design: sorting/filtering happen on the server.
 export default function DataTable<TData extends RowData>({
   columns,
   data,

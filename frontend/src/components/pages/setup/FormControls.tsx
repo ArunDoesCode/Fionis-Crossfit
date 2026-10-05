@@ -14,7 +14,7 @@ import {
   NumberInput,
 } from '@/components/common/form';
 import { useItemIds } from '@/components/common/form/fieldContext';
-import TimeZoneCombobox from '@/components/common/TimeZoneCombobox';
+import TimeZoneCombobox from '@/components/pages/setup/TimeZoneCombobox';
 import { FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 

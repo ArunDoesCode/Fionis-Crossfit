@@ -1,10 +1,12 @@
 import LinkButton from '@/components/common/LinkButton';
 import Page from '@/components/common/Page';
 import PageHeader from '@/components/common/PageHeader';
-import DueBlock from '@/components/pages/member/DueBlock';
-import MemberHeader from '@/components/pages/member/MemberHeader';
-import MembershipBlock from '@/components/pages/member/MembershipBlock';
-import RecentBlock from '@/components/pages/member/RecentBlock';
+import {
+  DueBlock,
+  MemberHeader,
+  MembershipBlock,
+  RecentBlock,
+} from '@/components/pages/member/MemberBlocks';
 import { UI_TEXT } from '@/lib/messages/words';
 
 interface MemberViewProps {
@@ -15,7 +17,7 @@ interface MemberViewProps {
 // sub-spec): person, membership, assessments, recent, the two link buttons, then the one main action
 // "Record assessment" in the bar above the tabs. From 1024 px: person + membership left, assessments +
 // recent right, inside the 720 px detail width (BR-REC-139) and the main action in the header.
-// The four blocks are slots (see the imports); the frame has no data calls. The page title is the word
+// The four blocks live in pages/member/MemberBlocks; the frame has no data calls. The page title is the word
 // "Member": the person's name belongs to MemberHeader.
 export default function MemberView({ memberId }: MemberViewProps) {
   const base = `/admin/members/${memberId}` as const;

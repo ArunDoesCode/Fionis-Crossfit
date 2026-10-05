@@ -4,8 +4,7 @@ import { Loading03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect, useRef } from 'react';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
-import SheetBody from '@/components/pages/setup/SheetBody';
-import SheetFooter from '@/components/pages/setup/SheetFooter';
+import SheetBody, { SheetFooter } from '@/components/pages/setup/SheetBody';
 import { Button } from '@/components/ui/button';
 import { UI_TEXT } from '@/lib/messages/words';
 

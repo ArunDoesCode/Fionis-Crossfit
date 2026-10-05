@@ -15,16 +15,8 @@ function Busy({ className, children }: { className?: string; children: React.Rea
   );
 }
 
-export function PageHeaderSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex min-h-[var(--header-height)] items-center', className)}>
-      <Skeleton className="h-7 w-48" />
-    </div>
-  );
-}
-
 /** One list row (--row-height): name, detail line, status at the right. `chips` adds the chip line. */
-export function RowSkeleton({ chips = false }: { chips?: boolean }) {
+function RowSkeleton({ chips = false }: { chips?: boolean }) {
   return (
     <div className={cn('flex items-center gap-3 px-4', chips ? 'h-24' : 'h-(--row-height)')}>
       <div className="flex min-w-0 flex-1 flex-col gap-2">

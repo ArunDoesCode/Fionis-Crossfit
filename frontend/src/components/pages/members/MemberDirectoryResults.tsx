@@ -3,10 +3,13 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import ErrorState from '@/components/common/ErrorState';
-import { RowList } from '@/components/common/ListRow';
+import ListRow, { RowList } from '@/components/common/ListRow';
 import { RowSkeletons } from '@/components/common/Skeletons';
-import MemberListRow from '@/components/pages/members/MemberListRow';
+import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
+import type { IsoDate } from '@/lib/domain/dates';
+import { memberListDetail } from '@/lib/members/listDetail';
+import { memberListBadge } from '@/lib/members/membershipText';
 import type { MemberListItem } from '@/lib/members/types';
 import { useDesktop } from '@/lib/members/useDesktop';
 import { deviceTimeZone, useToday } from '@/lib/members/useToday';
@@ -15,6 +18,28 @@ import { deviceTimeZone, useToday } from '@/lib/members/useToday';
 const MemberTable = dynamic(() => import('@/components/pages/members/MemberTable'));
 
 const PAGE = 25;
+
+// One member in a list (S5, Home search; BR-REC-07, 125, 135): name, one detail line, the status words at
+// the right with their colour and icon. The whole row opens the member.
+function MemberListRow({
+  item,
+  today,
+  timeZone,
+}: {
+  item: MemberListItem;
+  today: IsoDate;
+  timeZone: string;
+}) {
+  const badge = memberListBadge(item, today);
+  return (
+    <ListRow
+      title={item.fullName}
+      detail={memberListDetail(item, today, timeZone)}
+      status={<StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>}
+      href={`/admin/members/${item.id}`}
+    />
+  );
+}
 
 interface MemberDirectoryResultsProps {
   /** The matching members, in order; `undefined` while the directory loads. */

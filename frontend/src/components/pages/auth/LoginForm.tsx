@@ -15,7 +15,6 @@ import {
   FormMessage,
   useFocusFirstProblem,
 } from '@/components/common/form';
-import LoginMessages from '@/components/pages/auth/LoginMessages';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -162,7 +161,15 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
         )}
       />
 
-      <LoginMessages error={error} notice={notice} />
+      {/* One line for the server's answer (red), "Please sign in again." after an ended sign-in (BR-REC-41).
+          Its space is always kept (two lines) and both regions are always in the page, only their text
+          changes, so a screen reader announces it (BR-REC-137). */}
+      <div className="min-h-12 text-base">
+        <p role="alert" className="text-destructive">
+          {error}
+        </p>
+        <p role="status">{notice}</p>
+      </div>
 
       <Button type="submit" size="lg" disabled={busy} className="w-full">
         {busy && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
