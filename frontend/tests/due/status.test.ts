@@ -83,9 +83,9 @@ describe('BR-REC-96 / 105 / 125 dueRowStatus: the words at the right of a Home /
     }
   });
 
-  test('BR-REC-125 late is danger, soon is warning only for Assess soon, the rest is neutral', () => {
+  test('BR-REC-125 late is danger, due soon and Assess soon are warning', () => {
     expect(status.dueRowStatus({ flagged: false, daysOverdue: 1 }).tone).toBe('danger');
-    expect(status.dueRowStatus({ flagged: false, daysOverdue: 0 }).tone).toBe('neutral');
+    expect(status.dueRowStatus({ flagged: false, daysOverdue: 0 }).tone).toBe('warning');
     expect(status.dueRowStatus({ flagged: true, daysOverdue: 0 }).tone).toBe('warning');
   });
 
