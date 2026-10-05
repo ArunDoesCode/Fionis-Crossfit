@@ -12,8 +12,8 @@ export function focusFirstProblem(formId: string, errors: Record<string, unknown
   if (!field) return;
   const element = document.getElementById(fieldId(formId, field));
   if (!element) return;
-  const details = element.closest('details');
-  if (details) details.open = true;
+  const panel = element.closest<HTMLElement>('[data-slot="collapsible-content"]');
+  if (panel?.hidden) document.querySelector<HTMLElement>(`[aria-controls="${panel.id}"]`)?.click();
   const target = element.matches(FOCUSABLE)
     ? element
     : element.querySelector<HTMLElement>(FOCUSABLE);

@@ -10,6 +10,7 @@ import {
 import ChoiceChips from '@/components/common/ChoiceChips';
 import DurationField from '@/components/common/DurationField';
 import NumberField from '@/components/common/NumberField';
+import TimeZoneCombobox from '@/components/common/TimeZoneCombobox';
 import {
   Field,
   FieldContent,
@@ -19,7 +20,6 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
 
 // Small controlled fields for the setup forms (React Hook Form + the shared components). Every field has a
 // visible label linked by `htmlFor` (or a legend), its error sits under it (BR-REC-134) and is read out.
@@ -95,7 +95,7 @@ interface SelectControlProps<Values extends FieldValues> extends BaseProps<Value
   options: readonly string[];
 }
 
-// The phone's own picker (a native select): the list of time zones is long, and a typed name is easy to get wrong.
+// The time-zone picker: a searchable list, because the list is long and a typed name is easy to get wrong.
 export function SelectControl<Values extends FieldValues>({
   control,
   name,
@@ -114,28 +114,15 @@ export function SelectControl<Values extends FieldValues>({
   return (
     <Field data-invalid={fieldState.invalid}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <select
+      <TimeZoneCombobox
         id={id}
-        name={field.name}
-        ref={field.ref}
-        data-slot="input"
         value={asValue<string>(field.value)}
         onChange={field.onChange}
         onBlur={field.onBlur}
-        aria-invalid={fieldState.invalid}
+        options={options}
+        invalid={fieldState.invalid}
         aria-describedby={describedBy || undefined}
-        className={cn(
-          'h-12 w-full min-w-0 rounded-4xl border border-input px-3 text-base outline-none',
-          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-          'aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20',
-        )}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      />
       {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
       <div className="min-h-5">
         <FieldError id={errorId} errors={[fieldState.error]} />

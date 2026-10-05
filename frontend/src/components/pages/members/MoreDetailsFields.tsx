@@ -3,6 +3,7 @@
 import { Controller } from 'react-hook-form';
 import ChoiceChips from '@/components/common/ChoiceChips';
 import type { MemberFormControl } from '@/components/pages/members/memberFormControl';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { fieldId } from '@/lib/members/formFields';
@@ -26,22 +27,25 @@ const GOAL_OPTIONS: { value: GoalChoice; label: string }[] = [
 const TEXTAREA =
   'min-h-28 w-full rounded-2xl border border-input px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20';
 
-// The optional fields go last under "More details" (BR-REC-03, 134). The block is a native <details>, so
-// its fields stay in the form while it is closed; Save opens it when a problem is inside.
+// The optional fields go last under "More details" (BR-REC-03, 134). The fields stay mounted while the block is
+// closed (keepMounted); Save opens it when a problem is inside.
 export default function MoreDetailsFields({
   formId,
   control,
   defaultOpen = false,
 }: MoreDetailsFieldsProps) {
   return (
-    <details open={defaultOpen} className="group flex flex-col gap-4">
-      <summary className="flex min-h-12 cursor-pointer list-none items-center font-heading text-lg font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+    <Collapsible defaultOpen={defaultOpen} className="flex flex-col gap-4">
+      <CollapsibleTrigger className="group flex min-h-12 w-full cursor-pointer items-center text-left font-heading text-lg font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
         More details
-        <span aria-hidden="true" className="ml-2 text-muted-foreground group-open:hidden">
+        <span
+          aria-hidden="true"
+          className="ml-2 text-muted-foreground group-data-panel-open:hidden"
+        >
           +
         </span>
-      </summary>
-      <div className="flex flex-col gap-4">
+      </CollapsibleTrigger>
+      <CollapsibleContent keepMounted className="flex flex-col gap-4">
         <Controller
           control={control}
           name="email"
@@ -109,7 +113,7 @@ export default function MoreDetailsFields({
             </Field>
           )}
         />
-      </div>
-    </details>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
