@@ -150,6 +150,7 @@ Names fixed so tests and code agree (no rule changed):
 - **Pure search (BR-REC-201, 202):** `frontend/src/lib/members/directory.ts` exports `type MemberSearchField = 'name' | 'email' | 'phone'`, `MIN_SEARCH_CHARS = 2`, `foldText(text)` (lower case, accents removed, spaces collapsed and trimmed) and `searchMembers(rows, { text, field, archived })` returning the matching E16 items in the BR-REC-202 order (`archived` true = only archived members, false = only active ones; text shorter than 2 characters returns all rows of that scope in the given order).
 - **Directory (BR-REC-203):** `frontend/src/lib/api/members/queries.ts` exports `memberDirectoryQuery()` (loops E16 `status=any`, `pageSize=100` over all pages) with key `memberKeys.directory()`; every member, membership and assessment write refreshes it. Typing in `MemberSearch` never calls the server.
 - **Component (BR-REC-201, 204):** `frontend/src/components/common/MemberSearch.tsx` (field picker + input, controlled: `text`, `field`, `onChange`); Members keeps `q` and `by` in the address (nuqs, replace); Home keeps them in state.
+- **Over 1,000 members (BR-REC-203 tail):** the owner states the gym stays at about 200 members, so only the developer warning ships; the server `q` fallback is not built in this slice.
 - **Tables (ux BR-REC-183):** from 1024 px Members, Due list and Memberships ending render the existing `components/common/DataTable.tsx` (whole row is one link); below 1024 px the current rows stay.
 
 ## Changelog
