@@ -27,7 +27,7 @@ Legend — Code: none / schema only / partial / full. Tests per module: see each
 ## Active pipelines
 | Feature | Branch | Phase | PR | Waiting on |
 |---|---|---|---|---|
-| UX v2 redesign (#59) slices U1–U6 | `claude/ui-ux-responsive-redesign-1de4d4` | U1 shell + theme built + reviewed (2 loops); manual checklist pending; U2…U6 next | not opened | — |
+| UX v2 redesign (#59) slices U1–U6 | `claude/ui-ux-responsive-redesign-1de4d4` | U1, U2, U3, U5-backend built + reviewed; U4 (assessment grid), U5-frontend (member search, desktop tables), U6 (performance) next; manual checklists pending | not opened | — |
 | docs cleanup + `seed:demo` (BR-REC-176) | `work/mvp-demo-prep` | built; DB tests not yet run (no env files in this worktree) | not opened | owner creates the env files, then tests + PR |
 
 ## Waiting on you
