@@ -32,6 +32,8 @@ interface SetupSheetProps {
   saving: boolean;
   /** The question to ask before saving, or `null` while the form is shown. */
   confirm: SetupSheetConfirm | null;
+  /** A wider desktop dialog for a two-column form (phones are unchanged). */
+  wide?: boolean;
   /** The form. It stays in the sheet (hidden) while the question is shown, so nothing typed is lost. */
   children: React.ReactNode;
 }
@@ -52,6 +54,7 @@ export default function SetupSheet({
   formId,
   saving,
   confirm,
+  wide,
   children,
 }: SetupSheetProps) {
   const saveRef = useRef<HTMLButtonElement>(null);
@@ -68,6 +71,7 @@ export default function SetupSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
+      desktopClassName={wide ? 'sm:max-w-2xl' : undefined}
       footer={
         confirm ? (
           <ConfirmFooter confirm={confirm} />

@@ -1,203 +1,255 @@
 'use client';
 
-import {
-  type Control,
-  type FieldValues,
-  type Path,
-  type PathValue,
-  useController,
-} from 'react-hook-form';
+import type { ReactNode } from 'react';
+import type { Control, FieldValues, Path } from 'react-hook-form';
 import ChoiceChips from '@/components/common/ChoiceChips';
-import DurationField from '@/components/common/DurationField';
-import NumberField from '@/components/common/NumberField';
-import TimeZoneCombobox from '@/components/common/TimeZoneCombobox';
 import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+  DurationInput,
+  FloatingLabelInput,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+  NumberInput,
+} from '@/components/common/form';
+import { useItemIds } from '@/components/common/form/fieldContext';
+import TimeZoneCombobox from '@/components/common/TimeZoneCombobox';
+import { FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 
-// Small controlled fields for the setup forms (React Hook Form + the shared components). Every field has a
-// visible label linked by `htmlFor` (or a legend), its error sits under it (BR-REC-134) and is read out.
-// `useController` hands back `PathValue<Values, Name>`, which TypeScript cannot narrow for a generic form;
-// each control states the one kind of value it expects and the form's own types guarantee it.
+// Small controlled fields for the setup forms: React Hook Form's `FormField` + the shared form primitives
+// (one 76 px FormItem per field, so an error never moves the form; BR-REC-187). Every field has a visible
+// label linked by `htmlFor` (floating label, or the FieldLabel for the time zone and the switch). The
+// forms use `useForm<z.input, unknown, z.output>`; `useController` hands back `PathValue<Values, Name>`,
+// which TypeScript cannot narrow for a generic form, so each field states the one kind of value it
+// expects and the form's own types guarantee it.
 
-interface BaseProps<Values extends FieldValues> {
-  control: Control<Values>;
+interface BaseProps<Values extends FieldValues, Output extends FieldValues> {
+  control: Control<Values, unknown, Output>;
   name: Path<Values>;
-  id: string;
+  className?: string;
 }
 
 const asValue = <Value,>(value: unknown): Value => value as Value;
+// `FormField` is typed for a control whose output equals its input; the forms' output type differs.
+const asControl = <Values extends FieldValues, Output extends FieldValues>(
+  control: Control<Values, unknown, Output>,
+) => control as unknown as Control<Values>;
 
-const Required = () => <span className="text-destructive"> *</span>;
+const Hint = ({ children }: { children?: ReactNode }) =>
+  children ? <FieldDescription className="text-xs">{children}</FieldDescription> : null;
 
-interface TextControlProps<Values extends FieldValues> extends BaseProps<Values> {
+interface TextFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
   required?: boolean;
   hint?: string;
   disabled?: boolean;
-  autoComplete?: string;
 }
 
-export function TextControl<Values extends FieldValues>({
+export function TextField<V extends FieldValues, O extends FieldValues>({
   control,
   name,
-  id,
   label,
   required,
   hint,
   disabled,
-  autoComplete = 'off',
-}: TextControlProps<Values>) {
-  const { field, fieldState } = useController({ control, name });
-  const hintId = `${id}-hint`;
-  const errorId = `${id}-error`;
-  const describedBy = [hint ? hintId : null, fieldState.error ? errorId : null]
-    .filter(Boolean)
-    .join(' ');
-
+  className,
+}: TextFieldProps<V, O>) {
   return (
-    <Field data-invalid={fieldState.invalid}>
-      <FieldLabel htmlFor={id}>
-        <span>
-          {label}
-          {required && <Required />}
-        </span>
-      </FieldLabel>
-      <Input
-        id={id}
-        name={field.name}
-        ref={field.ref}
-        value={asValue<string>(field.value)}
-        onChange={field.onChange}
-        onBlur={field.onBlur}
-        disabled={disabled}
-        autoComplete={autoComplete}
-        aria-invalid={fieldState.invalid}
-        aria-describedby={describedBy || undefined}
-      />
-      {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
-      <div className="min-h-5">
-        <FieldError id={errorId} errors={[fieldState.error]} />
-      </div>
-    </Field>
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className}>
+          <FormControl>
+            <FloatingLabelInput
+              name={field.name}
+              ref={field.ref}
+              label={label}
+              required={required}
+              disabled={disabled}
+              autoComplete="off"
+              value={asValue<string | null>(field.value) ?? ''}
+              onChange={(event) => field.onChange(event.target.value)}
+              onBlur={field.onBlur}
+            />
+          </FormControl>
+          <Hint>{hint}</Hint>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
 
-interface SelectControlProps<Values extends FieldValues> extends BaseProps<Values> {
+interface TimeZoneFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
   hint?: string;
   options: readonly string[];
 }
 
 // The time-zone picker: a searchable list, because the list is long and a typed name is easy to get wrong.
-export function SelectControl<Values extends FieldValues>({
+export function TimeZoneField<V extends FieldValues, O extends FieldValues>({
   control,
   name,
-  id,
   label,
   hint,
   options,
-}: SelectControlProps<Values>) {
-  const { field, fieldState } = useController({ control, name });
-  const hintId = `${id}-hint`;
-  const errorId = `${id}-error`;
-  const describedBy = [hint ? hintId : null, fieldState.error ? errorId : null]
-    .filter(Boolean)
-    .join(' ');
-
+  className,
+}: TimeZoneFieldProps<V, O>) {
   return (
-    <Field data-invalid={fieldState.invalid}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <TimeZoneCombobox
-        id={id}
-        value={asValue<string>(field.value)}
-        onChange={field.onChange}
-        onBlur={field.onBlur}
-        options={options}
-        invalid={fieldState.invalid}
-        aria-describedby={describedBy || undefined}
-      />
-      {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
-      <div className="min-h-5">
-        <FieldError id={errorId} errors={[fieldState.error]} />
-      </div>
-    </Field>
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className}>
+          <ItemLabel>{label}</ItemLabel>
+          <FormControl>
+            <TimeZoneComboboxFor
+              value={asValue<string>(field.value)}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={options}
+            />
+          </FormControl>
+          <Hint>{hint}</Hint>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
 
-interface NumberControlProps<Values extends FieldValues> extends BaseProps<Values> {
+/** The label of a control that has no floating label of its own; it points at the item's control id. */
+function ItemLabel({ children }: { children: ReactNode }) {
+  const ids = useItemIds();
+  return <FieldLabel htmlFor={ids?.id}>{children}</FieldLabel>;
+}
+
+/** FormControl clones `id` and the aria props onto its child; this passes them on to the combobox. */
+function TimeZoneComboboxFor({
+  id,
+  'aria-invalid': invalid,
+  ...props
+}: {
+  id?: string;
+  'aria-invalid'?: boolean;
+  value: string;
+  onChange: (zone: string) => void;
+  onBlur: () => void;
+  options: readonly string[];
+  'aria-describedby'?: string;
+}) {
+  return <TimeZoneCombobox id={id ?? ''} invalid={invalid} {...props} />;
+}
+
+interface NumberFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
   required?: boolean;
   unit?: string;
+  /** Digits after the point the box accepts (0 = whole numbers). */
+  decimals?: 0 | 1 | 2;
+  allowNegative?: boolean;
+  hint?: string;
 }
 
-/** Whole or decimal numbers typed as text; the form's resolver turns the text into a number. */
-export function NumberControl<Values extends FieldValues>({
+/** A number typed as text; the schema turns the text into a number. */
+export function NumberField<V extends FieldValues, O extends FieldValues>({
   control,
   name,
-  id,
   label,
   required,
   unit,
-}: NumberControlProps<Values>) {
-  const { field, fieldState } = useController({ control, name });
+  decimals = 0,
+  allowNegative,
+  hint,
+  className,
+}: NumberFieldProps<V, O>) {
   return (
-    <NumberField
-      id={id}
-      label={label}
-      required={required}
-      unit={unit}
-      value={asValue<string>(field.value)}
-      onChange={field.onChange}
-      onBlur={field.onBlur}
-      error={fieldState.error?.message}
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className}>
+          <FormControl>
+            <NumberInput
+              name={field.name}
+              ref={field.ref}
+              label={label}
+              required={required}
+              unit={unit}
+              decimals={decimals}
+              allowNegative={allowNegative}
+              value={asValue<string | null>(field.value) ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+            />
+          </FormControl>
+          <Hint>{hint}</Hint>
+          <FormMessage />
+        </FormItem>
+      )}
     />
   );
 }
 
-interface DurationControlProps<Values extends FieldValues> extends BaseProps<Values> {
+interface DurationFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
 }
 
-/** Minutes and seconds in two boxes; the form keeps whole seconds as text ("" = empty). */
-export function DurationControl<Values extends FieldValues>({
+const split = (text: string) => {
+  const seconds = Number(text);
+  if (text === '' || !Number.isFinite(seconds)) return { min: '', sec: '' };
+  return { min: String(Math.floor(seconds / 60)), sec: String(seconds % 60) };
+};
+
+/** Minutes and seconds in two boxes under one label; the form keeps whole seconds as text ("" = empty). */
+export function DurationField<V extends FieldValues, O extends FieldValues>({
   control,
   name,
-  id,
   label,
-}: DurationControlProps<Values>) {
-  const { field, fieldState } = useController({ control, name });
-  const text = asValue<string>(field.value);
-  const seconds = text === '' ? null : Number(text);
+  className,
+}: DurationFieldProps<V, O>) {
   return (
-    <DurationField
-      id={id}
-      label={label}
-      value={seconds !== null && Number.isFinite(seconds) ? seconds : null}
-      onChange={(next) => field.onChange(next === null ? '' : String(next))}
-      onBlur={field.onBlur}
-      error={fieldState.error?.message}
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FormItem className={className}>
+          <FormControl>
+            <DurationInput
+              label={label}
+              value={split(asValue<string | null>(field.value) ?? '')}
+              aria-invalid={fieldState.invalid}
+              onChange={({ min, sec }) =>
+                field.onChange(
+                  min === '' && sec === '' ? '' : String(Number(min) * 60 + Number(sec)),
+                )
+              }
+              onBlur={field.onBlur}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
     />
   );
 }
 
-interface ChipsControlProps<Values extends FieldValues, Choice extends string>
-  extends Omit<BaseProps<Values>, 'id'> {
+interface ChipsFieldProps<V extends FieldValues, O extends FieldValues, Choice extends string>
+  extends BaseProps<V, O> {
   legend: string;
   hideLegend?: boolean;
   required?: boolean;
   options: readonly { value: Choice; label: string }[];
   /** Runs after the form value changed (for example to clear a field that no longer applies). */
   onPick?: (value: Choice) => void;
+  /** Turn the stored value into the chip's text, and the chip's text back (for stored numbers). */
+  toChip?: (value: unknown) => Choice | null;
+  fromChip?: (value: Choice) => unknown;
 }
 
-export function ChipsControl<Values extends FieldValues, Choice extends string>({
+export function ChipsField<V extends FieldValues, O extends FieldValues, Choice extends string>({
   control,
   name,
   legend,
@@ -205,52 +257,94 @@ export function ChipsControl<Values extends FieldValues, Choice extends string>(
   required,
   options,
   onPick,
-}: ChipsControlProps<Values, Choice>) {
-  const { field, fieldState } = useController({ control, name });
+  toChip,
+  fromChip,
+  className,
+}: ChipsFieldProps<V, O, Choice>) {
   return (
-    <ChoiceChips
-      legend={legend}
-      hideLegend={hideLegend}
-      required={required}
-      options={options}
-      value={asValue<Choice | null>(field.value)}
-      onChange={(value) => {
-        field.onChange(value as PathValue<Values, Path<Values>>);
-        onPick?.(value);
-      }}
-      error={fieldState.error?.message}
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FormItem className={className}>
+          <ChoiceChips
+            legend={legend}
+            hideLegend={hideLegend}
+            required={required}
+            options={options}
+            value={toChip ? toChip(field.value) : asValue<Choice | null>(field.value)}
+            onChange={(value) => {
+              field.onChange(fromChip ? fromChip(value) : value);
+              onPick?.(value);
+            }}
+            error={fieldState.error?.message}
+          />
+        </FormItem>
+      )}
     />
   );
 }
 
-interface SwitchControlProps<Values extends FieldValues> extends BaseProps<Values> {
+interface SwitchFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
   hint?: string;
 }
 
 /** The On/Off switch of an assessment or a measurement (BR-REC-66: off, never deleted). */
-export function SwitchControl<Values extends FieldValues>({
+export function SwitchField<V extends FieldValues, O extends FieldValues>({
   control,
   name,
-  id,
   label,
   hint,
-}: SwitchControlProps<Values>) {
-  const { field } = useController({ control, name });
-  const hintId = `${id}-hint`;
+  className,
+}: SwitchFieldProps<V, O>) {
   return (
-    <Field orientation="horizontal" className="min-h-12 items-center justify-between">
+    <FormField
+      control={asControl(control)}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className ?? 'col-span-full'}>
+          <SwitchRow
+            label={label}
+            hint={hint}
+            checked={asValue<boolean>(field.value)}
+            onChange={field.onChange}
+            name={field.name}
+          />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function SwitchRow({
+  label,
+  hint,
+  checked,
+  onChange,
+  name,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  name: string;
+}) {
+  const ids = useItemIds();
+  const hintId = `${ids?.id}-hint`;
+  return (
+    <div className="flex min-h-12 items-center justify-between gap-3">
       <FieldContent>
-        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        <FieldLabel htmlFor={ids?.id}>{label}</FieldLabel>
         {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
       </FieldContent>
       <Switch
-        id={id}
-        name={field.name}
-        checked={asValue<boolean>(field.value)}
-        onCheckedChange={(checked) => field.onChange(checked)}
+        id={ids?.id}
+        name={name}
+        checked={checked}
+        onCheckedChange={(next) => onChange(next)}
         aria-describedby={hint ? hintId : undefined}
       />
-    </Field>
+    </div>
   );
 }

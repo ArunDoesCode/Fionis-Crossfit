@@ -48,6 +48,8 @@ export interface ResponsiveSheetProps {
   alert?: boolean;
   /** Phone/desktop Back closes the sheet (BR-REC-138). Off only when the caller already owns the history. */
   backToClose?: boolean;
+  /** Extra classes for the desktop dialog only (e.g. `sm:max-w-2xl` for a two-column form). */
+  desktopClassName?: string;
   children?: React.ReactNode;
 }
 
@@ -67,6 +69,7 @@ export default function ResponsiveSheet({
   footer,
   alert = false,
   backToClose = true,
+  desktopClassName,
   children,
 }: ResponsiveSheetProps) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
@@ -92,7 +95,10 @@ export default function ResponsiveSheet({
       </AlertDialog>
     ) : (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent showCloseButton={false} className={DESKTOP_POPUP}>
+        <DialogContent
+          showCloseButton={false}
+          className={desktopClassName ? `${DESKTOP_POPUP} ${desktopClassName}` : DESKTOP_POPUP}
+        >
           <DialogHeader>
             <DialogTitle className="pr-12 text-lg">{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}

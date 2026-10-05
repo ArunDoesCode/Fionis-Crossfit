@@ -1,10 +1,12 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useId, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { focusFirstProblem } from '@/components/pages/setup/focusFirstProblem';
-import MeasurementFields, { measurementFieldIds } from '@/components/pages/setup/MeasurementFields';
+import type { z } from 'zod';
+import { FormErrorSummary, focusField, useFocusFirstProblem } from '@/components/common/form';
+import MeasurementFields from '@/components/pages/setup/MeasurementFields';
 import SetupSheet from '@/components/pages/setup/SetupSheet';
 import { isApiError } from '@/lib/api/errors';
 import type { Metric, UpdateMetricBody } from '@/lib/api/setup/fetchers';
@@ -16,14 +18,11 @@ import {
   intervalChangeNeedsConfirm,
 } from '@/lib/setup/describe';
 import {
-  type MeasurementFormValues,
-  measurementToInput,
   metricCreateBody,
   metricToValues,
   metricUpdateBody,
   newMeasurementValues,
-  parseMeasurement,
-  schemaResolver,
+  withTimeDefaults,
 } from '@/lib/setup/form';
 import { SETUP_TEXT } from '@/lib/setup/text';
 import { measurementFormSchema } from '@/lib/validators/setup';
@@ -45,6 +44,15 @@ const FIELD_ORDER = [
   'intervalCount',
   'tableGroup',
 ] as const;
+
+const LABELS = {
+  name: SETUP_TEXT.measurementSheet.name,
+  unit: SETUP_TEXT.measurementSheet.unit,
+  plausibleMin: SETUP_TEXT.measurementSheet.pleaseCheckBelow,
+  plausibleMax: SETUP_TEXT.measurementSheet.pleaseCheckAbove,
+  intervalCount: SETUP_TEXT.measurementSheet.ownRepeatNumber,
+  tableGroup: SETUP_TEXT.measurementSheet.group,
+};
 
 interface Waiting {
   body: UpdateMetricBody;
@@ -69,8 +77,13 @@ export default function MeasurementSheet({
   const create = useCreateMetric();
   const update = useUpdateMetric();
   const [waiting, setWaiting] = useState<Waiting | null>(null);
-  const form = useForm<MeasurementFormValues>({
-    resolver: schemaResolver(measurementFormSchema, measurementToInput),
+  const focusFirst = useFocusFirstProblem(FIELD_ORDER);
+  const form = useForm<
+    z.input<typeof measurementFormSchema>,
+    unknown,
+    z.output<typeof measurementFormSchema>
+  >({
+    resolver: zodResolver(measurementFormSchema),
     mode: 'onBlur',
     shouldFocusError: false,
     defaultValues: measurement ? metricToValues(measurement) : newMeasurementValues(),
@@ -80,7 +93,7 @@ export default function MeasurementSheet({
   const showNameTaken = (err: unknown) => {
     if (isApiError(err) && err.code === 'NAME_TAKEN') {
       form.setError('name', { message: messageForCode(err.code) });
-      document.getElementById(measurementFieldIds(formId, false).name)?.focus();
+      focusField('name');
     }
   };
 
@@ -99,10 +112,10 @@ export default function MeasurementSheet({
     );
   };
 
-  const onValid = (values: MeasurementFormValues) => {
+  const onValid = (checked: z.output<typeof measurementFormSchema>) => {
     // A second Enter can arrive before Save turns off: one try, one request.
     if (saving) return;
-    const input = parseMeasurement(values);
+    const input = withTimeDefaults(checked);
     if (!measurement) {
       create.mutate(
         { typeId, body: metricCreateBody(input) },
@@ -141,21 +154,17 @@ export default function MeasurementSheet({
       formId={formId}
       saving={saving}
       confirm={confirm}
+      wide
     >
-      <form
-        id={formId}
-        noValidate
-        onSubmit={form.handleSubmit(onValid, (errors) =>
-          focusFirstProblem(
-            errors,
-            FIELD_ORDER,
-            measurementFieldIds(formId, form.getValues('datatype') === 'duration'),
-          ),
-        )}
-      >
+      <form id={formId} noValidate onSubmit={form.handleSubmit(onValid, focusFirst)}>
+        <FormErrorSummary
+          errors={form.formState.errors}
+          order={FIELD_ORDER}
+          labels={LABELS}
+          className="mb-2 rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm"
+        />
         <MeasurementFields
           form={form}
-          base={formId}
           locked={measurement?.hasValues ?? false}
           isEdit={measurement !== null}
         />

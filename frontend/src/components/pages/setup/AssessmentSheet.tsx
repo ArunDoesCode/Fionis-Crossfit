@@ -1,32 +1,26 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useId, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useForm } from 'react-hook-form';
+import type { z } from 'zod';
+import { FormGrid, focusField, useFocusFirstProblem } from '@/components/common/form';
 import {
-  ChipsControl,
-  NumberControl,
-  SwitchControl,
-  TextControl,
+  ChipsField,
+  NumberField,
+  SwitchField,
+  TextField,
 } from '@/components/pages/setup/FormControls';
-import { focusFirstProblem } from '@/components/pages/setup/focusFirstProblem';
 import SetupSheet from '@/components/pages/setup/SetupSheet';
 import { isApiError } from '@/lib/api/errors';
 import type { AssessmentType, UpdateAssessmentTypeBody } from '@/lib/api/setup/fetchers';
 import { useCreateAssessmentType, useUpdateAssessmentType } from '@/lib/api/setup/queries';
 import { messageForCode } from '@/lib/messages/errors';
 import { confirmCopy, intervalChangeNeedsConfirm } from '@/lib/setup/describe';
-import {
-  type AssessmentFormValues,
-  assessmentToInput,
-  assessmentToValues,
-  assessmentUpdateBody,
-  newAssessmentValues,
-  parseAssessment,
-  schemaResolver,
-} from '@/lib/setup/form';
+import { assessmentToValues, assessmentUpdateBody, newAssessmentValues } from '@/lib/setup/form';
 import { SETUP_TEXT } from '@/lib/setup/text';
-import { assessmentFormSchema } from '@/lib/validators/setup';
+import { assessmentSheetSchema } from '@/lib/validators/setup';
 
 interface AssessmentSheetProps {
   /** The assessment being edited, or `null` to add a new one. */
@@ -44,6 +38,8 @@ const UNIT_OPTIONS = [
 
 const FIELD_ORDER = ['name', 'intervalCount'] as const;
 
+type Output = z.output<typeof assessmentSheetSchema>;
+
 // Add / edit an assessment (BR-REC-13, 61, 66, 70): name, repeat number + unit, and (when editing) the On
 // switch. A changed repeat asks "This changes due dates for all members" first (BR-REC-70, 133), as a
 // second step inside this same sheet (SetupSheet). A name that is already used is said next to the Name
@@ -51,17 +47,13 @@ const FIELD_ORDER = ['name', 'intervalCount'] as const;
 // dialog on desktop (BR-REC-138).
 export default function AssessmentSheet({ assessment, open, onOpenChange }: AssessmentSheetProps) {
   const formId = useId();
-  const ids = {
-    name: `${formId}-name`,
-    intervalCount: `${formId}-count`,
-    isActive: `${formId}-on`,
-  };
+  const focusFirst = useFocusFirstProblem(FIELD_ORDER);
   const create = useCreateAssessmentType();
   const update = useUpdateAssessmentType();
   // The changes waiting for the repeat confirmation; `null` when no question is open.
   const [waiting, setWaiting] = useState<UpdateAssessmentTypeBody | null>(null);
-  const form = useForm<AssessmentFormValues>({
-    resolver: schemaResolver(assessmentFormSchema, assessmentToInput),
+  const form = useForm<z.input<typeof assessmentSheetSchema>, unknown, Output>({
+    resolver: zodResolver(assessmentSheetSchema),
     mode: 'onBlur',
     shouldFocusError: false,
     defaultValues: assessment ? assessmentToValues(assessment) : newAssessmentValues(),
@@ -71,7 +63,7 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
   const showNameTaken = (err: unknown) => {
     if (isApiError(err) && err.code === 'NAME_TAKEN') {
       form.setError('name', { message: messageForCode(err.code) });
-      document.getElementById(ids.name)?.focus();
+      focusField('name');
     }
   };
 
@@ -90,15 +82,14 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
     );
   };
 
-  const onValid = (values: AssessmentFormValues) => {
+  const onValid = ({ isActive, ...input }: Output) => {
     // A second Enter can arrive before Save turns off: one try, one request.
     if (saving) return;
-    const input = parseAssessment(values);
     if (!assessment) {
       create.mutate(input, { onSuccess: () => onOpenChange(false), onError: showNameTaken });
       return;
     }
-    const body = assessmentUpdateBody(assessment, input, form.getValues('isActive'));
+    const body = assessmentUpdateBody(assessment, input, isActive);
     if (Object.keys(body).length === 0) {
       onOpenChange(false);
       return;
@@ -125,41 +116,36 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
       formId={formId}
       saving={saving}
       confirm={confirm}
+      wide
     >
-      <form
-        id={formId}
-        noValidate
-        onSubmit={form.handleSubmit(onValid, (errors) =>
-          focusFirstProblem(errors, FIELD_ORDER, ids),
-        )}
-        className="flex flex-col gap-2"
-      >
-        <TextControl control={form.control} name="name" id={ids.name} label={text.name} required />
-        <div className="flex flex-col gap-2">
-          <NumberControl
-            control={form.control}
-            name="intervalCount"
-            id={ids.intervalCount}
-            label={text.repeatEvery}
-            required
-          />
-          <ChipsControl
-            control={form.control}
-            name="intervalUnit"
-            legend={text.weeksOrMonths}
-            hideLegend
-            options={UNIT_OPTIONS}
-          />
-        </div>
-        {assessment && (
-          <SwitchControl
-            control={form.control}
-            name="isActive"
-            id={ids.isActive}
-            label={text.on}
-            hint={text.onHint}
-          />
-        )}
+      <form id={formId} noValidate onSubmit={form.handleSubmit(onValid, focusFirst)}>
+        <FormGrid maxCols={2}>
+          <TextField control={form.control} name="name" label={text.name} required />
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+            <NumberField
+              control={form.control}
+              name="intervalCount"
+              label={text.repeatEvery}
+              required
+            />
+            <ChipsField
+              control={form.control}
+              name="intervalUnit"
+              legend={text.weeksOrMonths}
+              hideLegend
+              options={UNIT_OPTIONS}
+              className="min-h-0 pt-0"
+            />
+          </div>
+          {assessment && (
+            <SwitchField
+              control={form.control}
+              name="isActive"
+              label={text.on}
+              hint={text.onHint}
+            />
+          )}
+        </FormGrid>
       </form>
     </SetupSheet>
   );
