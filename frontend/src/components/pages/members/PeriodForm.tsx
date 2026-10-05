@@ -2,15 +2,19 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { focusFirstProblem } from '@/components/pages/members/focusFirstProblem';
+import { useForm, useWatch } from 'react-hook-form';
+import { FormGrid, focusField, useFocusFirstProblem } from '@/components/common/form';
 import MembershipFields from '@/components/pages/members/MembershipFields';
-import { asPeriodControl } from '@/components/pages/members/memberFormControl';
-import RestoreNote from '@/components/pages/members/RestoreNote';
+import {
+  asPeriodControl,
+  type PeriodFormControl,
+} from '@/components/pages/members/memberFormControl';
 import { type PeriodJob, useSavePeriod } from '@/lib/api/members/queries';
+import type { IsoDate } from '@/lib/domain/dates';
 import { changedPeriodFields } from '@/lib/members/changes';
+import { MEMBER_FORM_ORDER } from '@/lib/members/formFields';
 import { newIdempotencyKey } from '@/lib/members/idempotencyKey';
-import { renewDefaults, renewRestoresMember } from '@/lib/members/renew';
+import { entryEnd, renewDefaults, renewRestoresMember } from '@/lib/members/renew';
 import { periodFieldError } from '@/lib/members/serverErrors';
 import type { MemberDetail, MemberPeriod } from '@/lib/members/types';
 import { useToday } from '@/lib/members/useToday';
@@ -19,6 +23,32 @@ import {
   type PeriodFormValues,
   periodFormSchema,
 } from '@/lib/validators/members';
+
+// BR-REC-58 (Q7 = B): saving a membership that covers today brings an archived member back to the list.
+// The sheet says so before the trainer taps Renew; an old binder entry (all in the past) or a later start
+// never does, and then the line is not shown. It is only drawn for an archived member. `verb` is
+// "Renewing" on the Renew sheet, "Saving" on Edit membership.
+function RestoreNote({
+  control,
+  fullName,
+  today,
+  verb,
+}: {
+  control: PeriodFormControl;
+  fullName: string;
+  today: IsoDate;
+  verb: 'Renewing' | 'Saving';
+}) {
+  const [plan, startOn] = useWatch({ control, name: ['plan', 'startOn'] });
+  const end = entryEnd(plan, startOn);
+  const restores = end !== null && renewRestoresMember(true, { startOn, endOn: end }, today);
+
+  return (
+    <p aria-live="polite" className="col-span-full min-h-6 text-base font-medium">
+      {restores && `${verb} brings ${fullName} back to the list.`}
+    </p>
+  );
+}
 
 interface PeriodFormProps {
   /** The sheet's footer button submits this form. */
@@ -38,12 +68,14 @@ export default function PeriodForm({ formId, member, period, onDone }: PeriodFor
   const today = useToday();
   const form = useForm<PeriodFormInput, unknown, PeriodFormValues>({
     resolver: zodResolver(periodFormSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: period
       ? { plan: period.plan, startOn: period.startOn }
       : renewDefaults(member.periods),
   });
+  const focusFirst = useFocusFirstProblem(MEMBER_FORM_ORDER);
   const { mutate } = useSavePeriod(member);
   const inFlight = useRef(false);
   // Same rule as Add member (BR-REC-156): tapping Renew again with the same details after a lost answer
@@ -61,7 +93,7 @@ export default function PeriodForm({ formId, member, period, onDone }: PeriodFor
       }
       return { kind: 'renew', body: values, idempotencyKey: attempt.current.key };
     }
-    // Only what changed is sent (E23). The API refuses an empty change, so when nothing changed there is
+    // Only what changed is sent (E23). The API refuses an empty change, so with no change there is
     // nothing to save, except that saving a period that covers today still brings an archived member back
     // (BR-REC-58): that one is sent whole.
     const changes = changedPeriodFields(values, period);
@@ -89,7 +121,7 @@ export default function PeriodForm({ formId, member, period, onDone }: PeriodFor
         const problem = periodFieldError(err);
         if (!problem) return;
         form.setError(problem.field, { message: problem.message });
-        focusFirstProblem(formId, { [problem.field]: true });
+        focusField(problem.field);
       },
     });
   };
@@ -98,18 +130,20 @@ export default function PeriodForm({ formId, member, period, onDone }: PeriodFor
     <form
       id={formId}
       noValidate
-      onSubmit={form.handleSubmit(onSubmit, (errors) => focusFirstProblem(formId, errors))}
+      onSubmit={form.handleSubmit(onSubmit, focusFirst)}
       className="flex flex-col gap-4"
     >
-      <MembershipFields formId={formId} control={asPeriodControl(form.control)} />
-      {archived && (
-        <RestoreNote
-          control={asPeriodControl(form.control)}
-          fullName={member.fullName}
-          today={today}
-          verb={period ? 'Saving' : 'Renewing'}
-        />
-      )}
+      <FormGrid maxCols={2}>
+        <MembershipFields control={asPeriodControl(form.control)} />
+        {archived && (
+          <RestoreNote
+            control={asPeriodControl(form.control)}
+            fullName={member.fullName}
+            today={today}
+            verb={period ? 'Saving' : 'Renewing'}
+          />
+        )}
+      </FormGrid>
     </form>
   );
 }

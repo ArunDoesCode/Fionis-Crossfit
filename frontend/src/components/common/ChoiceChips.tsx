@@ -1,7 +1,7 @@
 'use client';
 
+import { ChipGroup } from '@/components/common/form/ChipGroup';
 import { FieldLegend, FieldSet } from '@/components/ui/field';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 interface ChoiceChipsProps<T extends string> {
@@ -35,29 +35,11 @@ export default function ChoiceChips<T extends string>({
 }: ChoiceChipsProps<T>) {
   return (
     <FieldSet className={cn('gap-2', className)}>
-      <FieldLegend variant="label" className={cn('mb-0', hideLegend && 'sr-only')}>
+      <FieldLegend variant="label" className={hideLegend ? 'mb-0 sr-only' : 'mb-0'}>
         {legend}
         {required && <span className="text-destructive"> *</span>}
       </FieldLegend>
-      <ToggleGroup
-        value={value === null ? [] : [value]}
-        onValueChange={(next) => {
-          const chosen = options.find((option) => option.value === next[0]);
-          if (chosen) onChange(chosen.value);
-        }}
-        className="flex-wrap"
-      >
-        {options.map((option) => (
-          <ToggleGroupItem
-            key={option.value}
-            value={option.value}
-            variant="outline"
-            className="min-h-11 min-w-11 rounded-full px-4 text-base aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground"
-          >
-            {option.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <ChipGroup options={options} value={value} onChange={onChange} />
       <p role={error ? 'alert' : undefined} className="min-h-5 text-sm text-destructive">
         {error}
       </p>

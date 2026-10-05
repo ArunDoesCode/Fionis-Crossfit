@@ -1,6 +1,5 @@
 'use client';
 
-import { Drawer } from '@base-ui/react/drawer';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useCallback } from 'react';
@@ -20,6 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { useBackToClose } from '@/lib/hooks/useBackToClose';
 import { DESKTOP_QUERY, useMediaQuery } from '@/lib/hooks/useMediaQuery';
 import { UI_TEXT } from '@/lib/messages/words';
@@ -40,10 +46,18 @@ export interface ResponsiveSheetProps {
    * swipe-down, not by tapping outside.
    */
   alert?: boolean;
+  /** Phone/desktop Back closes the sheet (BR-REC-138). Off only when the caller already owns the history. */
+  backToClose?: boolean;
+  /** Extra classes for the desktop dialog only (e.g. `sm:max-w-2xl` for a two-column form). */
+  desktopClassName?: string;
   children?: React.ReactNode;
 }
 
-const FOOTER = 'mt-6 flex flex-col-reverse gap-2 *:h-12 lg:flex-row lg:justify-end lg:*:w-auto';
+const FOOTER =
+  'flex flex-col-reverse gap-2 *:h-[var(--control-height)] lg:flex-row lg:justify-end lg:*:w-auto';
+
+// Desktop: header, body and footer are grid rows; only the body scrolls, so the buttons stay in view (#18).
+const DESKTOP_POPUP = 'max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]';
 
 // BR-REC-138: short choices open as a bottom sheet on phones (swipe down or Back closes it) and as a
 // centred dialog from 1024 px. Same props either way. Both are loaded with the screen that uses them.
@@ -54,22 +68,24 @@ export default function ResponsiveSheet({
   description,
   footer,
   alert = false,
+  backToClose = true,
+  desktopClassName,
   children,
 }: ResponsiveSheetProps) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  useBackToClose(open, close);
+  useBackToClose(open && backToClose, close);
 
   if (isDesktop) {
     const body = (
       <>
-        {children}
+        <div className="min-h-0 overflow-y-auto">{children}</div>
         {footer && <div className={FOOTER}>{footer}</div>}
       </>
     );
     return alert ? (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={DESKTOP_POPUP}>
           <AlertDialogHeader>
             <AlertDialogTitle>{title}</AlertDialogTitle>
             {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
@@ -79,7 +95,10 @@ export default function ResponsiveSheet({
       </AlertDialog>
     ) : (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent
+          showCloseButton={false}
+          className={desktopClassName ? `${DESKTOP_POPUP} ${desktopClassName}` : DESKTOP_POPUP}
+        >
           <DialogHeader>
             <DialogTitle className="pr-12 text-lg">{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
@@ -91,7 +110,7 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="absolute top-3 right-3 size-11"
+                className="absolute top-3 right-3 size-[var(--control-height)]"
               />
             }
           >
@@ -103,50 +122,41 @@ export default function ResponsiveSheet({
   }
 
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange} disablePointerDismissal={alert}>
-      <Drawer.Portal>
-        <Drawer.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/60 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute" />
-        <Drawer.Viewport className="fixed inset-0 z-50 flex items-end justify-center">
-          <Drawer.Popup
-            data-slot="responsive-sheet"
-            {...(alert ? { role: 'alertdialog' as const } : {})}
-            className="-mb-12 max-h-[calc(85dvh+3rem)] w-full touch-auto overflow-y-auto overscroll-contain rounded-t-3xl border-t bg-popover px-6 pt-3 pb-[calc(1.5rem+3rem+env(safe-area-inset-bottom,0px))] text-popover-foreground shadow-lg outline-none transition-transform duration-150 ease-out [transform:translateY(var(--drawer-swipe-movement-y))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*150ms)] data-ending-style:[transform:translateY(calc(100%-3rem+2px))] data-starting-style:[transform:translateY(calc(100%-3rem+2px))] data-swiping:select-none"
+    <Drawer open={open} onOpenChange={onOpenChange} disablePointerDismissal={alert} showSwipeHandle>
+      <DrawerContent
+        data-slot="responsive-sheet"
+        {...(alert ? { role: 'alertdialog' as const } : {})}
+        className="m-0 rounded-t-3xl rounded-b-none"
+      >
+        <div className="flex items-start gap-2 px-6 pt-2">
+          <div className="min-w-0 flex-1">
+            <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
+            {description && <DrawerDescription className="mt-1">{description}</DrawerDescription>}
+          </div>
+          <DrawerClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={UI_TEXT.close}
+                className="-mr-2 size-[var(--control-height)] shrink-0"
+              />
+            }
           >
-            <div
-              aria-hidden="true"
-              className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted-foreground/40"
-            />
-            <Drawer.Content className="mx-auto w-full max-w-[32rem]">
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <Drawer.Title className="font-heading text-lg font-semibold">
-                    {title}
-                  </Drawer.Title>
-                  {description && (
-                    <Drawer.Description className="mt-1 text-sm text-muted-foreground">
-                      {description}
-                    </Drawer.Description>
-                  )}
-                </div>
-                <Drawer.Close
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={UI_TEXT.close}
-                      className="-mt-1 -mr-2 size-11 shrink-0"
-                    />
-                  }
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5" />
-                </Drawer.Close>
-              </div>
-              <div className="mt-4">{children}</div>
-              {footer && <div className={FOOTER}>{footer}</div>}
-            </Drawer.Content>
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5" />
+          </DrawerClose>
+        </div>
+        <div className="mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto px-6 pt-4">
+          {children}
+        </div>
+        {footer && (
+          <div
+            className={`${FOOTER} mx-auto w-full max-w-lg px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`}
+          >
+            {footer}
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
   );
 }

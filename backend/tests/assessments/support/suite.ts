@@ -60,6 +60,8 @@ export type FormMetric = {
   plausibleMin: number | null;
   plausibleMax: number | null;
   previous: { value: number; on: IsoDate; isEstimated: boolean } | null;
+  tableGroup: string | null;
+  tablePart: "whole_body" | "arms" | "trunk" | "legs" | null;
 };
 export type EntryForm = {
   member: { id: string; fullName: string; joinedOn: IsoDate };
@@ -174,6 +176,8 @@ export type MetricSeed = {
   plausibleMax?: number | null;
   isActive?: boolean;
   sortOrder?: number;
+  tableGroup?: string | null;
+  tablePart?: "whole_body" | "arms" | "trunk" | "legs" | null;
 };
 export type SeededMetric = {
   id: string;
@@ -459,6 +463,8 @@ export function useAssessmentsSuite() {
             plausibleMax: seed.plausibleMax ?? null,
             isActive: seed.isActive ?? true,
             sortOrder: seed.sortOrder ?? order,
+            tableGroup: seed.tableGroup ?? null,
+            tablePart: seed.tablePart ?? null,
           })
           .returning({
             id: metrics.id,

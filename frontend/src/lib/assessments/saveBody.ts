@@ -1,4 +1,4 @@
-import { parseNumberText } from './parseNumber';
+import { parseNumberText } from '@/lib/forms/numberText';
 import { ASSESSMENT_TEXT } from './text';
 import type { Decimals } from './types';
 

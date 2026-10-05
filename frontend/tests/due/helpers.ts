@@ -7,7 +7,7 @@
 export const TODAY = '2026-10-03';
 
 export type IsoDate = string;
-export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral';
+export type StatusTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 export type DueTab = 'overdue' | 'soon';
 export type DueListStatus = 'overdue' | 'upcoming';
 

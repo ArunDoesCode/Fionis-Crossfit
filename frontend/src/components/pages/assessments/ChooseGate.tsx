@@ -4,7 +4,7 @@ import { useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import PageHeader from '@/components/common/PageHeader';
-import { ChooseAssessmentSheetLazy } from '@/components/pages/assessments/LazySheets';
+import { ChooseAssessmentSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { useMemberDue } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
@@ -14,7 +14,6 @@ import { afterHistorySettles } from '@/lib/assessments/leave';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import { useLeaveGuard } from '@/lib/assessments/useLeaveGuard';
 import { messageForCode } from '@/lib/messages/errors';
-import { UI_TEXT } from '@/lib/messages/words';
 
 interface ChooseGateProps {
   memberId: string;
@@ -45,11 +44,7 @@ export default function ChooseGate({ memberId, today, onPick }: ChooseGateProps)
 
   return (
     <>
-      <PageHeader
-        title={UI_TEXT.screens.recordAssessment}
-        subtitle={member.data?.fullName}
-        backHref={memberHref}
-      />
+      <PageHeader subtitle={member.data?.fullName} />
       {member.isError ? (
         <ErrorState
           message={missing ? messageForCode('NOT_FOUND') : undefined}
@@ -66,7 +61,7 @@ export default function ChooseGate({ memberId, today, onPick }: ChooseGateProps)
         />
       )}
       {!member.isError && (
-        <ChooseAssessmentSheetLazy
+        <ChooseAssessmentSheet
           open={open}
           onOpenChange={setOpen}
           firstName={firstName}

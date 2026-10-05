@@ -7,7 +7,7 @@ type Stored = Pick<
 
 /**
  * What an Edit member save sends (E19): only the fields that differ from what is stored, so a save
- * never touches what the trainer did not change. Empty = nothing changed (no request needed).
+ * never touches what the trainer did not change. Empty = no change (no request needed).
  * `values` are the cleaned form values; optional fields are `null` when empty and `null` clears one.
  */
 export function changedMemberFields(
@@ -38,7 +38,7 @@ export function changedMemberFields(
 
 /**
  * What an Edit membership save sends (E23): only the plan and/or start that differ from the stored period.
- * Empty = nothing changed (the API refuses an empty body).
+ * Empty = no change (the API refuses an empty body).
  */
 export function changedPeriodFields(
   values: { plan: MemberPeriod['plan']; startOn: string },

@@ -1,6 +1,5 @@
 import {
   infiniteQueryOptions,
-  keepPreviousData,
   type QueryClient,
   queryOptions,
   useInfiniteQuery,
@@ -17,7 +16,7 @@ import type {
   CreatePeriodBody,
   EndingStatus,
   MemberDetail,
-  MemberStatusFilter,
+  MemberListItem,
   UpdateMemberBody,
   UpdatePeriodBody,
 } from '@/lib/members/types';
@@ -39,20 +38,18 @@ export const MEMBER_PAGE_SIZE = 25;
 /** BR-REC-101: the Home sections show the first 5 rows and link "See all". */
 export const HOME_PREVIEW_SIZE = 5;
 
-export interface MemberListFilters {
-  /** Already checked with `isSearchReady` and trimmed, then `clampSearchText`: 2–100 characters (E16). */
-  q?: string;
-  status?: MemberStatusFilter;
-}
+/** BR-REC-203: the directory loads every member, 100 per request. */
+export const DIRECTORY_PAGE_SIZE = 100;
+/** Above this many members the directory is too big to search in the browser (developer warning). */
+const DIRECTORY_WARN_ABOVE = 1000;
 
 export const memberKeys = {
   all: () => ['members'] as const,
   lists: () => [...memberKeys.all(), 'list'] as const,
-  list: (filters: MemberListFilters) => [...memberKeys.lists(), filters] as const,
+  // Sits under `lists()`: every list refresh after a member, membership or assessment write covers it.
+  directory: () => [...memberKeys.all(), 'list', 'directory'] as const,
   details: () => [...memberKeys.all(), 'detail'] as const,
   detail: (memberId: string) => [...memberKeys.details(), memberId] as const,
-  duplicatesAll: () => [...memberKeys.all(), 'duplicates'] as const,
-  duplicates: (phone: string) => [...memberKeys.duplicatesAll(), phone] as const,
 };
 
 /**
@@ -74,23 +71,34 @@ export const memberMutationKeys = {
   period: (memberId: string) => [...memberKeys.all(), 'period', memberId] as const,
 };
 
+/** BR-REC-203: every member (archived too) loaded once, 100 per request, and searched in the browser. */
+export const memberDirectoryQuery = () =>
+  queryOptions({
+    queryKey: memberKeys.directory(),
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const members: MemberListItem[] = [];
+      let page = 1;
+      let totalPages = 1;
+      while (page <= totalPages) {
+        const res = await listMembers(
+          { status: 'any', page, pageSize: DIRECTORY_PAGE_SIZE },
+          signal,
+        );
+        members.push(...res.data);
+        totalPages = res.meta.totalPages;
+        page += 1;
+      }
+      if (process.env.NODE_ENV !== 'production' && members.length > DIRECTORY_WARN_ABOVE) {
+        console.warn(`Member directory has ${members.length} members: searching them may be slow.`);
+      }
+      return members;
+    },
+  });
+
 export const memberQueries = {
-  list: (filters: MemberListFilters) =>
-    infiniteQueryOptions({
-      queryKey: memberKeys.list(filters),
-      queryFn: ({ pageParam, signal }) =>
-        listMembers({ ...filters, page: pageParam, pageSize: MEMBER_PAGE_SIZE }, signal),
-      initialPageParam: 1,
-      getNextPageParam: ({ meta }) => (meta.page < meta.totalPages ? meta.page + 1 : undefined),
-    }),
   detail: (memberId: string) =>
     queryOptions({ queryKey: memberKeys.detail(memberId), queryFn: () => getMember(memberId) }),
-  /** BR-REC-47: members with the same last 10 digits, archived ones too. `phone` is the cleaned phone. */
-  duplicates: (phone: string) =>
-    queryOptions({
-      queryKey: memberKeys.duplicates(phone),
-      queryFn: ({ signal }) => listMembers({ phone, status: 'any', page: 1, pageSize: 10 }, signal),
-    }),
 };
 
 export const membershipQueries = {
@@ -112,16 +120,8 @@ export const membershipQueries = {
     }),
 };
 
-/**
- * E16 as pages that append ("Show more"). While the filter or search text changes, the old rows stay
- * on screen (`isPlaceholderData`) instead of flashing grey shapes at every keystroke.
- */
-export const useMemberList = (filters: MemberListFilters, enabled = true) =>
-  useInfiniteQuery({
-    ...memberQueries.list(filters),
-    enabled,
-    placeholderData: keepPreviousData,
-  });
+/** The whole member directory (BR-REC-203): Home and Members search it, the phone warning reads it. */
+export const useMemberDirectory = () => useQuery(memberDirectoryQuery());
 
 /**
  * E18: the member page and Edit member read this. The Renew sheet on a list row asks for the member only
@@ -152,9 +152,16 @@ export const useEndingPreview = (status: EndingStatus) =>
  */
 export const useDuplicatePhone = (phone: string | null, selfId?: string) =>
   useQuery({
-    ...memberQueries.duplicates(phone ?? ''),
+    ...memberDirectoryQuery(),
     enabled: phone !== null,
-    select: ({ data }) => duplicatePhoneMatches(data, selfId),
+    select: (directory) => {
+      const last10 = (value: string) => value.replace(/\D/g, '').slice(-10);
+      const wanted = last10(phone ?? '');
+      return duplicatePhoneMatches(
+        directory.filter((member) => last10(member.phone) === wanted),
+        selfId,
+      );
+    },
   });
 
 // A 401 is the global handler's (it opens Login); everything else is one short sentence (BR-REC-128).
@@ -185,7 +192,6 @@ function useRefreshMembers() {
   return (member: MemberDetail) => {
     queryClient.setQueryData(memberKeys.detail(member.id), member);
     void queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
-    void queryClient.invalidateQueries({ queryKey: memberKeys.duplicatesAll() });
     void queryClient.invalidateQueries({ queryKey: membershipKeys.all() });
   };
 }

@@ -3,11 +3,27 @@
 import { useSyncExternalStore } from 'react';
 import { gymToday, type IsoDate } from '@/lib/domain/dates';
 
+// One formatter for the device's own zone, built on first use (BR-REC-211: `gymToday` builds one per call and
+// this runs on every render). Same fields and options as `gymToday` in lib/domain/dates.ts.
+let deviceFormat: Intl.DateTimeFormat | undefined;
+const format = (): Intl.DateTimeFormat =>
+  (deviceFormat ??= new Intl.DateTimeFormat('en-US', {
+    calendar: 'iso8601',
+    numberingSystem: 'latn',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }));
+
 /** The device's time zone (the gym and its phones are in one zone; the server stays authoritative). */
-export const deviceTimeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const deviceTimeZone = (): string => format().resolvedOptions().timeZone;
 
 /** Gym today = the device's calendar day (BR-REC-93, due-list.md). */
-export const gymTodayNow = (): IsoDate => gymToday(new Date(), deviceTimeZone());
+export const gymTodayNow = (): IsoDate => {
+  const parts = format().formatToParts(new Date());
+  const pick = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${pick('year')}-${pick('month')}-${pick('day')}`;
+};
 
 const MINUTE = 60_000;
 

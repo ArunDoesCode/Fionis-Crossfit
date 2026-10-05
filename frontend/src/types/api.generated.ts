@@ -834,6 +834,10 @@ export interface operations {
                                 better: "higher" | "lower" | "none";
                                 plausibleMin: number | null;
                                 plausibleMax: number | null;
+                                /** @description Report table group, e.g. 'Skeletal muscle %'; null = no report place. */
+                                tableGroup: string | null;
+                                /** @description Report table part; null exactly when tableGroup is null. */
+                                tablePart: ("whole_body" | "arms" | "trunk" | "legs") | null;
                                 previous: {
                                     value: number;
                                     on: string;
@@ -2187,6 +2191,8 @@ export interface operations {
                             id: string;
                             fullName: string;
                             phone: string;
+                            /** @description null = no email on file. */
+                            email: string | null;
                             /** @description Latest assessment day; null = never assessed. */
                             lastAssessedOn: string | null;
                             /** @description null = not archived. */

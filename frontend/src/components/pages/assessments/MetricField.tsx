@@ -1,103 +1,157 @@
 'use client';
 
-import type { Dispatch } from 'react';
-import DurationField from '@/components/common/DurationField';
-import NumberField from '@/components/common/NumberField';
-import { ChangeLine, RemovedNote, WarningLine } from '@/components/pages/assessments/FieldLines';
-import type { EntryAction } from '@/lib/assessments/entryState';
+import { Alert02Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  DurationInput,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+  NumberInput,
+} from '@/components/common/form';
+import type { Change } from '@/lib/assessments/change';
+import type { EntryControl } from '@/lib/assessments/entryErrors';
+import { valueName } from '@/lib/assessments/entryErrors';
+import { fieldInput } from '@/lib/assessments/entryValues';
 import { canBeNegative, enterKeyHintFor } from '@/lib/assessments/fieldOptions';
 import { changeFor, previousLine, readField, warningFor } from '@/lib/assessments/fieldView';
-import { fieldDomId } from '@/lib/assessments/focusField';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
-import type { EntryMetric, FieldInput } from '@/lib/assessments/types';
+import { asDecimals, type EntryMetric } from '@/lib/assessments/types';
+
+const ARROWS = { up: '▲', down: '▼' } as const;
+
+/** The live change next to a field: "▼ −1.5 kg better" (BR-REC-81). Never colour alone: arrow + words. */
+function ChangeLine({ change }: { change: Change }) {
+  const tone =
+    change.verdict === 'better' ? 'text-success' : change.verdict === 'worse' ? 'text-warning' : '';
+  return (
+    <span className={`inline-flex items-center gap-1 ${tone}`}>
+      {change.arrow !== 'none' && (
+        <>
+          <span aria-hidden="true">{ARROWS[change.arrow]}</span>
+          <span className="sr-only">
+            {change.arrow === 'up' ? ASSESSMENT_TEXT.up : ASSESSMENT_TEXT.down}
+          </span>
+        </>
+      )}
+      <span>{change.amount}</span>
+      {change.verdict && <span>{change.verdict}</span>}
+    </span>
+  );
+}
+
+/** An emptied saved field says so until Save (BR-REC-77). */
+function RemovedNote() {
+  return <span className="text-warning">{ASSESSMENT_TEXT.willBeRemoved}</span>;
+}
+
+/**
+ * "Please check — last time 8" in the line under a field (BR-REC-21, 82): amber, with an icon and words, never
+ * an error. It takes the place of the "Last …" line inside the field's own height, so it never moves the form;
+ * a field has a warning only when it has a readable value, so it never shares the line with a number error.
+ */
+function WarningLine({ text }: { text: string }) {
+  return (
+    <p role="status" className="flex items-center gap-1.5 text-sm text-warning">
+      <HugeiconsIcon
+        icon={Alert02Icon}
+        strokeWidth={2}
+        aria-hidden="true"
+        className="size-4 shrink-0"
+      />
+      {text}
+    </p>
+  );
+}
 
 interface MetricFieldProps {
-  formId: string;
+  control: EntryControl;
   metric: EntryMetric;
   /** Place in the screen order: the last field's keypad key says "done" (BR-REC-91). */
   index: number;
   count: number;
-  input: FieldInput | undefined;
-  /** The field was left once. */
-  touched: boolean;
-  /** Save was tapped: show every problem (BR-REC-134). */
-  attempted: boolean;
   /** The saved assessment holds a value here: emptying the field removes it (BR-REC-77). */
   hadValue: boolean;
-  /** A Time box is out of range: the field says why itself. */
-  timeProblem: boolean;
-  /** This measurement is due (BR-REC-73). */
-  due: boolean;
   /** The previous values belong to another date until the new ones arrive: hide them. */
   stale: boolean;
+  /** Save was tapped once: "please check" shows on every field, not only on the ones that were left. */
+  submitted: boolean;
   today: string;
-  dispatch: Dispatch<EntryAction>;
 }
 
-// One measurement: label, the box(es), "Last 95.5 kg · 12 Sep" at the left and the live change at the right
-// (BR-REC-20, 81), "Will be removed" for an emptied saved value (BR-REC-77), the number error (BR-REC-76) and
-// "Please check" (BR-REC-82) once the field has been left. Scrolls clear of the sticky header and the bar.
+// One measurement in the owner's format (BR-REC-187): one FormItem with the floating label, the box(es), and
+// one line under them that is the number error (BR-REC-76), else "Please check" (BR-REC-82), else "Last 95.5 kg
+// · 12 Sep" at the left with the live change (BR-REC-81) or "Will be removed" (BR-REC-77) at the right.
 export default function MetricField({
-  formId,
+  control,
   metric,
   index,
   count,
-  input,
-  touched,
-  attempted,
   hadValue,
-  timeProblem,
-  due,
   stale,
+  submitted,
   today,
-  dispatch,
 }: MetricFieldProps) {
-  const id = fieldDomId(formId, metric.id);
-  const reading = readField(metric, input);
-  const showProblems = touched || attempted;
-  const label = due ? `${metric.name} · ${ASSESSMENT_TEXT.due}` : metric.name;
-  const previous = stale ? null : previousLine(metric, today);
-  const change = stale ? null : changeFor(metric, reading.value);
-  const removed = hadValue && reading.blank && !timeProblem;
-  const changeNode = removed ? <RemovedNote /> : change ? <ChangeLine change={change} /> : null;
-  const warning = showProblems && !stale ? warningFor(metric, reading.value) : null;
+  const label = metric.name;
   const enterKeyHint = enterKeyHintFor(index, count);
-  const leave = () => dispatch({ type: 'touch', metricId: metric.id });
-  const className = 'scroll-mt-20 scroll-mb-28';
-
   return (
-    <div className="flex flex-col">
-      {metric.datatype === 'duration' ? (
-        <DurationField
-          id={id}
-          label={label}
-          value={typeof input === 'number' ? input : null}
-          onChange={(seconds, status) =>
-            dispatch({ type: 'time', metricId: metric.id, seconds, status })
-          }
-          onBlur={leave}
-          previous={previous}
-          change={changeNode}
-          enterKeyHint={enterKeyHint}
-          className={className}
-        />
-      ) : (
-        <NumberField
-          id={id}
-          label={label}
-          unit={metric.unit}
-          allowNegative={canBeNegative(metric.plausibleMin)}
-          enterKeyHint={enterKeyHint}
-          value={typeof input === 'string' ? input : ''}
-          onChange={(value) => dispatch({ type: 'input', metricId: metric.id, value })}
-          onBlur={leave}
-          previous={previous}
-          change={changeNode}
-          error={showProblems && reading.invalid ? ASSESSMENT_TEXT.numberError : undefined}
-          className={className}
-        />
-      )}
-      {warning && <WarningLine text={warning} />}
-    </div>
+    <FormField
+      control={control}
+      name={valueName(metric.id)}
+      render={({ field, fieldState }) => {
+        const reading = readField(metric, fieldInput(field.value));
+        const previous = stale ? null : previousLine(metric, today);
+        const change = stale ? null : changeFor(metric, reading.value);
+        const warning =
+          (fieldState.isTouched || submitted) && !stale ? warningFor(metric, reading.value) : null;
+        const right =
+          hadValue && reading.blank ? (
+            <RemovedNote />
+          ) : change ? (
+            <ChangeLine change={change} />
+          ) : null;
+        const text = typeof field.value === 'string' ? field.value : '';
+        const duration =
+          typeof field.value === 'object' && field.value !== null
+            ? field.value
+            : { min: '', sec: '' };
+        return (
+          <FormItem>
+            <FormControl>
+              {metric.datatype === 'duration' ? (
+                <DurationInput
+                  label={`${label} (min:sec)`}
+                  value={duration}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              ) : (
+                <NumberInput
+                  label={label}
+                  unit={metric.unit}
+                  decimals={asDecimals(metric.decimals)}
+                  allowNegative={canBeNegative(metric.plausibleMin)}
+                  enterKeyHint={enterKeyHint}
+                  name={field.name}
+                  ref={field.ref}
+                  value={text}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            </FormControl>
+            {fieldState.error ? (
+              <FormMessage />
+            ) : (
+              <div className="flex flex-wrap items-start justify-between gap-x-3 text-xs text-muted-foreground">
+                {warning ? <WarningLine text={warning} /> : <span>{previous}</span>}
+                {right}
+              </div>
+            )}
+          </FormItem>
+        );
+      }}
+    />
   );
 }

@@ -14,14 +14,12 @@ interface ListRowProps<T extends string> {
   href?: Route<T>;
   /** ... or a button. Both need `aria-label` only when the title alone is unclear. */
   onClick?: () => void;
-  /** Hover/touch-start prefetch hooks for long lists that use `prefetch={false}` (tactic 6). */
-  prefetch?: boolean;
   /** A separate control beside the row (for example a "⋯" button). Never put it inside the link. */
   trailing?: React.ReactNode;
 }
 
 const ROW =
-  'flex min-h-row min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 hover:bg-muted/50';
+  'flex min-h-row min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 hover:bg-accent/50';
 
 // A list row (BR-REC-122, 135): at least 56 px (we use 64), name, one detail line, status at the right.
 // Render inside <RowList>.
@@ -32,7 +30,6 @@ export default function ListRow<T extends string>({
   children,
   href,
   onClick,
-  prefetch,
   trailing,
 }: ListRowProps<T>) {
   const content = (
@@ -49,7 +46,7 @@ export default function ListRow<T extends string>({
   return (
     <li className="flex items-stretch">
       {href ? (
-        <Link href={href} prefetch={prefetch} className={ROW}>
+        <Link href={href} className={ROW}>
           {content}
         </Link>
       ) : onClick ? (

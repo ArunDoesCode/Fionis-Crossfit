@@ -18,7 +18,6 @@ export const WORDS = {
   endsSoon: 'Ends soon', // Expiring
   ended: 'Ended', // Expired
   membership: 'Membership', // period
-  about: 'About', // estimated (shown with ≈)
   pleaseCheck: 'Please check', // plausibility warning
   turnOff: 'Turn off', // deactivate
   archive: 'Archive (hide)',
@@ -29,6 +28,7 @@ export const DEFAULT_GYM_NAME = 'Fionis CrossFit';
 /** Plain strings the shared shell and components show (BR-REC-126, 129, 131, 132). */
 export const UI_TEXT = {
   nav: { home: 'Home', members: 'Members', reports: 'Reports', settings: 'Settings' },
+  signIn: 'Sign in',
   signOut: 'Sign out',
   back: 'Back',
   close: 'Close',
@@ -37,11 +37,21 @@ export const UI_TEXT = {
   loadError: "Couldn't load this.",
   loading: 'Loading…',
   saving: 'Saving…',
+  approximateDate: 'Approximate date', // Record assessment tick: the date is estimated (BR-REC-79, 216)
+  needOneValue: 'Enter at least one value', // Record assessment, Save with nothing entered (BR-REC-78, 190)
   seeAll: 'See all',
   search: 'Search',
   searchMembers: 'Search members',
   clearSearch: 'Clear search',
   minutes: 'min',
+  minutesBox: 'Minutes', // screen-reader name of the minutes box of a Time field
+  secondsBox: 'Seconds',
+  previousYear: 'Previous year',
+  nextYear: 'Next year',
+  clear: 'Clear',
+  anyMonth: 'Any month',
+  searchTimeZones: 'Search time zones',
+  noTimeZone: 'No time zone found.',
   seconds: 'sec',
   makeNegative: 'Make negative', // NumberField ± button, text has no minus
   makePositive: 'Make positive', // NumberField ± button, text starts with a minus

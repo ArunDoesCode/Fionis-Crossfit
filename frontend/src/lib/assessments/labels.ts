@@ -1,17 +1,13 @@
 import { isIsoDate } from '@/lib/domain/dates';
-import { formatDay } from '@/lib/format';
+import { formatDay, formatMonthYear } from '@/lib/format';
 import { messageForCode } from '@/lib/messages/errors';
 import { ASSESSMENT_TEXT } from './text';
 
 // The words around dates and counts on the assessment screens (BR-REC-80, 83, 84, 89). Pure.
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-/** "≈ Dec 2025" for an estimated date (month and year, always the year), else "12 Mar 2025" / "12 Mar". */
-export function assessmentDateLabel(date: string, isEstimated: boolean, today: string): string {
-  if (!isEstimated) return formatDay(date, today);
-  const month = MONTHS[Number(date.slice(5, 7)) - 1];
-  return month ? `≈ ${month} ${date.slice(0, 4)}` : date;
+/** "≈ Dec 2025" for an estimated date (month and year), else "12 Mar 2025". */
+export function assessmentDateLabel(date: string, isEstimated: boolean, _today?: string): string {
+  return isEstimated ? `≈ ${formatMonthYear(date)}` : formatDay(date);
 }
 
 const firstWord = (fullName: string): string => fullName.trim().split(/\s+/)[0] ?? '';
@@ -35,7 +31,7 @@ export function entryDateIssue(input: {
   if (!isIsoDate(date)) return { kind: null, message: null };
   if (date > today) return { kind: 'future', message: messageForCode('DATE_IN_FUTURE') };
   if (date < joinedOn) {
-    const day = formatDay(joinedOn, today);
+    const day = formatDay(joinedOn);
     return {
       kind: 'before_join',
       message: ASSESSMENT_TEXT.beforeJoin(firstWord(memberName), day),

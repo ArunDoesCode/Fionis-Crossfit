@@ -14,6 +14,8 @@ export interface LeaveGuard {
   leave: () => void;
   /** Go back to where the entry started (after a successful Save), without asking. */
   exitToStart: () => void;
+  /** Go somewhere else without asking (after a successful Save, or when there is nothing to save). */
+  exitTo: (go: () => void) => void;
 }
 
 /**
@@ -70,10 +72,15 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
     else router.replace(closeHref as Route);
   }, [router, closeHref]);
 
-  const exitToStart = useCallback(() => {
-    exiting.current = true;
-    afterHistorySettles(() => unarm(goToStart));
-  }, [unarm, goToStart]);
+  const exitTo = useCallback(
+    (go: () => void) => {
+      exiting.current = true;
+      afterHistorySettles(() => unarm(go));
+    },
+    [unarm],
+  );
+
+  const exitToStart = useCallback(() => exitTo(goToStart), [exitTo, goToStart]);
 
   useEffect(() => {
     dirtyRef.current = dirty;
@@ -110,8 +117,12 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
       const run = isClose
         ? goToStart
         : () => router.push(`${anchor.pathname}${anchor.search}${anchor.hash}` as Route);
-      if (dirtyRef.current) ask(run);
-      else exitToStart();
+      const go = () => (dirtyRef.current ? ask(run) : exitToStart());
+      // A sheet is open (the phone drawer): let it close first, so its history entry is gone before we ask or leave.
+      if (window.history.state?.sheet) {
+        afterHistorySettles(go);
+        window.history.back();
+      } else go();
     };
 
     // Closing or reloading the tab: the browser's own prompt (iPhones may skip it; the draft is kept anyway).
@@ -142,5 +153,5 @@ export function useLeaveGuard(dirty: boolean, closeHref: string): LeaveGuard {
     unarm(() => onLeave.current());
   }, [unarm]);
 
-  return { open, stay, leave, exitToStart };
+  return { open, stay, leave, exitToStart, exitTo };
 }

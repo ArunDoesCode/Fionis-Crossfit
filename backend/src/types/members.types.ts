@@ -204,6 +204,7 @@ export const memberListItemSchema = z.object({
   id: uuidSchema,
   fullName: z.string(),
   phone: z.string(),
+  email: z.string().nullable().describe("null = no email on file."),
   lastAssessedOn: isoDateSchema
     .nullable()
     .describe("Latest assessment day; null = never assessed."),

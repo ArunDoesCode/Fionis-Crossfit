@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import ListRow from '@/components/common/ListRow';
 import StatusBadge from '@/components/common/StatusBadge';
-import { preloadPeriodSheet } from '@/components/pages/members/PeriodSheetLazy';
+import { preloadPeriodSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { prefetchMember } from '@/lib/api/members/queries';
 import type { IsoDate } from '@/lib/domain/dates';
@@ -38,7 +38,6 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
       title={item.fullName}
       detail={formatPhone(item.phone)}
       href={`/admin/members/${item.memberId}`}
-      prefetch={false}
       trailing={
         <div className="flex items-center pr-3">
           <Button

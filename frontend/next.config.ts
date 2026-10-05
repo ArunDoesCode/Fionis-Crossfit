@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true, // dynamic by default, opt into caching with 'use cache'
   reactCompiler: true,
   typedRoutes: true,
+  poweredByHeader: false,
+  experimental: { optimizePackageImports: ['@hugeicons/core-free-icons'] },
   async rewrites() {
     if (!apiUrl) throw new Error('API_URL is required: next.config.ts forwards /api to it (D-018)');
     return {

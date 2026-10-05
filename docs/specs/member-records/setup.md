@@ -2,8 +2,8 @@
 module: member-records/setup
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
-frozen_on: 2026-10-03
+version: 3
+frozen_on: 2026-10-05
 owner: Arun
 depends_on: [member-records/data-model, member-records/api-contract, member-records/ux, member-records/performance]
 ---
@@ -46,7 +46,7 @@ Rules BR-REC-10, 11, 13, 14, 60…72 · endpoints E07–E15 · tables `gym_setti
 | BR-REC-62 | A measurement name is 2–40 characters, unique inside its assessment; unit up to 12 characters (may be empty); "please check below/above" (min < max) optional.                                                                                                                                | Min 50, max 10 → "Below must be smaller than above"                           | Zod test                                         |
 | BR-REC-63 | Better can also be "No direction" (e.g. Height): then reports show the change but no best, improved/worse or leaderboard (Q1).                                                                                                                                                                 | Height 172 → 173 cm → change +1 cm, no "better" word                         | Report test with`better = none`                |
 | BR-REC-64 | Numbers are rounded to the measurement's decimals (0–2) when saved; durations are whole seconds; changing decimals later only changes how values are shown.                                                                                                                                   | Decimals 1, typed 95.56 → stored 95.6                                         | Service rounding test                            |
-| BR-REC-65 | A measurement may have a report-table place (group + body part: whole body, arms, trunk, legs); the 8 segmental items are seeded with one.                                                                                                                                                     | "Skeletal muscle %" + "Arms" → row Arms, column Skeletal muscle %             | Report card test                                 |
+| BR-REC-65 | A measurement may have a report-table place (group + body part: whole body, arms, trunk, legs); the 8 segmental items are seeded with one. v3: the same place groups the desktop Record form (assessments BR-REC-216). | "Skeletal muscle %" + "Arms" → row Arms, column Skeletal muscle %             | Report card test; Record form screenshot |
 | BR-REC-66 | Assessments and measurements are never deleted, only turned off; off hides them from entry, Home and due dates, while history and reports keep them; turning an assessment off hides all its measurements.                                                                                     | Turn off Fitness test → no fitness rows on Home; report card still shows Fran | E11/E14 + due test                               |
 | BR-REC-67 | "Move up / Move down" sets the order used in forms, the report card and lists.                                                                                                                                                                                                                 | Move Fran above 5K → form shows Fran first                                    | E12/E15 test                                     |
 | BR-REC-68 | The seed creates the items below only on an empty catalog and never overwrites a coach's later edits.                                                                                                                                                                                          | Coach renamed "Hang time" → re-running seed keeps the new name                | Seed run twice → no change                      |
@@ -119,6 +119,8 @@ Measurement sheet (bottom sheet on phones, dialog on desktop):
 ```
 
 S16 Reminders & gym (`/admin/settings/general`): gym name, time zone, "Due soon" days, "Ends soon" days, [Save].
+v3 (ux BR-REC-188, 196): sheets and S16 use the shared form grid (pairs side by side: below · above, repeat count ·
+unit, group · part) and fit one desktop screen; time zone is a searchable Combobox; Settings pages up to 896 px.
 
 ## Build clarifications (v2, Stream C coordinator, 2026-10-04 — owner to confirm at merge; no change of intent)
 
@@ -155,7 +157,7 @@ No automated UI tests for the BR-REC-11 lock in the sheet or the BR-REC-70, 71 s
 | Q5 | Gym name on report cards | **A** "Fionis CrossFit" / B other | **A** |
 
 ## Changelog
-
+- 2026-10-05 v3 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, split out of member-records v2; carries BR-REC-10, 11, 13, 14 and the Metric list from v1 unchanged
 - 2026-10-03 v0 — answers folded: all as recommended, no rule changes
 - 2026-10-03 v1 — frozen with the member-records index (v2); all questions answered, 0 open
@@ -164,3 +166,8 @@ No automated UI tests for the BR-REC-11 lock in the sheet or the BR-REC-70, 71 s
   lock only on a real change, off assessment hides without cascading, `hasValues`, full order lists, pair checks on
   edit, rounding function for the assessments stream, change-log action names); BR-REC-11 example changed from Fran
   (a Time measurement, whose unit is always `min:sec`) to Deadlift kg → lb; C8 also covers clearing one side alone; C11 name races → 409; C12 sheet layout, theme choice and Edit placement; C13 E07 never writes
+- 2026-10-05 v3 — changed after freeze (owner UAT #59): BR-REC-65 report place also groups the desktop Record form
+  (assessments BR-REC-216, E25 fields BR-REC-217); sheets in the shared form grid, time-zone Combobox (ux BR-REC-188,
+  196); C12 flat order kept, now in two columns on desktop
+- 2026-10-05 v3 — owner answers (ux Q8 = B): S16 Save with nothing changed closes silently — the "nothing changed"
+  toast goes; fields use the owner's `FormItem min-h-19` + `FloatingLabelInput` format (ux BR-REC-187)

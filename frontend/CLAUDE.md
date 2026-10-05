@@ -48,7 +48,7 @@ Per the standard (§4): `app/` (thin server pages + `loading.tsx` + `error.tsx`)
 
 ## Stack
 Bun, Biome (`biome check`), Tailwind 4 tokens, shadcn (`components/ui` never hand-edited — a hook blocks it),
-TanStack Query v5, TanStack Table v9, nuqs, Zustand v5, RHF + Zod v4, Sonner, Hugeicons (`@hugeicons/react` `HugeiconsIcon` + `@hugeicons/core-free-icons`), `date-fns`, `motion`
+TanStack Query v5, TanStack Table v9, nuqs, RHF + Zod v4 (Zustand v5 is not installed: the admin has no store; add it with the TV, D-0xx), Sonner, Hugeicons (`@hugeicons/react` `HugeiconsIcon` + `@hugeicons/core-free-icons`), `date-fns`, `motion`
 (TV), `canvas-confetti` (TV). User-facing text: typed dictionaries in `lib/messages/` if more than one language.
 
 ## Commands
@@ -65,6 +65,10 @@ server code (`lib/api/server.ts`) and by the rewrite, which is resolved at `next
 `/` is rewritten to `/admin` (no redirect round trip). Documented in `.env.example`.
 
 ## Overrides of the standard
-- **member-records mobile-first (D-016):** nextjs-standards §14 button placement does not apply here. The main action
-  sits in the bottom action bar on phones (`PageHeader action` / `ActionBar`) and at the right of the header on
-  desktop; forms have **no Reset button**. UI rules: `docs/specs/member-records/ux.md`.
+- **member-records desktop-first (D-016 superseded, D-027…D-036; spec `docs/specs/member-records/ux.md` v2):** the laptop
+  is the main device, phone is responsive. App shell = shadcn `Sidebar` (fixed left, content scrolls; ☰ drawer below 768 px).
+  Forms use the owner's `FormField` → `FormItem min-h-19` → `FormControl` + `FloatingLabelInput` → `FormMessage`
+  (nextjs-standards §14); no Reset button; main action in the header (desktop) / action bar (phone). Colours only as
+  Tailwind classes from tokens in `globals.css` — no raw hex/oklch in components. Dates `dd MMM yyyy`, weeks start Monday,
+  via `DatePicker`; every modal is a shadcn component; member search is `MemberSearch` over the cached directory.
+  One source for each thing (tokens, nav items, back targets, formatter, form primitives): don't duplicate.

@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import '@/lib/validators/zodMessages';
+import { exactNumberFromText } from '@/lib/forms/zodNumber';
 
 // Mirrors backend/src/types/setup.types.ts (the server checks again). Limits, issue `path`s and messages are
 // BR-REC-60 to 62 and the build clarifications C1, C2 of docs/specs/member-records/setup.md; messages are plain sentences that
@@ -40,7 +42,6 @@ const MESSAGES = {
   unit: `Use at most ${UNIT_MAX} characters`,
   decimals: 'Use 0, 1 or 2',
   bound: 'Use a number up to 999,999,999.999 either way',
-  notANumber: 'Enter a number',
   range: 'Below must be smaller than above',
   repeatPair: 'Set both the repeat number and unit, or neither',
   tablePair: 'Set both the report group and part, or neither',
@@ -56,16 +57,20 @@ export const gymSettingsSchema = z.object({
     .min(GYM_NAME_MIN, { error: MESSAGES.gymName })
     .max(GYM_NAME_MAX, { error: MESSAGES.gymName }),
   timezone: z.string({ error: MESSAGES.timezone }).min(1, { error: MESSAGES.timezone }),
-  upcomingLeadDays: z
-    .number({ error: MESSAGES.upcomingLeadDays })
-    .int({ error: MESSAGES.wholeDays })
-    .min(0, { error: MESSAGES.upcomingLeadDays })
-    .max(UPCOMING_LEAD_MAX, { error: MESSAGES.upcomingLeadDays }),
-  expiryLeadDays: z
-    .number({ error: MESSAGES.expiryLeadDays })
-    .int({ error: MESSAGES.wholeDays })
-    .min(0, { error: MESSAGES.expiryLeadDays })
-    .max(EXPIRY_LEAD_MAX, { error: MESSAGES.expiryLeadDays }),
+  upcomingLeadDays: exactNumberFromText(0, false).pipe(
+    z
+      .number({ error: MESSAGES.upcomingLeadDays })
+      .int({ error: MESSAGES.wholeDays })
+      .min(0, { error: MESSAGES.upcomingLeadDays })
+      .max(UPCOMING_LEAD_MAX, { error: MESSAGES.upcomingLeadDays }),
+  ),
+  expiryLeadDays: exactNumberFromText(0, false).pipe(
+    z
+      .number({ error: MESSAGES.expiryLeadDays })
+      .int({ error: MESSAGES.wholeDays })
+      .min(0, { error: MESSAGES.expiryLeadDays })
+      .max(EXPIRY_LEAD_MAX, { error: MESSAGES.expiryLeadDays }),
+  ),
 });
 
 const itemName = z
@@ -74,7 +79,7 @@ const itemName = z
   .min(NAME_MIN, { error: MESSAGES.name })
   .max(NAME_MAX, { error: MESSAGES.name });
 
-const repeatCount = z
+const repeatRange = z
   .number({ error: MESSAGES.repeatCount })
   .int({ error: MESSAGES.repeatCount })
   .min(REPEAT_MIN, { error: MESSAGES.repeatCount })
@@ -84,15 +89,22 @@ const repeatUnit = z.enum(INTERVAL_UNITS, { error: MESSAGES.repeatUnit });
 
 export const assessmentFormSchema = z.object({
   name: itemName,
-  intervalCount: repeatCount,
+  intervalCount: exactNumberFromText(0, false).pipe(repeatRange),
   intervalUnit: repeatUnit,
 });
 
-const rangeBound = z
-  .number({ error: MESSAGES.notANumber })
-  .min(-RANGE_BOUND, { error: MESSAGES.bound })
-  .max(RANGE_BOUND, { error: MESSAGES.bound })
-  .nullable();
+/** The assessment sheet's schema: the same fields plus the On switch (shown when editing). */
+export const assessmentSheetSchema = assessmentFormSchema.extend({
+  isActive: z.boolean({ error: 'Fill this in' }),
+});
+
+const rangeBound = exactNumberFromText(1, true).pipe(
+  z
+    .number()
+    .min(-RANGE_BOUND, { error: MESSAGES.bound })
+    .max(RANGE_BOUND, { error: MESSAGES.bound })
+    .nullable(),
+);
 
 export const measurementFormSchema = z
   .object({
@@ -103,7 +115,7 @@ export const measurementFormSchema = z
     better: z.enum(BETTER_VALUES, { error: MESSAGES.better }),
     plausibleMin: rangeBound,
     plausibleMax: rangeBound,
-    intervalCount: repeatCount.nullable(),
+    intervalCount: exactNumberFromText(0, true).pipe(repeatRange.nullable()),
     intervalUnit: repeatUnit.nullable(),
     tableGroup: z
       .string({ error: MESSAGES.name })
@@ -112,7 +124,7 @@ export const measurementFormSchema = z
       .max(NAME_MAX, { error: MESSAGES.name })
       .nullable(),
     tablePart: z.enum(TABLE_PARTS, { error: MESSAGES.tablePart }).nullable(),
-    isActive: z.boolean(),
+    isActive: z.boolean({ error: 'Fill this in' }),
   })
   // These run only when every field has the right type (Zod skips them otherwise), so a wrong type is
   // reported once, on its own field.
@@ -129,9 +141,12 @@ export const measurementFormSchema = z
     }
   });
 
-export type GymSettingsInput = z.infer<typeof gymSettingsSchema>;
-export type AssessmentFormInput = z.infer<typeof assessmentFormSchema>;
-export type MeasurementFormInput = z.infer<typeof measurementFormSchema>;
+/** What a form holds while typing (numbers are text). */
+export type GymSettingsFormValues = z.input<typeof gymSettingsSchema>;
+export type AssessmentFormValues = z.input<typeof assessmentSheetSchema>;
+export type MeasurementFormValues = z.input<typeof measurementFormSchema>;
 
-/** The text shown for a number typed so far that is not a number (forms keep numbers as text until Save). */
-export const NOT_A_NUMBER_MESSAGE = MESSAGES.notANumber;
+/** What the schema hands back (numbers are numbers, `null` for "none"). */
+export type GymSettingsInput = z.output<typeof gymSettingsSchema>;
+export type AssessmentFormInput = z.output<typeof assessmentFormSchema>;
+export type MeasurementFormInput = z.output<typeof measurementFormSchema>;

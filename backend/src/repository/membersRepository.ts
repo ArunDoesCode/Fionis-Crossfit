@@ -47,6 +47,7 @@ export type MemberListRow = {
   id: string;
   fullName: string;
   phone: string;
+  email: string | null;
   archivedAt: Date | null;
   plan: Plan;
   startOn: IsoDate;
@@ -230,6 +231,7 @@ export const membersRepository = {
           id: members.id,
           fullName: members.fullName,
           phone: members.phone,
+          email: members.email,
           archivedAt: members.archivedAt,
           plan: latestPeriod.plan,
           startOn: latestPeriod.startOn,

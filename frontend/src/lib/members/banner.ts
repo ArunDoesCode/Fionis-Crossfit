@@ -1,6 +1,6 @@
 import { gymToday, type IsoDate } from '@/lib/domain/dates';
+import { formatDay } from '@/lib/format';
 import { FIXED_LINES } from '@/lib/messages/words';
-import { formatDayWithYear } from './dayText';
 import type { MembershipStatus } from './types';
 
 /**
@@ -19,9 +19,9 @@ export const memberBannerText = (
   if (!member.archivedAt && !ended) return null;
   return FIXED_LINES.archivedEndedBanner({
     archivedOn: member.archivedAt
-      ? formatDayWithYear(gymToday(new Date(member.archivedAt), timeZone))
+      ? formatDay(gymToday(new Date(member.archivedAt), timeZone))
       : null,
-    membershipEndOn: formatDayWithYear(member.membership.endOn),
+    membershipEndOn: formatDay(member.membership.endOn),
     membershipEnded: ended,
   });
 };

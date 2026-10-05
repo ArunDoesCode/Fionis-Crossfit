@@ -5,10 +5,11 @@ import ErrorState from '@/components/common/ErrorState';
 import ListRow, { RowList } from '@/components/common/ListRow';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { RowSkeletons } from '@/components/common/Skeletons';
-import StatusBadge, { type StatusTone } from '@/components/common/StatusBadge';
+import StatusBadge from '@/components/common/StatusBadge';
 import { dueStatusText } from '@/lib/assessments/dueStatus';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { MemberDueRow } from '@/lib/assessments/types';
+import { type StatusTone, toneFor } from '@/lib/statusTone';
 
 export interface ChoosableAssessment {
   id: string;
@@ -31,11 +32,13 @@ interface ChooseAssessmentSheetProps {
 }
 
 const toneOf = (row: MemberDueRow): StatusTone =>
-  row.flagged || row.state === 'upcoming'
-    ? 'warning'
-    : row.state === 'overdue'
-      ? 'danger'
-      : 'neutral';
+  toneFor(
+    row.flagged || row.state === 'upcoming'
+      ? 'soon'
+      : row.state === 'overdue'
+        ? 'overdue'
+        : 'neverRecorded',
+  );
 
 // "Record for Surya" · Body composition — Overdue 34 days · Fitness test — Due in 5 days (BR-REC-73). Only
 // turned-on assessments are offered (D4); the status words come from E32 when it answers, else none (D11).

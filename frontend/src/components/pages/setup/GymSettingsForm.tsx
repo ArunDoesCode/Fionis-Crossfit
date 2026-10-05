@@ -1,20 +1,14 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import type { z } from 'zod';
+import { FormErrorSummary, FormGrid, useFocusFirstProblem } from '@/components/common/form';
 import Section from '@/components/common/Section';
-import { NumberControl, SelectControl, TextControl } from '@/components/pages/setup/FormControls';
-import { focusFirstProblem } from '@/components/pages/setup/focusFirstProblem';
+import { NumberField, TextField, TimeZoneField } from '@/components/pages/setup/FormControls';
 import type { Settings } from '@/lib/api/setup/fetchers';
 import { useUpdateSettings } from '@/lib/api/setup/queries';
-import {
-  type GymSettingsFormValues,
-  gymSettingsToInput,
-  gymSettingsToValues,
-  parseGymSettings,
-  schemaResolver,
-  settingsUpdateBody,
-} from '@/lib/setup/form';
+import { gymSettingsToValues, settingsUpdateBody } from '@/lib/setup/form';
 import { SETUP_TEXT } from '@/lib/setup/text';
 import { timeZoneOptions } from '@/lib/setup/timezones';
 import { gymSettingsSchema } from '@/lib/validators/setup';
@@ -27,34 +21,32 @@ interface GymSettingsFormProps {
 
 const FIELD_ORDER = ['gymName', 'timezone', 'upcomingLeadDays', 'expiryLeadDays'] as const;
 
-// S16 (BR-REC-60): gym name, time zone, "Due soon" days, "Ends soon" days. One column, labels above the
-// fields, checked when a field is left and on Save; Save stays tappable and jumps to the first problem and
-// there is no Reset button (BR-REC-134). The Save button is in the page header / action bar.
+// S16 (BR-REC-60): gym name, time zone, "Due soon" days, "Ends soon" days. Checked when a field is left
+// and on Save; Save stays tappable and jumps to the first problem (BR-REC-189); no Reset button. A Save
+// with no edits sends nothing and says nothing (BR-REC-190). The Save button is in the page header
+// / action bar. The success toast lives in the mutation hook.
 export default function GymSettingsForm({ settings, formId }: GymSettingsFormProps) {
   const text = SETUP_TEXT.general;
   const update = useUpdateSettings();
-  const form = useForm<GymSettingsFormValues>({
-    resolver: schemaResolver(gymSettingsSchema, gymSettingsToInput),
-    mode: 'onBlur',
+  const focusFirst = useFocusFirstProblem(FIELD_ORDER);
+  const form = useForm<
+    z.input<typeof gymSettingsSchema>,
+    unknown,
+    z.output<typeof gymSettingsSchema>
+  >({
+    resolver: zodResolver(gymSettingsSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: gymSettingsToValues(settings),
   });
 
-  const ids = {
-    gymName: `${formId}-gym-name`,
-    timezone: `${formId}-timezone`,
-    upcomingLeadDays: `${formId}-due-soon`,
-    expiryLeadDays: `${formId}-ends-soon`,
-  };
-
-  const onValid = (values: GymSettingsFormValues) => {
+  const onValid = (input: z.output<typeof gymSettingsSchema>) => {
     // A second Enter can arrive before the header button turns off: one try, one request.
     if (update.isPending) return;
-    const input = parseGymSettings(values);
     const body = settingsUpdateBody(settings, input);
     if (Object.keys(body).length === 0) {
       form.reset(gymSettingsToValues({ ...settings, ...input }));
-      toast.success(SETUP_TEXT.toasts.settingsSaved);
       return;
     }
     update.mutate(body);
@@ -64,50 +56,56 @@ export default function GymSettingsForm({ settings, formId }: GymSettingsFormPro
     <form
       id={formId}
       noValidate
-      onSubmit={form.handleSubmit(onValid, (errors) => focusFirstProblem(errors, FIELD_ORDER, ids))}
+      onSubmit={form.handleSubmit(onValid, focusFirst)}
       className="section-gap flex flex-col"
     >
+      <FormErrorSummary
+        errors={form.formState.errors}
+        order={FIELD_ORDER}
+        labels={{
+          gymName: text.gymName,
+          timezone: text.timezone,
+          upcomingLeadDays: text.dueSoonDays,
+          expiryLeadDays: text.endsSoonDays,
+        }}
+      />
       <Section title={text.gymSection}>
-        <div className="flex flex-col gap-2">
-          <TextControl
+        <FormGrid maxCols={2}>
+          <TextField
             control={form.control}
             name="gymName"
-            id={ids.gymName}
             label={text.gymName}
             hint={text.gymNameHint}
             required
           />
-          <SelectControl
+          <TimeZoneField
             control={form.control}
             name="timezone"
-            id={ids.timezone}
             label={text.timezone}
             hint={text.timezoneHint}
             options={timeZoneOptions(settings.timezone)}
           />
-        </div>
+        </FormGrid>
       </Section>
       <Section title={text.remindersSection}>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">{text.dueSoonHint}</p>
-          <NumberControl
+        <FormGrid maxCols={2}>
+          <NumberField
             control={form.control}
             name="upcomingLeadDays"
-            id={ids.upcomingLeadDays}
             label={text.dueSoonDays}
+            hint={text.dueSoonHint}
             unit={text.daysUnit}
             required
           />
-          <p className="text-sm text-muted-foreground">{text.endsSoonHint}</p>
-          <NumberControl
+          <NumberField
             control={form.control}
             name="expiryLeadDays"
-            id={ids.expiryLeadDays}
             label={text.endsSoonDays}
+            hint={text.endsSoonHint}
             unit={text.daysUnit}
             required
           />
-        </div>
+        </FormGrid>
       </Section>
     </form>
   );

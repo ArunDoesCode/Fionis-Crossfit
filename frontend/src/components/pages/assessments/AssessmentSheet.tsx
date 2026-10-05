@@ -1,5 +1,7 @@
 'use client';
 
+import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -7,7 +9,6 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { RowSkeletons } from '@/components/common/Skeletons';
-import DeleteConfirmFooter from '@/components/pages/assessments/DeleteConfirmFooter';
 import SheetBody from '@/components/pages/setup/SheetBody';
 import { Button } from '@/components/ui/button';
 import { assessmentQueries, useDeleteAssessment } from '@/lib/api/assessments/listQueries';
@@ -20,6 +21,56 @@ import type { AssessmentDetail, AssessmentListItem } from '@/lib/assessments/typ
 import { storedValueText } from '@/lib/assessments/valueText';
 import { messageForCode } from '@/lib/messages/errors';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
+
+interface DeleteConfirmFooterProps {
+  /** True while deleting: the button shows "Deleting…" with a spinner and both buttons are off. */
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+// A second tap of a quick double tap on Delete lands on the confirm button (same place on a phone, and it
+// would delete before the sentence is read): taps in the first moments are ignored; nothing looks different.
+const ARM_DELAY_MS = 300;
+
+// [ Cancel ] [ Delete assessment ]: focus starts on Cancel, the safe button, so Enter cannot confirm.
+function DeleteConfirmFooter({ pending, onCancel, onConfirm }: DeleteConfirmFooterProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const armed = useRef(false);
+
+  useEffect(() => {
+    cancelRef.current?.focus();
+    const timer = setTimeout(() => {
+      armed.current = true;
+    }, ARM_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      <Button
+        ref={cancelRef}
+        type="button"
+        variant="secondary"
+        disabled={pending}
+        onClick={onCancel}
+      >
+        {UI_TEXT.cancel}
+      </Button>
+      <Button
+        type="button"
+        variant="destructive"
+        disabled={pending}
+        onClick={() => {
+          if (armed.current) onConfirm();
+        }}
+      >
+        {pending && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
+        {pending ? ASSESSMENT_TEXT.deleting : ASSESSMENT_TEXT.deleteConfirm}
+      </Button>
+    </>
+  );
+}
 
 interface AssessmentSheetProps {
   open: boolean;

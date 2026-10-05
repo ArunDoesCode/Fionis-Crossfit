@@ -26,7 +26,6 @@ export default function DueRow({ item, onMore }: DueRowProps) {
       title={item.fullName}
       detail={item.typeName}
       href={recordHref(item.memberId, item.typeId)}
-      prefetch={false}
       status={<StatusBadge tone={status.tone}>{status.text}</StatusBadge>}
       trailing={<DueMoreButton name={item.fullName} onOpen={() => onMore(listTarget(item))} />}
     >

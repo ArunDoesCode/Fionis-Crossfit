@@ -10,16 +10,16 @@ import type { MemberListItem } from './types';
  */
 export const memberListDetail = (
   item: Pick<MemberListItem, 'phone' | 'lastAssessedOn' | 'archivedAt' | 'membership'>,
-  today: IsoDate,
+  _today: IsoDate,
   timeZone: string,
 ): string => {
   if (item.archivedAt) {
-    const archivedOn = formatDay(gymToday(new Date(item.archivedAt), timeZone), today);
+    const archivedOn = formatDay(gymToday(new Date(item.archivedAt), timeZone));
     const ended = item.membership.status === 'expired';
-    return `Archived ${archivedOn} · ${ended ? 'Ended' : 'Ends'} ${formatDay(item.membership.endOn, today)}`;
+    return `Archived ${archivedOn} · ${ended ? 'Ended' : 'Ends'} ${formatDay(item.membership.endOn)}`;
   }
   const assessed = item.lastAssessedOn
-    ? `Last ${formatDay(item.lastAssessedOn, today)}`
+    ? `Last ${formatDay(item.lastAssessedOn)}`
     : 'Never assessed';
   return `${formatPhone(item.phone)} · ${assessed}`;
 };

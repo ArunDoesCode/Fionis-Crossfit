@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist_Mono, Outfit, Raleway } from 'next/font/google';
+import { Geist_Mono, Outfit, Poppins } from 'next/font/google';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import Providers from '@/lib/providers';
-import { cn } from '@/lib/utils';
 import './globals.css';
 
 // BR-REC-150 / 174 (tactic 22): three self-hosted fonts, Latin only, size-matched fallback, swap.
-// Only Outfit (all text, inputs, buttons) is preloaded. Raleway (page and section titles, weight 600
+// Only Outfit (all text, inputs, buttons) is preloaded. Poppins (page and section titles, weight 600
 // only) and Geist Mono (number columns only) are fetched by the browser when a screen uses them.
 const outfit = Outfit({
   subsets: ['latin'],
@@ -15,13 +14,13 @@ const outfit = Outfit({
   preload: true,
   variable: '--font-outfit',
 });
-const raleway = Raleway({
+const poppins = Poppins({
   subsets: ['latin'],
   weight: '600',
   display: 'swap',
   adjustFontFallback: true,
   preload: false,
-  variable: '--font-raleway',
+  variable: '--font-poppins',
 });
 const geistMono = Geist_Mono({
   subsets: ['latin'],
@@ -49,7 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn('antialiased', outfit.variable, raleway.variable, geistMono.variable)}
+      className={`antialiased ${outfit.variable} ${poppins.variable} ${geistMono.variable}`}
     >
       <body>
         <ThemeProvider>

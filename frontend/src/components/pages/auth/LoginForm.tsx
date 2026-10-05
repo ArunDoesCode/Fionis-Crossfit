@@ -6,11 +6,18 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import {
+  FloatingLabelInput,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+  useFocusFirstProblem,
+} from '@/components/common/form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useLogin } from '@/lib/api/auth/queries';
 import { loginErrorMessage, SIGN_IN_AGAIN_LINE } from '@/lib/auth/loginError';
 import { safeNextPath } from '@/lib/auth/safeNextPath';
@@ -23,6 +30,8 @@ interface LoginFormProps {
   expired?: boolean;
 }
 
+const LOGIN_ORDER = ['username', 'password'] as const;
+
 // S1 (auth.md): username, password with Show/Hide, "Keep me signed in" ticked, one error line with its
 // space always reserved, Sign in. There is no "create account" (BR-REC-25). The button is only off while
 // the call runs: a locked login (BR-REC-29) keeps it tappable and the line says how long to wait.
@@ -33,11 +42,14 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inFlight = useRef(false);
+  const focusFirst = useFocusFirstProblem(LOGIN_ORDER);
   const { mutate, isPending, isSuccess } = useLogin();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    shouldFocusError: false,
     defaultValues: { username: '', password: '', remember: true },
   });
 
@@ -65,49 +77,52 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
   const busy = isPending || isSuccess; // stays off after success until the next page replaces this one
 
   return (
-    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <Controller
+    <form
+      noValidate
+      onSubmit={form.handleSubmit(onSubmit, focusFirst)}
+      className="flex flex-col gap-2"
+    >
+      <FormField
         control={form.control}
         name="username"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={`${id}-username`}>Username</FieldLabel>
-            <Input
-              {...field}
-              id={`${id}-username`}
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              aria-invalid={fieldState.invalid}
-              aria-describedby={fieldState.error ? `${id}-username-error` : undefined}
-            />
-            <div className="min-h-5">
-              <FieldError id={`${id}-username-error`} errors={[fieldState.error]} />
-            </div>
-          </Field>
-        )}
-      />
-
-      <Controller
-        control={form.control}
-        name="password"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={`${id}-password`}>Password</FieldLabel>
-            <div className="relative">
-              <Input
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <FloatingLabelInput
                 {...field}
-                id={`${id}-password`}
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
+                label="Username"
+                required
+                autoComplete="username"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                aria-invalid={fieldState.invalid}
-                aria-describedby={fieldState.error ? `${id}-password-error` : undefined}
-                className="pr-20"
               />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="password"
+        render={({ field }) => (
+          <FormItem>
+            <div className="relative">
+              <FormControl>
+                <FloatingLabelInput
+                  {...field}
+                  id={`${id}-password`}
+                  label="Password"
+                  required
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="pr-20"
+                />
+              </FormControl>
               <Button
                 type="button"
                 variant="ghost"
@@ -120,33 +135,36 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
                 <span className="sr-only"> password</span>
               </Button>
             </div>
-            <div className="min-h-5">
-              <FieldError id={`${id}-password-error`} errors={[fieldState.error]} />
-            </div>
-          </Field>
+            <FormMessage />
+          </FormItem>
         )}
       />
 
-      <Controller
+      <FormField
         control={form.control}
         name="remember"
         render={({ field }) => (
-          <Field orientation="horizontal" className="min-h-11">
-            <Checkbox
-              id={`${id}-remember`}
-              name={field.name}
-              checked={field.value}
-              onCheckedChange={(checked) => field.onChange(checked)}
-            />
-            <FieldLabel htmlFor={`${id}-remember`} className="text-base font-normal">
-              Keep me signed in
-            </FieldLabel>
-          </Field>
+          <FormItem className="min-h-11">
+            <div className="flex items-center gap-3">
+              <FormControl>
+                <Checkbox
+                  id={`${id}-remember`}
+                  name={field.name}
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked)}
+                />
+              </FormControl>
+              <Label htmlFor={`${id}-remember`} className="text-base font-normal">
+                Keep me signed in
+              </Label>
+            </div>
+          </FormItem>
         )}
       />
 
-      {/* One line for what the server said; its space is always kept so nothing jumps (two lines). Both
-          regions are always in the page and only their text changes, so a screen reader announces it. */}
+      {/* One line for the server's answer (red), "Please sign in again." after an ended sign-in (BR-REC-41).
+          Its space is always kept (two lines) and both regions are always in the page, only their text
+          changes, so a screen reader announces it (BR-REC-137). */}
       <div className="min-h-12 text-base">
         <p role="alert" className="text-destructive">
           {error}

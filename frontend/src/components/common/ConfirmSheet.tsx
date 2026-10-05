@@ -19,6 +19,10 @@ interface ConfirmSheetProps {
   destructive?: boolean;
   /** True while saving: the button shows "Saving…" with a spinner and both buttons are off. */
   pending?: boolean;
+  /** The cancel button's text. Default "Cancel". */
+  cancelLabel?: string;
+  /** Back closes the sheet. Default true; off when the caller already owns the history. */
+  backToClose?: boolean;
   onConfirm: () => void;
 }
 
@@ -31,11 +35,14 @@ export default function ConfirmSheet({
   confirmLabel,
   destructive = false,
   pending = false,
+  cancelLabel = UI_TEXT.cancel,
+  backToClose = true,
   onConfirm,
 }: ConfirmSheetProps) {
   return (
     <ResponsiveSheet
       alert
+      backToClose={backToClose}
       open={open}
       onOpenChange={onOpenChange}
       title={title}
@@ -48,7 +55,7 @@ export default function ConfirmSheet({
             disabled={pending}
             onClick={() => onOpenChange(false)}
           >
-            {UI_TEXT.cancel}
+            {cancelLabel}
           </Button>
           <Button
             type="button"

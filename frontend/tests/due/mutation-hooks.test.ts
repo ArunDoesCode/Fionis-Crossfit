@@ -536,9 +536,9 @@ describe('BR-REC-99 / 100 useSetDueAction: Remind me later', () => {
     s.writeGate.resolve(jsonResponse(200, E33_SNOOZE));
     await s.settled();
     // The year is shown only when it is not this year (BR-REC-127), so both "3 Nov" and "3 Nov 2026" are right.
-    expect(
-      toastsSince(before).some((text) => /^Reminder set for 3 Nov( \d{4})?\.$/.test(text)),
-    ).toBe(true);
+    expect(toastsSince(before).some((text) => /^Reminder set for 03 Nov 2026\.$/.test(text))).toBe(
+      true,
+    );
   });
 
   test('C13 on settle every due query is invalidated, not before', async () => {

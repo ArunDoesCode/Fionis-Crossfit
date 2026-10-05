@@ -40,19 +40,19 @@ const TODAY = '2026-10-03';
 
 describe('BR-REC-106 / 127 readingDateText for a measured date', () => {
   test.each([
-    ['2026-09-12', '12 Sep'], // this year: no year (BR-REC-108 example date)
-    ['2026-10-03', '3 Oct'], // today
-    ['2026-01-05', '5 Jan'],
+    ['2026-09-12', '12 Sep 2026'], // this year: no year (BR-REC-108 example date)
+    ['2026-10-03', '03 Oct 2026'], // today
+    ['2026-01-05', '05 Jan 2026'],
     ['2025-12-12', '12 Dec 2025'], // another year: the year is shown
-    ['2025-06-01', '1 Jun 2025'], // S12 sketch: Joined 1 Jun 2025
-    ['2027-01-05', '5 Jan 2027'],
+    ['2025-06-01', '01 Jun 2025'], // S12 sketch: Joined 1 Jun 2025
+    ['2027-01-05', '05 Jan 2027'],
   ])('BR-REC-127 readingDateText(%s, measured) is "%s"', (on, expected) => {
     expect(text.readingDateText(on, false, TODAY)).toBe(expected);
   });
 
-  test('BR-REC-127 a measured date follows the year of "today" it is given', () => {
+  test('BR-REC-127 a measured date always shows its year (BR-REC-191), whatever "today" is', () => {
     expect(text.readingDateText('2026-09-12', false, '2027-01-02')).toBe('12 Sep 2026');
-    expect(text.readingDateText('2026-09-12', false, '2026-12-31')).toBe('12 Sep');
+    expect(text.readingDateText('2026-09-12', false, '2026-12-31')).toBe('12 Sep 2026');
   });
 });
 
@@ -103,7 +103,7 @@ describe('BR-REC-108 readingDateText for an estimated date', () => {
 describe('BR-REC-153 readingDateText gives the same calendar day in every time zone', () => {
   test.each(ZONES)('readingDateText is the same in time zone %s', (zone) => {
     inZone(zone, () => {
-      expect(text.readingDateText('2026-01-01', false, TODAY)).toBe('1 Jan');
+      expect(text.readingDateText('2026-01-01', false, TODAY)).toBe('01 Jan 2026');
       expect(text.readingDateText('2025-12-31', false, TODAY)).toBe('31 Dec 2025');
       expect(text.readingDateText('2026-01-01', true, TODAY)).toBe('≈ Jan 2026');
       expect(text.readingDateText('2025-12-31', true, TODAY)).toBe('≈ Dec 2025');

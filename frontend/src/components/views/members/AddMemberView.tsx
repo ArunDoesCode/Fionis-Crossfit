@@ -13,10 +13,8 @@ const FORM_ID = 'add-member-form';
 // desktop, bar on phones with the tabs hidden because this is a form: BR-REC-120, 121).
 export default function AddMemberView() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader
-        title={UI_TEXT.screens.addMember}
-        backHref="/admin/members"
         form
         action={
           <MemberSaveButton

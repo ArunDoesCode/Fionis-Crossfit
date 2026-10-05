@@ -23,7 +23,7 @@ Endpoints: E25 entry form · E26 save (create or edit by member + type + date) �
 | admin lib | `frontend/src/lib/assessments/**`, `lib/{numberText,durationStatus}.ts` | pure `parseNumberText`, `checkPlausibility`, `describeChange`, `buildSaveValues`, draft store (`draftKey`, `saveDraft`, `loadDraft`, `dropExpiredDrafts`), `entryReducer`/`isChanged` (`entryState.ts`); hooks `useSaveFlow`, `useLeaveGuard`, `useEntryLoader`, `useDraftAutosave`, `useDeferredDate`; words `ASSESSMENT_TEXT` |
 | admin api | `frontend/src/lib/api/assessments/{fetchers,queries,listQueries}.ts` | `assessmentKeys` `['assessments']`, `entryFormQueryOptions` (`staleTime: 0`), `invalidateAssessmentData`, `useEntryForm`, `useSaveAssessment`; S11: `useAssessmentList`, `useRecentAssessments`, `useAssessment`, `useDeleteAssessment`, `useUpdateAssessment` (unused until #32) |
 | admin ui | `frontend/src/components/{views,pages}/assessments/**`, routes `app/(app)/admin/members/[memberId]/{assess,assessments}/**` | `EntryScreen`, `ChooseAssessmentSheet`, `CheckValuesSheet`, `AssessmentSheet`, `LeaveDialog` |
-| slot | `frontend/src/components/pages/member/RecentBlock.tsx` | latest 3 assessments (E27 `pageSize=3`), takes `{ memberId }` |
+| slot | `frontend/src/components/pages/member/MemberBlocks.tsx (RecentBlock)` | latest 3 assessments (E27 `pageSize=3`), takes `{ memberId }` |
 
 ## Gotchas
 - E26/E29 lock the member row first (assess-D6, index → Lock order); E29 and E30 get the member id with `memberIdOf` before locking. The repository's own `readTimezone` is needed only for `DATE_IN_FUTURE` (E26/E29).

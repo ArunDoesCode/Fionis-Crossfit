@@ -167,3 +167,65 @@ Rejected: a shared integration branch. Detail: `docs/KNOWLEDGE.md` → Parallel 
 25 named members whose dates are today plus fixed offsets, so every screen and every manual checklist starts from known rows
 after `db:reset`. Why: `seed:perf` is random, leaves hundreds overdue and has no due overrides. Rejected: SQL snippets pasted in
 the checklists. Detail: data-model.md v3.
+
+**D-027 · 2026-10-05 · member-records UI is desktop-first and phone-responsive; supersedes the "mobile-first" part of D-016.**
+Owner UAT: the laptop is the main device; padding too big, forms one long column. Desktop density (40 px controls, 48 px
+rows), touch keeps 44 px on `pointer: coarse` (ux BR-REC-122, 181). Why: the trainer types the binder in at the desk.
+Rejected: keep mobile-first and widen (wasted space, scrolling). The D-016 override "no Reset button" stays; the
+`frontend/CLAUDE.md` override text ("mobile-first (D-016)") must be reworded by the developer. Detail: ux.md v2.
+
+**D-028 · 2026-10-05 · App shell = shadcn Sidebar (fixed, collapsible, content scrolls); phones navigate with a hamburger drawer only.**
+Bottom tab bar retired (ux BR-REC-120 superseded by 177, 178); breadcrumbs on desktop, "‹ parent" on phones from one
+route table (179). Why: owner choice; the sticky side nav broke on long forms and phones had no gym name, theme or
+sign-out. Sidebar open state lives in shadcn's provider (cookie), not Zustand (deviates from nextjs-standards §11
+"sidebar → Zustand"). Rejected: keep tabs + add a menu (two navigations).
+
+**D-029 · 2026-10-05 · Fionis brand colours (orange #F7941E on navy #050715, AA-checked set in #41) and Poppins 600 headings replace the green theme and Raleway.**
+Reverses ux v1 Q2 ("keep green") and the Raleway part of performance BR-REC-150 (now 214). Orange buttons carry navy
+text, never white (white on orange is 2.3:1). Why: owner wants the gym's own look (fionis.in). Rejected: the site's
+white-on-orange buttons (fail BR-REC-124).
+
+**D-030 · 2026-10-05 · A date-picker library is allowed: shadcn Calendar (`react-day-picker` + `date-fns`) loaded on demand; dates shown `dd MMM yyyy`; weeks start Monday.**
+Supersedes the "no date-picker library" clause of BR-REC-146 (now 215) and the native DateField of ux v1. Date-only
+values never pass through UTC (BR-REC-193). Why: owner wants one consistent picker on every device; native pickers
+differ per browser and leaked a year-typing bug (#51). Rejected: native inputs; a typeable-only field.
+
+**D-031 · 2026-10-05 · Member search runs in the browser over a once-loaded member directory, with a Name · Email · Phone field picker; E16 gains `email`.**
+Supersedes BR-REC-07, 56 and performance tactic 9 (250 ms debounce + server `ILIKE`). Why: ≤ 200 members ≈ 10 KB gzip;
+typing waited 250 ms + a round trip. The server `q` stays as the fallback above 1,000 members. Rejected: `pg_trgm`
+(no extensions, D-019), keeping the debounce. Detail: members.md BR-REC-201…205.
+
+**D-032 · 2026-10-05 · Forms use the owner's `FormField` format: label + control + a fixed-height message slot, so errors never resize the form; grids by container width (1–4 columns), one desktop screen per form.**
+Overrides, for this app, nextjs-standards §14 "error slot `h-4`" (exact height: ux Q1), "new code uses `Field` +
+`Controller`, legacy `<FormField>` may remain" (ux Q2) and the viewport grid `md:grid-cols-2`. RHF + Zod everywhere;
+whether the Record form leaves its D-024 reducer is ux Q3. Why: owner's standard; copy-pasted field blocks and three
+focus helpers today. Rejected: per-screen field markup.
+
+**D-033 · 2026-10-05 · Colours exist only as semantic tokens in `globals.css` mapped by `@theme inline` to Tailwind classes; one source per thing (SSOT) is a testable rule.**
+No raw hex / `oklch()` / arbitrary colour / palette class in components (CI grep, ux BR-REC-184, 200); one module each
+for date format, nav items, route meta, status tones, messages, form primitives (BR-REC-197–199). TV keeps its own
+`src/tv/theme.ts`. Why: owner asked for SSOT and clean, simple code. Rejected: a lint rule only (misses CSS-in-class strings).
+
+**D-034 · 2026-10-05 · Owner's form format is law: `FormField` → `<FormItem className="min-h-19">` → `<FormControl>` + `FloatingLabelInput` → `<FormMessage />`; every form, including Record assessment, is RHF + Zod. Supersedes D-024 (3) and completes D-032.**
+The 76 px minimum is on the whole item (control + message), so an error never resizes the form; the label floats inside
+the field and still carries `*` + `aria-required`. The five primitives live once in `components/common/form`, built on
+the installed shadcn `Field` / `FieldError` + RHF `Controller` (no legacy shadcn `form`); number inputs and date/month
+triggers share the `FloatingLabelInput` look. Record assessment: drafts from `watch`, leave guard from `isDirty`
+(owner Q3 = A). Overrides nextjs-standards §14 "error slot `h-4`" and "new code uses `Field`, legacy `<FormField>`
+may remain"; today's code uses `min-h-5` on the error only. The standards file is the owner's: not edited here — the
+owner updates §14 or keeps this note. Why: owner's own pattern (answers ux Q1, Q2). Rejected: a fixed slot on the
+message only (h-4 / h-5), the D-024 reducer. Detail: ux BR-REC-187, 198.
+
+**D-035 · 2026-10-05 · ux v2 answers: sidebar from 768 px, dates always with the year, unchanged edits close silently, server prefetch on Home + member page only, AVIF wordmark.**
+(1) shadcn default 768 px: below it ☰ drawer, 768–1023 px icon-collapsed sidebar (amends D-028). (2) "03 Oct 2026"
+always, also this year (amends D-030). (3) Save on an unchanged edit sends nothing and closes, no toast, on every edit
+form (gym-settings toast removed). (4) Server prefetch (#20) only for Home and the member page. (5) Logo
+`frontend/public/Fionis-Logo.avif` (284 × 106) via `next/image` on Login (`priority`) and the expanded sidebar; collapsed
+sidebar shows an orange "F" placeholder; square logo, app icon and favicon are follow-up assets (amends D-029). Why:
+owner answers ux Q4, Q5, Q7, Q8, performance Q6. Rejected: 1024 px breakpoint (edits generated shadcn code), a
+"No changes" toast.
+
+**D-036 · 2026-10-05 · `FormItem min-h-19` covers every kind of field: one floating label over a Time field's min + sec boxes; chips, switches and checkboxes in the same item with the label above; 76 px on desktop and touch alike.**
+Completes D-034 (owner answers ux Q9–Q11). Why: one field shape everywhere, so the grid rows line up and nothing moves
+when an error appears. Rejected: a label per box, no minimum height for choice fields, a smaller desktop minimum.
+Detail: ux BR-REC-187.

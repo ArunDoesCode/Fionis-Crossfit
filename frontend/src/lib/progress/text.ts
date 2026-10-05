@@ -1,5 +1,5 @@
 import { formatDuration } from '@/lib/domain/duration';
-import { formatDay, formatValue } from '@/lib/format';
+import { formatDay, formatMonthYear, formatValue } from '@/lib/format';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
 import type { AgeBand } from './filters';
 
@@ -129,15 +129,12 @@ export const changeText = (change: number | null, metric: ValueMetric): string |
   return `${up ? '↑' : '↓'} ${valueText(Math.abs(change), metric)} ${word}`;
 };
 
-/** "12 Sep" / "12 Dec 2025" for a measured day; "≈ Dec 2025" when estimated (BR-REC-108, 127). */
-export const readingDateText = (on: string, isEstimated: boolean, today: string): string => {
-  if (!isEstimated) return formatDay(on, today);
-  const month = formatDay(on, on).split(' ')[1]; // same year as itself: "12 Dec"
-  return month ? `≈ ${month} ${on.slice(0, 4)}` : on;
-};
+/** "12 Sep 2026" for a measured day; "≈ Dec 2025" when estimated (BR-REC-108, 127, 191). */
+export const readingDateText = (on: string, isEstimated: boolean, _today?: string): string =>
+  isEstimated ? `≈ ${formatMonthYear(on)}` : formatDay(on);
 
-/** "3 Oct 2026": always with the year (the printed date). */
-export const fullDayText = (on: string): string => `${formatDay(on, on)} ${on.slice(0, 4)}`;
+/** "03 Oct 2026": the printed date. */
+export const fullDayText = (on: string): string => formatDay(on);
 
 interface Outcomes {
   improved: number;

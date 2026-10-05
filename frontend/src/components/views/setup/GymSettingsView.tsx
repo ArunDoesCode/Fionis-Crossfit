@@ -1,15 +1,32 @@
 'use client';
 
+import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { useIsMutating } from '@tanstack/react-query';
 import ErrorState from '@/components/common/ErrorState';
 import Page from '@/components/common/Page';
 import PageHeader from '@/components/common/PageHeader';
 import { FormSkeleton } from '@/components/common/Skeletons';
 import GymSettingsForm from '@/components/pages/setup/GymSettingsForm';
-import GymSettingsSaveButton from '@/components/pages/setup/GymSettingsSaveButton';
-import { useSettings } from '@/lib/api/setup/queries';
+import { Button } from '@/components/ui/button';
+import { setupMutationKeys, useSettings } from '@/lib/api/setup/queries';
+import { UI_TEXT } from '@/lib/messages/words';
 import { SETUP_TEXT } from '@/lib/setup/text';
 
 const FORM_ID = 'gym-settings-form';
+
+// S16's one main action (BR-REC-121). It sits in the page header / action bar, outside the form, so it
+// submits by `form` id and reads "is it being saved" from the mutation. Off only while the call runs.
+function GymSettingsSaveButton({ formId }: { formId: string }) {
+  const saving = useIsMutating({ mutationKey: setupMutationKeys.updateSettings() }) > 0;
+
+  return (
+    <Button type="submit" form={formId} disabled={saving}>
+      {saving && <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="animate-spin" />}
+      {saving ? UI_TEXT.saving : SETUP_TEXT.general.save}
+    </Button>
+  );
+}
 
 // S16 Reminders & gym (`/admin/settings/general`), 720 px wide. Main action: Save (header on desktop, bar on
 // phones with the tab bar hidden, because this is a form: BR-REC-120, 121). The settings are read again on
@@ -19,13 +36,8 @@ export default function GymSettingsView() {
   const data = settings.data;
 
   return (
-    <Page width="narrow">
-      <PageHeader
-        title={SETUP_TEXT.general.title}
-        backHref="/admin/settings"
-        form
-        action={data ? <GymSettingsSaveButton formId={FORM_ID} /> : undefined}
-      />
+    <Page>
+      <PageHeader form action={data ? <GymSettingsSaveButton formId={FORM_ID} /> : undefined} />
       {data ? (
         // A change made on another device (or just saved here) starts the form again from the new values.
         <GymSettingsForm key={JSON.stringify(data)} settings={data} formId={FORM_ID} />

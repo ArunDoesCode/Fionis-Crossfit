@@ -132,6 +132,8 @@ export const assessmentsService = {
           better: metric.better,
           plausibleMin: metric.plausibleMin,
           plausibleMax: metric.plausibleMax,
+          tableGroup: metric.tableGroup,
+          tablePart: metric.tablePart,
           previous: before
             ? {
                 value: before.value,

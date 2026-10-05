@@ -36,7 +36,7 @@ interface DataTableProps<TData extends RowData> {
   emptyDescription?: string;
 }
 
-// Server-paginated by design: pair with TablePagination; sorting/filtering happen on the server.
+// Server-paginated by design: sorting/filtering happen on the server.
 export default function DataTable<TData extends RowData>({
   columns,
   data,
@@ -79,7 +79,7 @@ export default function DataTable<TData extends RowData>({
                 </TableRow>
               ))
             : table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} className="relative">
                   {row.getAllCells().map((cell) => (
                     <TableCell key={cell.id}>
                       <table.FlexRender cell={cell} />

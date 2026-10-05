@@ -27,7 +27,7 @@ export default function ActivePlans() {
     <Section
       title={text.activeByPlan}
       isLoading={!data && !active.isError}
-      loadingFallback={<CardSkeleton className="h-[15.25rem]" />}
+      loadingFallback={<CardSkeleton className="h-61" />}
       isError={!data && active.isError}
       onRetry={() => void active.refetch()}
     >

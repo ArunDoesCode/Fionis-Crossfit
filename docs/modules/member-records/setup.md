@@ -22,7 +22,7 @@ Endpoints: E07 settings (read, ETag) · E08 update settings · E09 catalog (ETag
 | backend | `backend/src/{routes/setup,controller/setupController,service/setupService,service/setupRules,repository/setupRepository}.ts`, `types/setup.types.ts` | `setupService.{getSettings,updateSettings,listCatalog,createType,updateType,reorderTypes,createMetric,updateMetric,reorderMetrics}`; pure `setupRules.ts`: `newMetricFields`, `editedMetricFields` (C3), `metricIssues` (C8), `changesKindOrUnit` (C4), `listsEveryIdOnce` (C7) |
 | domain | `backend/src/lib/domain/metric-value.ts` | `roundMetricValue(value, datatype, decimals)`: half away from zero on the decimal digits (BR-REC-76) |
 | admin lib | `frontend/src/lib/{validators/setup.ts,setup/{describe,text,form,timezones}.ts,api/setup/{fetchers,queries}.ts}` | `setupKeys`; `settingsQueryOptions`, `assessmentTypesQueryOptions` (`staleTime: 0`, catalog `pageSize=100`) |
-| admin ui | `frontend/src/components/{views,pages}/setup/*`, routes `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `SetupSheet` (edit sheet + confirm step), `SheetBody`, `ThemeChoice` (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
+| admin ui | `frontend/src/components/{views,pages}/setup/*`, routes `app/(app)/admin/settings/{page.tsx,general,assessments/[typeId]}` | `SetupSheet` (edit sheet + confirm step), `SheetBody`, the theme choice in SettingsHubView (System/Light/Dark), `SettingsHubView`, `GymSettingsView`, `AssessmentSetupView`, `AssessmentDetailView` |
 
 ## Gotchas
 - E07 is a pure read (setup-C13): no `gym_settings` row → the schema defaults (`SETTINGS_DEFAULTS`, read from the Drizzle column defaults); only E08 (`lockSettings`) and `seed` create the row.
@@ -31,7 +31,7 @@ Endpoints: E07 settings (read, ETag) · E08 update settings · E09 catalog (ETag
 - Audit: one `audit_log` row per successful write (entities `settings` id "1", `assessment_type`, `metric`; create rows hold the new item, reorder rows `{ order: [ids] }`); a no-op write still logs a row with null before/after; no ip/device (setup-C10).
 - Time → Number switch with no unit and no decimals in the body takes the creation defaults (unit "", decimals 1); a Time measurement is always `min:sec` + 0 decimals (setup-C3). E14 error order: 404 → C8 400 → `METRIC_LOCKED` → `NAME_TAKEN`.
 - Admin: a confirmation is a step inside the one `SetupSheet` (index → Sheets and Back). A hidden (not unmounted) form keeps its state, but `focus()` on it fails until visible (`flushSync` first).
-- Theme follows the device (`defaultTheme="system"`); the manual choice is `ThemeChoice` on S14 (the shared `ThemeToggle` is a two-state icon button and cannot offer System).
+- Theme follows the device (`defaultTheme="system"`); the manual choice is the theme choice in SettingsHubView on S14 (the shared `ThemeToggle` is a two-state icon button and cannot offer System).
 - Setup's `DurationControl` ignores the shared `DurationField` `status`, and `NumberControl` passes no `allowNegative`: an iOS phone cannot type a minus in a check range (#19, #21).
 
 ## Tests and open issues

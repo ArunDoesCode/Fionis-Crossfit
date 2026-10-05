@@ -1,4 +1,4 @@
-import Sparkline from '@/components/common/Sparkline';
+import Sparkline from '@/components/pages/progress/Sparkline';
 import type { ReportMetric, ReportType } from '@/lib/api/progress/fetchers';
 import { changeText, PROGRESS_TEXT, readingDateText, valueText } from '@/lib/progress/text';
 

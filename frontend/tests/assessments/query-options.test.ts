@@ -151,7 +151,7 @@ describe('BR-REC-20 / 81 entryFormQueryOptions', () => {
   });
 });
 
-describe('BR-REC-88 invalidateAssessmentData calls invalidateQueries for the three key roots', () => {
+describe('BR-REC-88 invalidateAssessmentData calls invalidateQueries for the four key roots (BR-REC-209)', () => {
   function spyClient(gatedRoot?: string) {
     const calls: Filters[] = [];
     let release: () => void = () => {};
@@ -167,22 +167,23 @@ describe('BR-REC-88 invalidateAssessmentData calls invalidateQueries for the thr
     return { client, calls, release: () => release() };
   }
 
-  test('BR-REC-88 it calls invalidateQueries exactly three times', async () => {
+  test('BR-REC-88 it calls invalidateQueries exactly four times', async () => {
     const spy = spyClient();
     await queries.invalidateAssessmentData(spy.client);
-    expect(spy.calls).toHaveLength(3);
+    expect(spy.calls).toHaveLength(4);
   });
 
-  test('BR-REC-88 once each for ["assessments"], ["members"] and ["due"], as { queryKey }', async () => {
+  test('BR-REC-88 once each for assessments, members list, members detail and due, as { queryKey }, no bare ["members"]', async () => {
     const spy = spyClient();
     await queries.invalidateAssessmentData(spy.client);
     const sorted = [...spy.calls].sort((a, b) =>
-      String(a.queryKey[0]).localeCompare(String(b.queryKey[0])),
+      a.queryKey.join('/').localeCompare(b.queryKey.join('/')),
     );
     expect(sorted).toEqual([
       { queryKey: ['assessments'] },
       { queryKey: ['due'] },
-      { queryKey: ['members'] },
+      { queryKey: ['members', 'detail'] },
+      { queryKey: ['members', 'list'] },
     ]);
   });
 
@@ -192,11 +193,11 @@ describe('BR-REC-88 invalidateAssessmentData calls invalidateQueries for the thr
     expect(spy.calls.map((call) => call.queryKey)).toContainEqual([...queries.assessmentKeys.all]);
   });
 
-  test('BR-REC-88 a second call invalidates again (three more calls)', async () => {
+  test('BR-REC-88 a second call invalidates again (four more calls)', async () => {
     const spy = spyClient();
     await queries.invalidateAssessmentData(spy.client);
     await queries.invalidateAssessmentData(spy.client);
-    expect(spy.calls).toHaveLength(6);
+    expect(spy.calls).toHaveLength(8);
   });
 
   test.each(['assessments', 'members', 'due'])(
@@ -213,7 +214,7 @@ describe('BR-REC-88 invalidateAssessmentData calls invalidateQueries for the thr
       spy.release();
       await run;
       expect(done).toBe(true);
-      expect(spy.calls).toHaveLength(3);
+      expect(spy.calls).toHaveLength(4);
     },
   );
 });
@@ -229,13 +230,15 @@ describe('BR-REC-88 invalidateAssessmentData on a real query client', () => {
       queries.assessmentKeys.list({ memberId: M1, typeId: T1 }),
       queries.assessmentKeys.recent(M1),
       queries.assessmentKeys.detail(A1),
-      ['members'],
       ['members', 'list', { q: 'sur' }],
+      ['members', 'list', 'directory'],
       ['members', 'detail', M1],
       ['due'],
       ['due', 'home'],
     ];
     const untouched: Key[] = [
+      ['members'],
+      ['members', 'duplicates', '9000000000'],
       ['setup', 'catalog'],
       ['auth', 'me'],
       ['reports', 'progress'],

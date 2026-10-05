@@ -1,6 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv } from '@/lib/envServer';
 import { createApi } from './client';
 
 // Server Components / Route Handlers only. Forwards the incoming Cookie header; never cached.

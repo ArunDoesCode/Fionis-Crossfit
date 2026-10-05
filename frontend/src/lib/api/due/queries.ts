@@ -24,7 +24,6 @@ import type {
   MemberDueItem,
 } from '@/lib/due/types';
 import { formatDay } from '@/lib/format';
-import { gymTodayNow } from '@/lib/members/useToday';
 import { messageForCode } from '@/lib/messages/errors';
 import { deleteDueAction, fetchDueList, fetchMemberDue, putDueAction } from './fetchers';
 
@@ -223,7 +222,7 @@ export function useSetDueAction() {
       toast.success(
         change.action === 'flag'
           ? DUE_TEXT.toasts.markedAssessSoon
-          : DUE_TEXT.toasts.reminderSet(formatDay(change.until, gymTodayNow())),
+          : DUE_TEXT.toasts.reminderSet(formatDay(change.until)),
       );
     },
     onSettled: () => refreshDue(queryClient),

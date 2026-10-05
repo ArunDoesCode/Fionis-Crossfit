@@ -1,64 +1,87 @@
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
-import type { Route } from 'next';
-import Link from 'next/link';
-import ActionBar from '@/components/common/ActionBar';
-import { buttonVariants } from '@/components/ui/button';
-import { UI_TEXT } from '@/lib/messages/words';
+import { Suspense } from 'react';
+import {
+  BackToParent,
+  PatternBack,
+  PatternHeading,
+  RouteHeading,
+} from '@/components/common/RouteHeading';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
-interface PageHeaderProps<T extends string> {
-  title: string;
+interface PageHeaderProps {
+  /**
+   * A loading.tsx passes its route pattern (`/admin/members/[memberId]`) so the title, crumbs and back link are in
+   * the first frame; a screen leaves it off and the same entry is found from the path.
+   */
+  pattern?: string;
+  /** Only for a title the route table cannot know (a name from the data); otherwise it comes from `routeFor`. */
+  title?: string;
   subtitle?: string;
-  /** Shows the back arrow (44 px) in front of the title. */
-  backHref?: Route<T>;
   /** Small extra control that stays at the right on every width (for example "Edit"). */
   secondary?: React.ReactNode;
   /**
-   * The screen's one main action (BR-REC-121): shown at the right of the header from 1024 px and in a
-   * full-width bar above the tabs on phones (written once, drawn in both places).
+   * The screen's one main action (BR-REC-180): at the right of the header on desktop and in the top bar on
+   * phones; on a form (`form`) the phone shows it in a bottom bar instead (written once, drawn in both places).
    */
   action?: React.ReactNode;
-  /** The screen is a form: the phone bar sits on the bottom edge and the tab bar steps aside. */
+  /** The screen is a form: on phones the action sits in the bottom bar. */
   form?: boolean;
   className?: string;
 }
 
-export default function PageHeader<T extends string>({
+// BR-REC-179, 180: the title, breadcrumbs (from 768 px) and "‹ Parent" (phones) all come from the route
+// table (`RouteHeading`), so a loading.tsx and its screen agree. The header stays visible while the content
+// scrolls; below 768 px it is the top bar with ☰.
+export default function PageHeader({
+  pattern,
   title,
   subtitle,
-  backHref,
   secondary,
   action,
   form,
   className,
-}: PageHeaderProps<T>) {
+}: PageHeaderProps) {
   return (
     <>
       <header
         className={cn(
-          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-[var(--header-height)] items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
+          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-header items-center gap-2 bg-background pt-[env(safe-area-inset-top)] md:-mx-4 md:-mt-4 md:px-4 md:pt-4',
           className,
         )}
       >
-        {backHref && (
-          <Link
-            href={backHref}
-            aria-label={UI_TEXT.back}
-            data-slot="button"
-            className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-11 shrink-0')}
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
-          </Link>
-        )}
+        {/* ☰ opens the drawer on phones; from 768 px the sidebar's own header button collapses it. */}
+        <SidebarTrigger className="-ml-2 size-[var(--control-height)] shrink-0 md:hidden" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-heading text-xl font-semibold lg:text-2xl">{title}</h1>
-          {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
+          <Suspense
+            fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
+          >
+            <RouteHeading title={title} subtitle={subtitle} />
+          </Suspense>
         </div>
         {secondary}
-        {action && <div className="hidden lg:block">{action}</div>}
+        {action && (
+          <div
+            className={
+              form ? 'shrink-0 whitespace-nowrap max-md:hidden' : 'shrink-0 whitespace-nowrap'
+            }
+          >
+            {action}
+          </div>
+        )}
       </header>
-      {action && <ActionBar form={form}>{action}</ActionBar>}
+      <Suspense fallback={<PatternBack pattern={pattern} />}>
+        <BackToParent />
+      </Suspense>
+      {/* BR-REC-180: on a phone a form's one main action (Save) is a full-width bar fixed to the bottom edge
+          (above the keyboard); the admin layout pads the content while a bar exists. Hidden from 768 px. */}
+      {form && action && (
+        <div
+          data-slot="action-bar"
+          className="fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t px-4 bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          <div className="flex w-full flex-col *:h-[var(--control-height)] *:w-full">{action}</div>
+        </div>
+      )}
     </>
   );
 }

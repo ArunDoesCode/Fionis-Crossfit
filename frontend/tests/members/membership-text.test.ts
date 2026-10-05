@@ -26,7 +26,7 @@ interface StatusInput {
 interface StatusText {
   label: 'Active' | 'Ends soon' | 'Ended';
   detail: string;
-  tone: 'success' | 'warning' | 'danger';
+  tone: 'success' | 'warning' | 'neutral';
 }
 
 interface ListItem {
@@ -40,7 +40,7 @@ interface ListItem {
 
 interface Badge {
   text: string;
-  tone: 'success' | 'warning' | 'danger' | 'neutral';
+  tone: 'success' | 'warning' | 'neutral';
 }
 
 interface MembershipText {
@@ -124,7 +124,7 @@ describe('BR-REC-52 membershipStatusText, Active', () => {
         { status: 'active', startOn: '2026-10-20', endOn: '2026-11-19', daysLeft: 47 },
         TODAY,
       ),
-    ).toEqual({ label: 'Active', detail: 'Starts 20 Oct', tone: 'success' });
+    ).toEqual({ label: 'Active', detail: 'Starts 20 Oct 2026', tone: 'success' });
   });
 
   test('BR-REC-52 a start tomorrow is "Starts 4 Oct"', () => {
@@ -132,15 +132,15 @@ describe('BR-REC-52 membershipStatusText, Active', () => {
       { status: 'active', startOn: '2026-10-04', endOn: '2026-11-03', daysLeft: 31 },
       TODAY,
     );
-    expect(result.detail).toBe('Starts 4 Oct');
+    expect(result.detail).toBe('Starts 04 Oct 2026');
   });
 
-  test('BR-REC-127 a start in another year shows the year: "Starts 5 Jan 2027"', () => {
+  test('BR-REC-127 a start in another year shows the year: "Starts 05 Jan 2027"', () => {
     const result = text.membershipStatusText(
       { status: 'active', startOn: '2027-01-05', endOn: '2027-02-04', daysLeft: 124 },
       TODAY,
     );
-    expect(result.detail).toBe('Starts 5 Jan 2027');
+    expect(result.detail).toBe('Starts 05 Jan 2027');
   });
 });
 
@@ -183,13 +183,13 @@ describe('BR-REC-52 membershipStatusText, Ends soon', () => {
 });
 
 describe('BR-REC-52 membershipStatusText, Ended', () => {
-  test('BR-REC-52 ended 2 Oct, today 3 Oct: Ended, "Ended yesterday", danger', () => {
+  test('BR-REC-52 ended 2 Oct, today 3 Oct: Ended, "Ended yesterday", neutral', () => {
     expect(
       text.membershipStatusText(
         { status: 'expired', startOn: '2025-10-03', endOn: '2026-10-02', daysLeft: -1 },
         TODAY,
       ),
-    ).toEqual({ label: 'Ended', detail: 'Ended yesterday', tone: 'danger' });
+    ).toEqual({ label: 'Ended', detail: 'Ended yesterday', tone: 'neutral' });
   });
 
   test('BR-REC-52 ended 28 Sep, today 3 Oct: "Ended 5 days ago"', () => {
@@ -198,7 +198,7 @@ describe('BR-REC-52 membershipStatusText, Ended', () => {
         { status: 'expired', startOn: '2025-09-29', endOn: '2026-09-28', daysLeft: -5 },
         TODAY,
       ),
-    ).toEqual({ label: 'Ended', detail: 'Ended 5 days ago', tone: 'danger' });
+    ).toEqual({ label: 'Ended', detail: 'Ended 5 days ago', tone: 'neutral' });
   });
 
   test('BR-REC-52 ended 31 May (125 days ago): "Ended 125 days ago"', () => {
@@ -223,7 +223,7 @@ describe('BR-REC-52 membershipStatusText, the status decides the label and the c
   const rows: [Status, StatusText['label'], StatusText['tone']][] = [
     ['active', 'Active', 'success'],
     ['expiring', 'Ends soon', 'warning'],
-    ['expired', 'Ended', 'danger'],
+    ['expired', 'Ended', 'neutral'],
   ];
   for (const [status, label, tone] of rows) {
     test(`BR-REC-125 ${status} is "${label}" with the ${tone} tone`, () => {
@@ -288,14 +288,14 @@ describe('BR-REC-125 memberListBadge (S5 Members rows)', () => {
     });
   });
 
-  test('BR-REC-125 an ended membership: "Ended", danger', () => {
+  test('BR-REC-125 an ended membership: "Ended", neutral', () => {
     expect(text.memberListBadge(item('expired', -1), TODAY)).toEqual({
       text: 'Ended',
-      tone: 'danger',
+      tone: 'neutral',
     });
     expect(text.memberListBadge(item('expired', -40), TODAY)).toEqual({
       text: 'Ended',
-      tone: 'danger',
+      tone: 'neutral',
     });
   });
 
@@ -336,13 +336,17 @@ describe('BR-REC-125 memberListBadge (S5 Members rows)', () => {
     }
   });
 
-  test('BR-REC-125 the tone differs between Active, Ends soon, Ended and Archived', () => {
+  test('BR-REC-125 Active, Ends soon and Ended/Archived are three distinct tones (BR-REC-185)', () => {
     const tones = [
       text.memberListBadge(item('active', 100), TODAY).tone,
       text.memberListBadge(item('expiring', 4), TODAY).tone,
       text.memberListBadge(item('expired', -4), TODAY).tone,
-      text.memberListBadge(item('active', 100, '2026-06-02T08:00:00.000Z'), TODAY).tone,
     ];
-    expect(new Set(tones).size).toBe(4);
+    expect(new Set(tones).size).toBe(3);
+    const archived = text.memberListBadge(
+      item('active', 100, '2026-06-02T08:00:00.000Z'),
+      TODAY,
+    ).tone;
+    expect(archived).toBe(text.memberListBadge(item('expired', -4), TODAY).tone);
   });
 });

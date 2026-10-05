@@ -1,6 +1,7 @@
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatDay, formatRelativeDay } from '@/lib/format';
 import { WORDS } from '@/lib/messages/words';
+import { type StatusTone, toneFor } from '@/lib/statusTone';
 import type { MemberListItem, MembershipStatus, Plan } from './types';
 
 /** BR-REC-59: the plan words on screen. */
@@ -11,12 +12,10 @@ export const PLAN_LABELS: Record<Plan, string> = {
   annual: 'Annual',
 };
 
-export type MembershipTone = 'success' | 'warning' | 'danger';
-
 export interface MembershipStatusText {
   label: 'Active' | 'Ends soon' | 'Ended';
   detail: string;
-  tone: MembershipTone;
+  tone: StatusTone;
 }
 
 const daysLeftText = (daysLeft: number): string =>
@@ -35,22 +34,21 @@ export const membershipStatusText = (
     return {
       label: WORDS.ended,
       detail: `Ended ${formatRelativeDay(m.endOn, today)}`,
-      tone: 'danger',
+      tone: toneFor('ended'),
     };
   }
   if (m.status === 'expiring') {
     return {
       label: WORDS.endsSoon,
       detail: `Ends ${formatRelativeDay(m.endOn, today)}`,
-      tone: 'warning',
+      tone: toneFor('ending'),
     };
   }
   const notStarted = m.startOn !== undefined && m.startOn > today;
   return {
     label: 'Active',
-    detail:
-      notStarted && m.startOn ? `Starts ${formatDay(m.startOn, today)}` : daysLeftText(m.daysLeft),
-    tone: 'success',
+    detail: notStarted && m.startOn ? `Starts ${formatDay(m.startOn)}` : daysLeftText(m.daysLeft),
+    tone: toneFor('active'),
   };
 };
 
@@ -58,11 +56,11 @@ export const membershipStatusText = (
 export const memberListBadge = (
   item: Pick<MemberListItem, 'archivedAt' | 'membership'>,
   today: IsoDate,
-): { text: string; tone: MembershipTone | 'neutral' } => {
-  if (item.archivedAt) return { text: 'Archived', tone: 'neutral' };
+): { text: string; tone: StatusTone } => {
+  if (item.archivedAt) return { text: 'Archived', tone: toneFor('archived') };
   const { status, endOn } = item.membership;
-  if (status === 'expired') return { text: WORDS.ended, tone: 'danger' };
+  if (status === 'expired') return { text: WORDS.ended, tone: toneFor('ended') };
   if (status === 'expiring')
-    return { text: `Ends ${formatRelativeDay(endOn, today)}`, tone: 'warning' };
-  return { text: 'Active', tone: 'success' };
+    return { text: `Ends ${formatRelativeDay(endOn, today)}`, tone: toneFor('ending') };
+  return { text: 'Active', tone: toneFor('active') };
 };

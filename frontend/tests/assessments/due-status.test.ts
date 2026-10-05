@@ -61,12 +61,12 @@ describe('due-list BR-REC-103 dueStatusText: the six words', () => {
     ['due in 2 days', { state: 'upcoming', nextDueOn: '2026-10-05' }, 'Due in 2 days'],
     ['due today (case 7)', { state: 'upcoming', nextDueOn: TODAY }, 'Due today'],
     ['due tomorrow (case 6)', { state: 'upcoming', nextDueOn: '2026-10-04' }, 'Due tomorrow'],
-    ['next due this year', { state: 'ok', nextDueOn: '2026-11-10' }, 'Next due 10 Nov'],
-    ['next due on 12 Dec', { state: 'ok', nextDueOn: '2026-12-12' }, 'Next due 12 Dec'],
+    ['next due this year', { state: 'ok', nextDueOn: '2026-11-10' }, 'Next due 10 Nov 2026'],
+    ['next due on 12 Dec', { state: 'ok', nextDueOn: '2026-12-12' }, 'Next due 12 Dec 2026'],
     [
       'next due next year shows the year',
       { state: 'ok', nextDueOn: '2027-01-05' },
-      'Next due 5 Jan 2027',
+      'Next due 05 Jan 2027',
     ],
     [
       'never recorded (due on the join date, so also overdue)',
@@ -83,17 +83,17 @@ describe('due-list BR-REC-103 dueStatusText: the six words', () => {
     [
       'a reminder until 20 Oct (case 13)',
       { state: 'ok', snoozedUntil: '2026-10-20' },
-      'Reminder on 20 Oct',
+      'Reminder on 20 Oct 2026',
     ],
     [
       'a reminder over an overdue date (hidden until then)',
       { state: 'overdue', snoozedUntil: '2026-10-20', nextDueOn: '2026-09-30', daysOverdue: 3 },
-      'Reminder on 20 Oct',
+      'Reminder on 20 Oct 2026',
     ],
     [
       'a reminder into next year shows the year',
       { state: 'ok', snoozedUntil: '2027-01-02' },
-      'Reminder on 2 Jan 2027',
+      'Reminder on 02 Jan 2027',
     ],
   ])('BR-REC-103 %s -> "%s"', (_name, over, expected) => {
     expect(dueStatusText(row(over), TODAY)).toBe(expected);

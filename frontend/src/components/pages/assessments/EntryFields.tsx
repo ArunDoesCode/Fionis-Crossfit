@@ -1,56 +1,64 @@
 'use client';
 
-import type { Dispatch } from 'react';
+import { useMemo } from 'react';
 import EmptyState from '@/components/common/EmptyState';
+import { FormGrid, FormSection } from '@/components/common/form';
 import MetricField from '@/components/pages/assessments/MetricField';
-import type { EntryAction, EntryState } from '@/lib/assessments/entryState';
+import type { EntryControl } from '@/lib/assessments/entryErrors';
+import { layoutMetrics } from '@/lib/assessments/layout';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { EntryMetric } from '@/lib/assessments/types';
 
 interface EntryFieldsProps {
-  formId: string;
+  control: EntryControl;
   metrics: EntryMetric[];
-  state: EntryState;
-  attempted: boolean;
-  /** Measurement ids that are due (empty until E32 answers, D11). */
-  dueIds: Set<string>;
+  /** The saved assessment's values by measurement id (emptying one removes it). */
+  baseline: Record<string, number>;
   stale: boolean;
+  submitted: boolean;
   today: string;
-  dispatch: Dispatch<EntryAction>;
 }
 
-// The measurements in setup order (BR-REC-73): one column, 720 px wide on desktop (BR-REC-139).
+// The measurements as cells of the form's grid (BR-REC-73, 216): untitled cells straight in it, a titled block as
+// a FormSection with its parts in a 2-up sub-grid. The screen owns the outer FormGrid.
 export default function EntryFields({
-  formId,
+  control,
   metrics,
-  state,
-  attempted,
-  dueIds,
+  baseline,
   stale,
+  submitted,
   today,
-  dispatch,
 }: EntryFieldsProps) {
-  if (metrics.length === 0) return <EmptyState title={ASSESSMENT_TEXT.noMeasurements} />;
-  return (
-    <div className="flex flex-col gap-2">
-      {metrics.map((metric, index) => (
-        <MetricField
-          key={metric.id}
-          formId={formId}
-          metric={metric}
-          index={index}
-          count={metrics.length}
-          input={state.inputs[metric.id]}
-          touched={state.touched[metric.id] === true}
-          attempted={attempted}
-          hadValue={metric.id in state.baseline}
-          timeProblem={state.timeProblems[metric.id] === true}
-          due={dueIds.has(metric.id)}
-          stale={stale}
-          today={today}
-          dispatch={dispatch}
-        />
-      ))}
-    </div>
+  const blocks = useMemo(() => layoutMetrics(metrics), [metrics]);
+  if (metrics.length === 0) {
+    return (
+      <div className="col-span-full">
+        <EmptyState title={ASSESSMENT_TEXT.noMeasurements} />
+      </div>
+    );
+  }
+  const cell = (metric: EntryMetric) => (
+    <MetricField
+      key={metric.id}
+      control={control}
+      metric={metric}
+      index={metrics.indexOf(metric)}
+      count={metrics.length}
+      hadValue={metric.id in baseline}
+      stale={stale}
+      submitted={submitted}
+      today={today}
+    />
+  );
+  return blocks.map((block) =>
+    block.title === null ? (
+      block.metrics.map(cell)
+    ) : (
+      <FormSection key={block.title} title={block.title} className="gap-3 border-t pt-4">
+        <FormGrid maxCols={2} className="gap-y-4">
+          {block.metrics.map(cell)}
+        </FormGrid>
+      </FormSection>
+    ),
   );
 }

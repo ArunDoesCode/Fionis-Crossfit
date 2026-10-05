@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { draftTimeLabel } from '@/lib/assessments/draft';
-import type { Offer } from '@/lib/assessments/entryState';
-import { scrollBehavior } from '@/lib/assessments/focusField';
+import type { Offer } from '@/lib/assessments/entryValues';
 import { assessmentDateLabel } from '@/lib/assessments/labels';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
+import { UI_TEXT } from '@/lib/messages/words';
 
 interface OfferNoticeProps {
   offer: Offer;
@@ -52,7 +52,9 @@ export function OfferNotice({ offer, date, today, onAnswer }: OfferNoticeProps) 
 export function StatusLine({ text }: { text: string | null }) {
   const ref = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (text) ref.current?.scrollIntoView({ block: 'nearest', behavior: scrollBehavior() });
+    if (!text) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    ref.current?.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
   }, [text]);
   return (
     <p
@@ -61,6 +63,23 @@ export function StatusLine({ text }: { text: string | null }) {
       className="scroll-mb-28 min-h-5 text-base font-medium text-destructive"
     >
       {text}
+    </p>
+  );
+}
+
+/**
+ * Save with nothing entered (BR-REC-78, 190): a top alert, never a dead button. A new `tick` mounts a new
+ * element, so a screen reader reads it again on every click; the cursor goes to the first measurement.
+ */
+export function NeedOneValue({ tick }: { tick: number }) {
+  if (tick === 0) return null;
+  return (
+    <p
+      key={tick}
+      role="alert"
+      className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-base font-medium text-destructive"
+    >
+      {UI_TEXT.needOneValue}
     </p>
   );
 }

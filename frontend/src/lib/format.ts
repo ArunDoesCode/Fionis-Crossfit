@@ -38,15 +38,24 @@ const parseDay = (date: IsoDate): DayParts | null => {
 const dayNumber = ({ year, month, day }: DayParts): number =>
   Math.round(Date.UTC(year, month - 1, day) / MS_PER_DAY);
 
-/** "3 Oct 2026"; the year is left out when `date` is in the same year as `today`. */
-export const formatDay = (date: IsoDate, today: IsoDate): string => {
+/** "03 Oct 2026": day padded, three-letter month, year always (BR-REC-191). The one calendar-day formatter. */
+export const formatDay = (date: IsoDate): string => {
   const parts = parseDay(date);
   const monthName = parts ? MONTH_NAMES[parts.month - 1] : undefined;
   if (!parts || !monthName) {
     return date;
   }
-  const text = `${parts.day} ${monthName}`;
-  return parts.year === parseDay(today)?.year ? text : `${text} ${parts.year}`;
+  return `${String(parts.day).padStart(2, '0')} ${monthName} ${parts.year}`;
+};
+
+/** "Mar" for month 1-12 (the month buttons of the month picker). */
+export const monthShortName = (month: number): string => MONTH_NAMES[month - 1] ?? '';
+
+/** "Dec 2025": month and year of a day, for estimated dates ("≈ Dec 2025"). */
+export const formatMonthYear = (date: IsoDate): string => {
+  const parts = parseDay(date);
+  const monthName = parts ? MONTH_NAMES[parts.month - 1] : undefined;
+  return parts && monthName ? `${monthName} ${parts.year}` : date;
 };
 
 /** "today", "tomorrow", "yesterday", "in 3 days" or "2 days ago". */

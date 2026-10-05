@@ -33,7 +33,7 @@ beforeAll(async () => {
   status = (await import('@/lib/due/status')) as unknown as StatusModule;
 });
 
-const TONES: StatusTone[] = ['success', 'warning', 'danger', 'neutral'];
+const TONES: StatusTone[] = ['success', 'warning', 'danger', 'info', 'neutral'];
 
 describe('BR-REC-96 / 105 / 125 dueRowStatus: the words at the right of a Home / Due list row', () => {
   const cases: Array<[string, boolean, number, string, StatusTone]> = [
@@ -52,12 +52,12 @@ describe('BR-REC-96 / 105 / 125 dueRowStatus: the words at the right of a Home /
     ],
     ['365 days overdue', false, 365, 'Overdue 365 days', 'danger'],
     ['1 day overdue is singular', false, 1, 'Overdue 1 day', 'danger'],
-    ['due today (case 7, Q3: Due soon, "Due today")', false, 0, 'Due today', 'neutral'],
-    ['due tomorrow (case 6)', false, -1, 'Due tomorrow', 'neutral'],
-    ['due in 2 days', false, -2, 'Due in 2 days', 'neutral'],
-    ['due in 3 days (BR-REC-96 example)', false, -3, 'Due in 3 days', 'neutral'],
-    ['due in 7 days (case 1)', false, -7, 'Due in 7 days', 'neutral'],
-    ['due in 30 days (Due soon window set wide)', false, -30, 'Due in 30 days', 'neutral'],
+    ['due today (case 7, Q3: Due soon, "Due today")', false, 0, 'Due today', 'warning'],
+    ['due tomorrow (case 6)', false, -1, 'Due tomorrow', 'warning'],
+    ['due in 2 days', false, -2, 'Due in 2 days', 'warning'],
+    ['due in 3 days (BR-REC-96 example)', false, -3, 'Due in 3 days', 'warning'],
+    ['due in 7 days (case 1)', false, -7, 'Due in 7 days', 'warning'],
+    ['due in 30 days (Due soon window set wide)', false, -30, 'Due in 30 days', 'warning'],
   ];
 
   for (const [label, flagged, daysOverdue, text, tone] of cases) {
@@ -83,9 +83,9 @@ describe('BR-REC-96 / 105 / 125 dueRowStatus: the words at the right of a Home /
     }
   });
 
-  test('BR-REC-125 late is danger, soon is warning only for Assess soon, the rest is neutral', () => {
+  test('BR-REC-125 late is danger, due soon and Assess soon are warning', () => {
     expect(status.dueRowStatus({ flagged: false, daysOverdue: 1 }).tone).toBe('danger');
-    expect(status.dueRowStatus({ flagged: false, daysOverdue: 0 }).tone).toBe('neutral');
+    expect(status.dueRowStatus({ flagged: false, daysOverdue: 0 }).tone).toBe('warning');
     expect(status.dueRowStatus({ flagged: true, daysOverdue: 0 }).tone).toBe('warning');
   });
 
@@ -124,14 +124,14 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
     [
       'a reminder until 20 Oct (BR-REC-103 example)',
       { state: 'upcoming', nextDueOn: '2026-10-06', snoozedUntil: '2026-10-20' },
-      'Reminder on 20 Oct',
-      'neutral',
+      'Reminder on 20 Oct 2026',
+      'info',
     ],
     [
       'a reminder wins over overdue',
       { state: 'overdue', nextDueOn: '2026-08-30', snoozedUntil: '2026-10-20' },
-      'Reminder on 20 Oct',
-      'neutral',
+      'Reminder on 20 Oct 2026',
+      'info',
     ],
     [
       'a reminder wins over never recorded',
@@ -141,14 +141,14 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
         neverRecorded: true,
         snoozedUntil: '2026-11-03',
       },
-      'Reminder on 3 Nov',
-      'neutral',
+      'Reminder on 03 Nov 2026',
+      'info',
     ],
     [
       'a reminder in another year shows the year (BR-REC-127)',
       { state: 'ok', nextDueOn: '2027-03-01', snoozedUntil: '2027-01-05' },
-      'Reminder on 5 Jan 2027',
-      'neutral',
+      'Reminder on 05 Jan 2027',
+      'info',
     ],
     [
       'never recorded and overdue: "Never recorded" wins over "Overdue 124 days" (Q5, C10)',
@@ -180,31 +180,31 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
       'Overdue 1 day',
       'danger',
     ],
-    ['due today', { state: 'upcoming', nextDueOn: '2026-10-03' }, 'Due today', 'neutral'],
-    ['due tomorrow', { state: 'upcoming', nextDueOn: '2026-10-04' }, 'Due tomorrow', 'neutral'],
+    ['due today', { state: 'upcoming', nextDueOn: '2026-10-03' }, 'Due today', 'warning'],
+    ['due tomorrow', { state: 'upcoming', nextDueOn: '2026-10-04' }, 'Due tomorrow', 'warning'],
     [
       'due in 5 days (BR-REC-103 example)',
       { state: 'upcoming', nextDueOn: '2026-10-08' },
       'Due in 5 days',
-      'neutral',
+      'warning',
     ],
-    ['due in 7 days', { state: 'upcoming', nextDueOn: '2026-10-10' }, 'Due in 7 days', 'neutral'],
+    ['due in 7 days', { state: 'upcoming', nextDueOn: '2026-10-10' }, 'Due in 7 days', 'warning'],
     [
       'next due 12 Dec (BR-REC-103 example)',
       { state: 'ok', nextDueOn: '2026-12-12' },
-      'Next due 12 Dec',
+      'Next due 12 Dec 2026',
       'success',
     ],
     [
       'next due 10 Nov (case 3: Fran-only fitness test)',
       { state: 'ok', nextDueOn: '2026-11-10' },
-      'Next due 10 Nov',
+      'Next due 10 Nov 2026',
       'success',
     ],
     [
       'next due in another year shows the year',
       { state: 'ok', nextDueOn: '2027-01-05' },
-      'Next due 5 Jan 2027',
+      'Next due 05 Jan 2027',
       'success',
     ],
   ];
@@ -215,12 +215,12 @@ describe('BR-REC-103 / C10 memberDueStatus: the one status per assessment on the
     });
   }
 
-  test('BR-REC-127 the year is left out only when the date is in the same year as "today" (today is an argument)', () => {
+  test('BR-REC-127 BR-REC-191: the year is always shown, whatever "today" is', () => {
     const line = memberLine({ state: 'ok', nextDueOn: '2027-01-05' });
-    expect(status.memberDueStatus(line, '2026-10-03').text).toBe('Next due 5 Jan 2027');
-    expect(status.memberDueStatus(line, '2027-01-02').text).toBe('Next due 5 Jan');
+    expect(status.memberDueStatus(line, '2026-10-03').text).toBe('Next due 05 Jan 2027');
+    expect(status.memberDueStatus(line, '2027-01-02').text).toBe('Next due 05 Jan 2027');
     const reminder = memberLine({ state: 'ok', snoozedUntil: '2027-01-05' });
-    expect(status.memberDueStatus(reminder, '2027-01-02').text).toBe('Reminder on 5 Jan');
+    expect(status.memberDueStatus(reminder, '2027-01-02').text).toBe('Reminder on 05 Jan 2027');
   });
 
   test('BR-REC-125 every combination gives words and one of the four tones', () => {

@@ -1,16 +1,17 @@
 // Plain words of the assessment screens (BR-REC-126): the word list of ux.md, no ids, codes or technical
 // terms. Fixed lines other code and tests rely on: `numberError`, `noValues`, `notSaved`.
 
+import { UI_TEXT } from '@/lib/messages/words';
+
 export const ASSESSMENT_TEXT = {
   // Fixed lines
   numberError: 'Enter a number like 95.5', // BR-REC-76
-  noValues: 'Enter at least one value', // BR-REC-78
+  noValues: UI_TEXT.needOneValue, // BR-REC-78
   notSaved: 'Not saved — check the connection and tap Save again', // BR-REC-86
 
   // Header and date
   recordFor: (name: string) => `Record for ${name}`,
   date: 'Date',
-  about: 'About',
   paperColumn: 'Paper column',
   datePick: 'Pick a date',
   editing: (day: string) => `Edit · ${day}`,
@@ -22,7 +23,6 @@ export const ASSESSMENT_TEXT = {
   noMeasurements: 'This assessment has no measurements turned on.',
 
   // Fields
-  due: 'due',
   last: (value: string, day: string) => `Last ${value} · ${day}`,
   willBeRemoved: 'Will be removed',
   pleaseCheck: 'Please check',

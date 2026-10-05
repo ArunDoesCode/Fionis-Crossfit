@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { BETTER_DIRECTIONS, DATATYPES } from "../lib/enums";
+import { BETTER_DIRECTIONS, DATATYPES, TABLE_PARTS } from "../lib/enums";
 import {
   isoDateSchema,
   paginationQuerySchema,
@@ -62,6 +62,16 @@ export const entryFormMetricSchema = z.object({
   better: z.enum(BETTER_DIRECTIONS),
   plausibleMin: z.number().nullable(),
   plausibleMax: z.number().nullable(),
+  tableGroup: z
+    .string()
+    .nullable()
+    .describe(
+      "Report table group, e.g. 'Skeletal muscle %'; null = no report place.",
+    ),
+  tablePart: z
+    .enum(TABLE_PARTS)
+    .nullable()
+    .describe("Report table part; null exactly when tableGroup is null."),
   previous: previousValueSchema.nullable(),
 });
 

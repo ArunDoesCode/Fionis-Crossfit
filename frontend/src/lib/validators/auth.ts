@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import '@/lib/validators/zodMessages';
 
 // Mirrors backend/src/types/auth.types.ts (the server checks again). Passwords are 8–128 characters of
 // any kind, no other rules (BR-REC-02, 27). Messages are plain sentences that say what to do (BR-REC-128).
@@ -10,23 +11,23 @@ const passwordTooLong = `Use at most ${PASSWORD_MAX_LENGTH} characters`;
 
 export const loginSchema = z.object({
   username: z
-    .string()
+    .string({ error: 'Enter your username' })
     .min(1, { error: 'Enter your username' })
     .max(USERNAME_MAX_LENGTH, { error: `Use at most ${USERNAME_MAX_LENGTH} characters` }),
   password: z
-    .string()
+    .string({ error: 'Enter your password' })
     .min(1, { error: 'Enter your password' })
     .max(PASSWORD_MAX_LENGTH, { error: passwordTooLong }),
-  remember: z.boolean(),
+  remember: z.boolean({ error: 'Fill this in' }),
 });
 
 export const changePasswordSchema = z.object({
   currentPassword: z
-    .string()
+    .string({ error: 'Enter your current password' })
     .min(1, { error: 'Enter your current password' })
     .max(PASSWORD_MAX_LENGTH, { error: passwordTooLong }),
   newPassword: z
-    .string()
+    .string({ error: 'Enter a new password' })
     .min(PASSWORD_MIN_LENGTH, { error: `Use at least ${PASSWORD_MIN_LENGTH} characters` })
     .max(PASSWORD_MAX_LENGTH, { error: passwordTooLong }),
 });

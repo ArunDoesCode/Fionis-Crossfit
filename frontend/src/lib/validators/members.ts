@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import '@/lib/validators/zodMessages';
 import { type IsoDate, isIsoDate } from '@/lib/domain/dates';
 import { messageForCode } from '@/lib/messages/errors';
 
@@ -71,7 +72,7 @@ const plan = z.string({ error: 'Pick a membership plan' }).transform((raw, ctx) 
 });
 
 const email = z
-  .string()
+  .string({ error: 'Enter text' })
   .nullish()
   .transform((raw, ctx) => {
     const value = raw?.trim() ?? '';
@@ -82,7 +83,7 @@ const email = z
   });
 
 const objective = z
-  .string()
+  .string({ error: 'Enter text' })
   .nullish()
   .transform((raw, ctx) => {
     if (raw === undefined || raw === null || raw === '') return null;
@@ -91,7 +92,7 @@ const objective = z
   });
 
 const notes = z
-  .string()
+  .string({ error: 'Enter text' })
   .nullish()
   .transform((raw, ctx) => {
     const value = raw?.trim() ?? '';

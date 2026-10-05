@@ -22,49 +22,49 @@ afterAll(() => {
   process.env.TZ = machineZone;
 });
 
-describe('BR-REC-127 formatDay', () => {
-  const TODAY = '2026-10-03';
-
+describe('BR-REC-191 formatDay: dd MMM yyyy, year always, one argument', () => {
   test.each([
-    // [date, today, expected]
-    ['2025-03-15', TODAY, '15 Mar 2025'], // another year: year shown
-    ['2027-01-05', TODAY, '5 Jan 2027'], // a future year also shows the year
-    ['1982-05-10', TODAY, '10 May 1982'],
-    ['2026-10-03', TODAY, '3 Oct'], // same year: year left out, day not zero-padded
-    ['2026-01-05', TODAY, '5 Jan'],
-    ['2026-12-31', '2026-01-01', '31 Dec'], // same year even when it is far ahead
-    ['2025-12-31', '2026-01-01', '31 Dec 2025'], // one day earlier but in last year
-    ['2026-01-01', '2025-12-31', '1 Jan 2026'], // one day later but in next year
-    ['2028-02-29', '2028-06-01', '29 Feb'], // leap day
-    ['2026-06-02', '2027-06-02', '2 Jun 2026'],
-    ['2026-05-31', '2027-06-02', '31 May 2026'],
-  ])('BR-REC-127 formatDay(%s, today %s) is "%s"', (date, today, expected) => {
-    expect(formatDay(date, today)).toBe(expected);
+    // [date, expected]
+    ['2026-10-03', '03 Oct 2026'], // spec example; this year too (Q4)
+    ['2025-06-01', '01 Jun 2025'], // spec example: Joined 1 Jun 2025 -> "01 Jun 2025"
+    ['2026-01-05', '05 Jan 2026'],
+    ['2026-12-31', '31 Dec 2026'],
+    ['2028-02-29', '29 Feb 2028'], // leap day
+    ['2027-01-05', '05 Jan 2027'],
+    ['1982-05-10', '10 May 1982'],
+  ])('BR-REC-191 formatDay(%s) is "%s"', (date, expected) => {
+    expect(formatDay(date)).toBe(expected);
+  });
+
+  test('BR-REC-191 a second argument (today) does not change the result', () => {
+    const loose = formatDay as (date: string, today?: string) => string;
+    expect(loose('2026-10-03', '2026-10-03')).toBe('03 Oct 2026');
+    expect(loose('2026-10-03', '2030-01-01')).toBe('03 Oct 2026');
   });
 
   test.each([
-    ['2026-01-20', '20 Jan'],
-    ['2026-02-20', '20 Feb'],
-    ['2026-03-20', '20 Mar'],
-    ['2026-04-20', '20 Apr'],
-    ['2026-05-20', '20 May'],
-    ['2026-06-20', '20 Jun'],
-    ['2026-07-20', '20 Jul'],
-    ['2026-08-20', '20 Aug'],
-    ['2026-09-20', '20 Sep'], // three-letter month names, as in "3 Oct 2026"
-    ['2026-10-20', '20 Oct'],
-    ['2026-11-20', '20 Nov'],
-    ['2026-12-20', '20 Dec'],
-  ])('BR-REC-127 formatDay names the month of %s as "%s"', (date, expected) => {
-    expect(formatDay(date, '2026-10-03')).toBe(expected);
+    ['2026-01-20', '20 Jan 2026'],
+    ['2026-02-20', '20 Feb 2026'],
+    ['2026-03-20', '20 Mar 2026'],
+    ['2026-04-20', '20 Apr 2026'],
+    ['2026-05-20', '20 May 2026'],
+    ['2026-06-20', '20 Jun 2026'],
+    ['2026-07-20', '20 Jul 2026'],
+    ['2026-08-20', '20 Aug 2026'],
+    ['2026-09-20', '20 Sep 2026'], // three-letter month names
+    ['2026-10-20', '20 Oct 2026'],
+    ['2026-11-20', '20 Nov 2026'],
+    ['2026-12-20', '20 Dec 2026'],
+  ])('BR-REC-191 formatDay names the month of %s as "%s"', (date, expected) => {
+    expect(formatDay(date)).toBe(expected);
   });
 
-  test.each(ZONES)('BR-REC-127 formatDay gives the same calendar day in time zone %s', (zone) => {
+  test.each(ZONES)('BR-REC-191 formatDay gives the same calendar day in time zone %s', (zone) => {
     inZone(zone, () => {
-      expect(formatDay('2026-01-01', '2026-10-03')).toBe('1 Jan');
-      expect(formatDay('2026-12-31', '2026-10-03')).toBe('31 Dec');
-      expect(formatDay('2025-01-01', '2026-10-03')).toBe('1 Jan 2025');
-      expect(formatDay('2025-12-31', '2026-10-03')).toBe('31 Dec 2025');
+      expect(formatDay('2026-01-01')).toBe('01 Jan 2026');
+      expect(formatDay('2026-12-31')).toBe('31 Dec 2026');
+      expect(formatDay('2025-01-01')).toBe('01 Jan 2025');
+      expect(formatDay('2025-12-31')).toBe('31 Dec 2025');
     });
   });
 });

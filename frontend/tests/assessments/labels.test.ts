@@ -2,7 +2,7 @@
 //   BR-REC-80 — estimated dates show as "≈ Dec 2025" in forms, lists and the report card.
 //               Example: Q2 entry -> history shows "≈ Sep 2025".
 //   BR-REC-83 — a future date cannot be picked or saved (DATE_IN_FUTURE); a date before the join date shows
-//               "This is before Surya joined (1 Jun 2025)" and can be saved.
+//               "This is before Surya joined (01 Jun 2025)" and can be saved.
 //   BR-REC-19 — earlier than the join date shows a warning.
 //   BR-REC-84 — after Save: "Saved 9 results for Surya".
 //   BR-REC-89 — the list row shows the number of results ("15 results").
@@ -101,8 +101,8 @@ describe('BR-REC-80 assessmentDateLabel: an estimated date shows month and year'
 describe('BR-REC-80 assessmentDateLabel: an exact date is a plain day', () => {
   test.each([
     ['2025-03-12', '12 Mar 2025'],
-    ['2026-09-12', '12 Sep'], // this year: the year is left out
-    ['2026-10-03', '3 Oct'],
+    ['2026-09-12', '12 Sep 2026'], // BR-REC-191: year always shown, this year too
+    ['2026-10-03', '03 Oct 2026'],
     ['2025-12-30', '30 Dec 2025'],
   ])('BR-REC-80 exact %s shows "%s"', (date, expected) => {
     expect(labels.assessmentDateLabel(date, false, TODAY)).toBe(expected);
@@ -111,7 +111,7 @@ describe('BR-REC-80 assessmentDateLabel: an exact date is a plain day', () => {
   test.each(['2025-03-12', '2026-09-12', '2026-10-03', '2024-02-29'])(
     'BR-REC-80 an exact date is formatDay (%s)',
     (date) => {
-      expect(labels.assessmentDateLabel(date, false, TODAY)).toBe(formatDay(date, TODAY));
+      expect(labels.assessmentDateLabel(date, false, TODAY)).toBe(formatDay(date));
     },
   );
 
@@ -148,7 +148,7 @@ describe('BR-REC-83 entryDateIssue: a date after today is "future"', () => {
 });
 
 describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_join"', () => {
-  test('BR-REC-83 spec example: before Surya joined (1 Jun 2025)', () => {
+  test('BR-REC-83 spec example: before Surya joined (01 Jun 2025)', () => {
     expect(
       labels.entryDateIssue({
         date: '2025-05-31',
@@ -156,7 +156,7 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
         joinedOn: '2025-06-01',
         memberName: 'Surya Pratap',
       }),
-    ).toEqual({ kind: 'before_join', message: 'This is before Surya joined (1 Jun 2025)' });
+    ).toEqual({ kind: 'before_join', message: 'This is before Surya joined (01 Jun 2025)' });
   });
 
   test('BR-REC-83 uses the first word of the name', () => {
@@ -167,7 +167,7 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
         joinedOn: '2025-06-01',
         memberName: 'Meera Devi Nair',
       }).message,
-    ).toBe('This is before Meera joined (1 Jun 2025)');
+    ).toBe('This is before Meera joined (01 Jun 2025)');
   });
 
   test('BR-REC-83 a one-word name is used whole', () => {
@@ -178,10 +178,10 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
         joinedOn: '2025-06-01',
         memberName: 'Surya',
       }).message,
-    ).toBe('This is before Surya joined (1 Jun 2025)');
+    ).toBe('This is before Surya joined (01 Jun 2025)');
   });
 
-  test('BR-REC-83 the join day is written like every day (this year: no year)', () => {
+  test('BR-REC-83 the join day is written like every day (BR-REC-191: dd MMM yyyy)', () => {
     expect(
       labels.entryDateIssue({
         date: '2026-05-20',
@@ -189,7 +189,7 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
         joinedOn: '2026-06-01',
         memberName: 'Surya Pratap',
       }),
-    ).toEqual({ kind: 'before_join', message: 'This is before Surya joined (1 Jun)' });
+    ).toEqual({ kind: 'before_join', message: 'This is before Surya joined (01 Jun 2026)' });
   });
 
   test('BR-REC-83 the join day is formatDay(joinedOn, today)', () => {
@@ -200,7 +200,7 @@ describe('BR-REC-83 / 19 entryDateIssue: a date before the join date is "before_
       joinedOn,
       memberName: 'Anil Kumar',
     });
-    expect(issue.message).toBe(`This is before Anil joined (${formatDay(joinedOn, TODAY)})`);
+    expect(issue.message).toBe(`This is before Anil joined (${formatDay(joinedOn)})`);
   });
 
   test('BR-REC-83 one day before the join date is already before_join', () => {

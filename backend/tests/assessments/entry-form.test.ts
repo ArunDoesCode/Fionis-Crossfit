@@ -458,6 +458,8 @@ describe("E25 measurements list (D4, D20)", () => {
         plausibleMin: -30,
         plausibleMax: 60,
         previous: null,
+        tableGroup: null,
+        tablePart: null,
       },
       {
         id: t.metric("Fran").id,
@@ -469,6 +471,8 @@ describe("E25 measurements list (D4, D20)", () => {
         plausibleMin: null,
         plausibleMax: null,
         previous: null,
+        tableGroup: null,
+        tablePart: null,
       },
       {
         id: t.metric("Height").id,
@@ -480,8 +484,69 @@ describe("E25 measurements list (D4, D20)", () => {
         plausibleMin: null,
         plausibleMax: null,
         previous: null,
+        tableGroup: null,
+        tablePart: null,
       },
     ]);
+  });
+});
+
+describe("E25 segmental table fields (BR-REC-217)", () => {
+  test("BR-REC-217 a metric with no table position has tableGroup and tablePart both null, keys present", async () => {
+    const t = await s.seedType({ metrics: [{ name: "Weight", unit: "kg" }] });
+    const m = await s.seedMember();
+    const form = await s.formOf(m.id, t.id, "2025-12-30");
+    const item = form.metrics[0] as Record<string, unknown>;
+    expect("tableGroup" in item).toBe(true);
+    expect("tablePart" in item).toBe(true);
+    expect(item.tableGroup).toBeNull();
+    expect(item.tablePart).toBeNull();
+  });
+
+  test("BR-REC-217 segmental metrics carry the group and part setup stores, others stay null", async () => {
+    const t = await s.seedType({
+      metrics: [
+        { name: "Weight", unit: "kg" },
+        {
+          name: "Muscle whole",
+          unit: "%",
+          tableGroup: "Skeletal muscle %",
+          tablePart: "whole_body",
+        },
+        {
+          name: "Muscle arms",
+          unit: "%",
+          tableGroup: "Skeletal muscle %",
+          tablePart: "arms",
+        },
+        {
+          name: "Fat trunk",
+          unit: "%",
+          tableGroup: "Subcut. fat %",
+          tablePart: "trunk",
+        },
+        {
+          name: "Fat legs",
+          unit: "%",
+          tableGroup: "Subcut. fat %",
+          tablePart: "legs",
+        },
+      ],
+    });
+    const m = await s.seedMember();
+    const form = await s.formOf(m.id, t.id, "2025-12-30");
+    const pick = (name: string) => {
+      const x = form.metrics.find((y) => y.name === name) as unknown as Record<
+        string,
+        unknown
+      >;
+      return [x.tableGroup, x.tablePart];
+    };
+    expect(pick("Weight")).toEqual([null, null]);
+    expect(pick("Muscle whole")).toEqual(["Skeletal muscle %", "whole_body"]);
+    expect(pick("Muscle arms")).toEqual(["Skeletal muscle %", "arms"]);
+    expect(pick("Fat trunk")).toEqual(["Subcut. fat %", "trunk"]);
+    expect(pick("Fat legs")).toEqual(["Subcut. fat %", "legs"]);
   });
 });
 
@@ -514,6 +579,8 @@ describe("E25 the member and the date (BR-REC-83, 153; D1)", () => {
       "plausibleMax",
       "plausibleMin",
       "previous",
+      "tableGroup",
+      "tablePart",
       "unit",
     ]);
   });

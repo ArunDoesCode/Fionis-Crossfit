@@ -5,13 +5,15 @@ import ErrorState from '@/components/common/ErrorState';
 import { RowList } from '@/components/common/ListRow';
 import { RowSkeletons } from '@/components/common/Skeletons';
 import { Button } from '@/components/ui/button';
+import { useDesktop } from '@/lib/members/useDesktop';
 import { UI_TEXT } from '@/lib/messages/words';
-import { cn } from '@/lib/utils';
 
 interface PagedRowsProps<Page extends { data: readonly unknown[] }> {
   query: UseInfiniteQueryResult<InfiniteData<Page>, Error>;
   /** One row; it carries its own `key`. */
   renderRow: (item: Page['data'][number]) => React.ReactNode;
+  /** From 1024 px (BR-REC-183) the rows are replaced by this table, built from the same items. */
+  renderTable?: (items: Page['data'][number][]) => React.ReactNode;
   /** What to show when there is nothing: one sentence and at most one action (BR-REC-130). */
   empty: React.ReactNode;
   /** Grey rows while the first page loads. */
@@ -29,10 +31,12 @@ const SHOW_MORE = 'Show more';
 export default function PagedRows<Page extends { data: readonly unknown[] }>({
   query,
   renderRow,
+  renderTable,
   empty,
   skeletonRows = 8,
   skeletonChips = false,
 }: PagedRowsProps<Page>) {
+  const desktop = useDesktop();
   const {
     data,
     isError,
@@ -55,8 +59,8 @@ export default function PagedRows<Page extends { data: readonly unknown[] }>({
 
   return (
     <div className="flex flex-col gap-4">
-      <div aria-busy={isPlaceholderData} className={cn(isPlaceholderData && 'opacity-60')}>
-        <RowList>{items.map(renderRow)}</RowList>
+      <div aria-busy={isPlaceholderData} className={isPlaceholderData ? 'opacity-60' : undefined}>
+        {desktop && renderTable ? renderTable(items) : <RowList>{items.map(renderRow)}</RowList>}
       </div>
       {isFetchNextPageError && <ErrorState onRetry={() => void query.fetchNextPage()} />}
       {hasNextPage && !isFetchNextPageError && (

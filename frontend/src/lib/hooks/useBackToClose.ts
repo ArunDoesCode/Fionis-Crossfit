@@ -18,7 +18,8 @@ export function useBackToClose(open: boolean, close: () => void) {
     let closedByBack = false;
 
     const timer = setTimeout(() => {
-      window.history.pushState({ ...window.history.state, sheet: true }, '');
+      // `leaveGuard` is cleared: the entry under a sheet belongs to the form's guard, not to this one.
+      window.history.pushState({ ...window.history.state, sheet: true, leaveGuard: false }, '');
       pushed = true;
     }, 0);
 

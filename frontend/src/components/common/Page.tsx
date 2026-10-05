@@ -1,25 +1,15 @@
 import { cn } from '@/lib/utils';
 
 interface PageProps {
-  /** `narrow` = forms and detail pages (720 px), `wide` = lists and reports (1080 px). BR-REC-139. */
-  width?: 'narrow' | 'wide';
   className?: string;
   children: React.ReactNode;
 }
 
-// Centres the screen on desktop and gives it the page padding (16 px phone, 24 px desktop).
-// Sections inside are 24 px apart.
-export default function Page({ width = 'wide', className, children }: PageProps) {
+// The whole content area with p-4 on every side and the section gap (BR-REC-181, 182). On phones the top
+// edge is the sticky top bar, so there is no top padding there.
+export default function Page({ className, children }: PageProps) {
   return (
-    <div
-      className={cn(
-        'section-gap page-px mx-auto flex w-full flex-col pb-6',
-        width === 'narrow'
-          ? 'max-w-[calc(720px+2*var(--page-padding))]'
-          : 'max-w-[calc(1080px+2*var(--page-padding))]',
-        className,
-      )}
-    >
+    <div className={cn('section-gap flex w-full flex-col p-4 max-md:pt-0', className)}>
       {children}
     </div>
   );

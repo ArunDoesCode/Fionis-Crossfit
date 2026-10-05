@@ -28,9 +28,10 @@ export const members = pgTable(
     check("members_objective_check", inList(t.objective, OBJECTIVES)),
     // phone lookup on the last 10 digits (BR-REC-46)
     index("members_phone_last10_idx").on(sql`right(${t.phoneDigits}, 10)`),
-    // name search / A-Z list of non-archived members
+    // A-Z list / name search of non-archived members; the expression equals the sort key `nameKey`
+    // in repository/membersSql.ts (BR-REC-207)
     index("members_name_active_idx")
-      .on(sql`lower(${t.fullName})`, asExpression(t.id))
+      .on(sql`lower(${t.fullName}) collate "C"`, asExpression(t.id))
       .where(sql`${t.archivedAt} is null`),
   ],
 );

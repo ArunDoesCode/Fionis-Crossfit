@@ -21,8 +21,9 @@ export const onLatestPeriod = eq(latestPeriod.id, latestPeriodId);
 /**
  * Case-insensitive name, the A-Z sort key (BR-REC-56). Compared byte by byte (`C`), so the order is
  * the same on every database whatever its locale ("Surya K" before "Surya Pratap", "Ann Lee" before
- * "Anna Bell"; the locale order ignores spaces). Trade-off: `members_name_active_idx` (default
- * collation) cannot serve this sort; at gym size (1,000 members) sorting the rows takes well under a millisecond.
+ * "Anna Bell"; the locale order ignores spaces). `members_name_active_idx` is built on exactly
+ * this expression (`lower(full_name) collate "C"`, id; BR-REC-207), so the A-Z order can be read from it.
+ * Change both together or the index stops serving the sort.
  */
 export const nameKey = sql`(lower(${members.fullName}) collate "C")`;
 

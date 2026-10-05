@@ -31,15 +31,47 @@ interface Issue {
   message: string;
 }
 
+const TEXT_FIELDS = [
+  'upcomingLeadDays',
+  'expiryLeadDays',
+  'intervalCount',
+  'plausibleMin',
+  'plausibleMax',
+];
+
+/**
+ * The number boxes of the setup forms hold typed TEXT (ux.md U2: setup schemas read it through the shared
+ * number parser). A number a case wants to send is sent as its text; a blank optional measurement field
+ * (check range, own repeat) is the empty box. Everything else, including wrong types, goes through unchanged.
+ */
+function asTyped(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const isMeasurement = 'datatype' in input;
+  const out: Record<string, unknown> = { ...(input as Record<string, unknown>) };
+  for (const key of TEXT_FIELDS) {
+    const value = out[key];
+    if (typeof value === 'number') out[key] = String(value);
+    else if (
+      value === null &&
+      isMeasurement &&
+      key !== 'upcomingLeadDays' &&
+      key !== 'expiryLeadDays'
+    ) {
+      out[key] = '';
+    }
+  }
+  return out;
+}
+
 /** The issues a schema reports for `input` (empty when the input is accepted). */
 function issuesOf(schema: ZodType, input: unknown): Issue[] {
-  const result = schema.safeParse(input);
+  const result = schema.safeParse(asTyped(input));
   return result.success ? [] : result.error.issues.map(({ path, message }) => ({ path, message }));
 }
 
 /** What a schema hands back for `input`, or `undefined` when the input is refused. */
 function parsed(schema: ZodType, input: unknown): Record<string, unknown> | undefined {
-  const result = schema.safeParse(input);
+  const result = schema.safeParse(asTyped(input));
   return result.success ? (result.data as Record<string, unknown>) : undefined;
 }
 
