@@ -29,19 +29,19 @@ export default function SideNav({ gymName = DEFAULT_GYM_NAME }: SideNavProps) {
         <span
           aria-hidden="true"
           data-slot="sidebar-mark"
-          className="hidden size-8 items-center justify-center self-center rounded-lg bg-brand font-heading font-semibold text-primary-foreground group-data-[collapsible=icon]:flex"
+          className="hidden size-8 items-center justify-center self-center rounded-lg bg-primary font-heading font-semibold text-primary-foreground group-data-[collapsible=icon]:flex"
         >
           F
         </span>
       </SidebarHeader>
-      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0.5">
+      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0">
         <nav aria-label="Main">
           <Suspense fallback={<NavLinksStatic />}>
             <NavLinks />
           </Suspense>
         </nav>
       </SidebarContent>
-      <SidebarFooter className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0.5">
+      <SidebarFooter className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <ThemeToggle className="size-(--control-height) group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         <SignOutButton />
       </SidebarFooter>

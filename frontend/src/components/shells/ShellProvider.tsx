@@ -16,8 +16,11 @@ function Drawer() {
   return null;
 }
 
-// Ctrl/Cmd+B is bold in a text field, so the sidebar's own shortcut is stopped before it sees the key.
+// Ctrl/Cmd+B is bold in a text field, so there it is left alone; anywhere else the sidebar's own
+// shortcut is stopped before it sees the key (the header button is the way to collapse).
 const blockShortcut = (event: KeyboardEvent) => {
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  if (target?.closest('input, textarea, [contenteditable]:not([contenteditable=false])')) return;
   if ((event.metaKey || event.ctrlKey) && event.key === 'b') event.stopPropagation();
 };
 
