@@ -2,8 +2,6 @@
 // readSidebarOpen(): `data-sidebar` attribute on <html> first, else cookie `sidebar_state`, else viewport
 // default (open from 1024 px, collapsed below). Returns true when the sidebar is open.
 import { afterEach, describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { readSidebarOpen } from '@/lib/sidebarState';
 
 type G = Record<string, unknown>;
@@ -82,20 +80,5 @@ describe('BR-REC-177 the pre-paint script writes the values the spec names', () 
     expect(SIDEBAR_STATE_SCRIPT).toContain("'open'");
     expect(SIDEBAR_STATE_SCRIPT).not.toContain("'expanded'");
     expect(SIDEBAR_STATE_SCRIPT).toContain("'collapsed'");
-  });
-});
-
-describe('BR-REC-186 / 122 AdminSidebar source', () => {
-  const nav = readFileSync(
-    join(import.meta.dir, '../../src/app/(app)/admin/_components/AdminSidebar.tsx'),
-    'utf8',
-  );
-  test('BR-REC-186 the "F" placeholder uses bg-primary and text-primary-foreground (AA)', () => {
-    expect(nav).toMatch(/>\s*F\s*</);
-    expect(nav).toContain('bg-primary');
-    expect(nav).toContain('text-primary-foreground');
-  });
-  test('BR-REC-122 collapsed icon buttons are 44 px (size-11)', () => {
-    expect(nav).toContain('size-11');
   });
 });

@@ -1,9 +1,9 @@
-// Spec: docs/specs/member-records/members.md BR-REC-201, 203, 204 ("Build clarifications (U5)"), ux.md BR-REC-183.
-// Source-level checks (no DOM runner here): what must exist, and what must be gone. Behaviour that needs a
-// browser (no network while typing, <= 50 ms per key, CLS) is manual-only.
+// Spec: docs/specs/member-records/members.md BR-REC-203, 204 ("Build clarifications (U5)").
+// Data-flow guards (query keys, invalidation, no server call while typing). No look tests (D-038): markup,
+// control and layout checks were removed. Behaviour that needs a browser is manual-only.
 
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { jsonResponse, setAuthEnv } from '../auth/helpers';
 import { appLikeClient, callHook, flush, recordingFetch } from '../due/hookHarness';
@@ -11,13 +11,6 @@ import { appLikeClient, callHook, flush, recordingFetch } from '../due/hookHarne
 const SRC = join(import.meta.dir, '..', '..', 'src');
 const read = (rel: string): string =>
   existsSync(join(SRC, rel)) ? readFileSync(join(SRC, rel), 'utf8') : '';
-const dirText = (rel: string): string =>
-  existsSync(join(SRC, rel))
-    ? readdirSync(join(SRC, rel))
-        .filter((f) => /\.tsx?$/.test(f))
-        .map((f) => readFileSync(join(SRC, rel, f), 'utf8'))
-        .join('\n')
-    : '';
 /** Text of the function whose declaration contains `name`, up to the next top-level declaration. */
 const fnBody = (text: string, name: string): string => {
   const at = text.search(new RegExp(`function ${name}\\b|const ${name}\\b`));
@@ -101,49 +94,11 @@ describe('BR-REC-203 directory query', () => {
   });
 });
 
-describe('BR-REC-201 one MemberSearch', () => {
-  const ms = read('components/common/MemberSearch.tsx');
-  test('component exists', () => expect(ms).not.toBe(''));
-  test('has a Name / Email / Phone field picker', () => {
-    expect(ms).toMatch(/Name/);
-    expect(ms).toMatch(/Email/);
-    expect(ms).toMatch(/Phone/);
-  });
-  test('keyboard follows the field (tel for phone, email for email)', () => {
-    expect(ms).toMatch(/inputMode|type=/);
-    expect(ms).toMatch(/tel|numeric/);
-    expect(ms).toMatch(/email/);
-  });
-  test('BR-REC-201 (amended 2026-10-05) the field picker is a shadcn Combobox, no ChoiceChips', () => {
-    expect(ms).toMatch(/Combobox|(Command[\s\S]*Popover|Popover[\s\S]*Command)/);
-    expect(ms).toMatch(/from '@\/components\/ui\/(combobox|command|popover)'/);
-    expect(ms).not.toMatch(/ChoiceChips/);
-  });
-  test('BR-REC-201 the text box is a plain Input, not an InputGroup', () => {
-    expect(ms).toMatch(/from '@\/components\/ui\/input'/);
-    expect(ms).toMatch(/<Input\b/);
-    expect(ms).not.toMatch(/InputGroup/);
-  });
-  test('BR-REC-201 the two controls sit in a flex row with a gap (not joined)', () => {
-    expect(ms).toMatch(/flex[^'"`]*\bgap-\d|gap-\d[^'"`]*\bflex/);
-  });
-  test('BR-REC-201 the placeholder follows the picked field', () => {
-    const three =
-      /Search by name/.test(ms) && /Search by email/.test(ms) && /Search by phone/.test(ms);
-    expect(three || /Search by \$\{/.test(ms)).toBe(true);
-    expect(ms).toMatch(/placeholder=/);
-  });
-  test('is controlled by text, field, onChange', () => {
-    expect(ms).toMatch(/\btext\b/);
-    expect(ms).toMatch(/\bfield\b/);
-    expect(ms).toMatch(/onChange/);
-  });
+describe('BR-REC-203 MemberSearch filters locally', () => {
   test('BR-REC-203 no debounce, no timer', () => {
-    expect(ms).not.toMatch(/useDebounce|debounce|setTimeout/i);
-  });
-  test('Home and Members both use MemberSearch', () => {
-    expect(read('components/views/home/HomeView.tsx')).toMatch(/MemberSearch/);
-    expect(read('components/pages/members/MemberListPanel.tsx')).toMatch(/MemberSearch/);
+    expect(read('components/common/MemberSearch.tsx')).not.toMatch(
+      /useDebounce|debounce|setTimeout/i,
+    );
   });
 });
 
@@ -179,35 +134,9 @@ describe('BR-REC-204 address state', () => {
     expect(params + list).toMatch(/history:\s*['"]replace['"]/);
     expect(params + list).not.toMatch(/history:\s*['"]push['"]/);
   });
-  test('Members uses by in the screen', () => expect(list).toMatch(/\bby\b/));
-  test('results show 25 then Show more adds 25', () => {
-    expect(dirText('components/pages/members')).toMatch(/Show more/);
-  });
-  test('empty state offers Add member and names the text', () => {
-    expect(list).toMatch(/No member[^\n]*matches/);
-    expect(list).toMatch(/Add member/);
-  });
 });
 
-describe('BR-REC-183 tables from 1024 px', () => {
-  const screens: [string, string][] = [
-    ['Members', dirText('components/pages/members').replace(/\/\/.*$/gm, '')],
-    ['Due list', dirText('components/pages/due')],
-    [
-      'Memberships ending',
-      read('components/pages/members/EndingTabs.tsx') + read('components/views/home/HomeView.tsx'),
-    ],
-  ];
-  for (const [name, text] of screens) {
-    test(`${name} renders DataTable`, () => expect(text).toMatch(/<DataTable|DataTable\b/));
-    test(`${name} switches at 1024 px (lg / min-width) and keeps rows below`, () => {
-      expect(text).toMatch(/lg:|1024/);
-      expect(text).toMatch(/Row\b/);
-    });
-  }
-  test('Members table is not capped at 1280 px by a media query other than 1024', () => {
-    expect(dirText('components/pages/members')).not.toMatch(/min-width:\s*(?!1024)\d+px/);
-  });
+describe('BR-REC-208 prefetch', () => {
   for (const f of [
     'components/pages/members/MemberDirectoryResults.tsx',
     'components/pages/due/DueRow.tsx',
