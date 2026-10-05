@@ -19,6 +19,8 @@ interface DurationInputProps {
   id?: string;
   required?: boolean;
   disabled?: boolean;
+  /** Key label of the seconds box on the phone keyboard (the minutes box says "next", BR-REC-91). */
+  enterKeyHint?: 'next' | 'done';
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
 }
@@ -34,6 +36,7 @@ export function DurationInput({
   id,
   required,
   disabled,
+  enterKeyHint = 'next',
   'aria-invalid': invalid,
   'aria-describedby': describedBy,
 }: DurationInputProps) {
@@ -45,6 +48,7 @@ export function DurationInput({
         id={`${base}-${part}`}
         value={value[part]}
         inputMode="numeric"
+        enterKeyHint={part === 'sec' ? enterKeyHint : 'next'}
         autoComplete="off"
         aria-label={ariaLabel}
         aria-required={required || undefined}
