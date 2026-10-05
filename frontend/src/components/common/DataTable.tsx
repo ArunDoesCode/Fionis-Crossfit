@@ -79,7 +79,7 @@ export default function DataTable<TData extends RowData>({
                 </TableRow>
               ))
             : table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} className="relative">
                   {row.getAllCells().map((cell) => (
                     <TableCell key={cell.id}>
                       <table.FlexRender cell={cell} />

@@ -1,4 +1,5 @@
 import OfflineBanner from '@/components/common/OfflineBanner';
+import DirectoryWarmup from '@/components/providers/DirectoryWarmup';
 import ShellProvider from '@/components/shells/ShellProvider';
 import SideNav from '@/components/shells/SideNav';
 import { SIDEBAR_STATE_CSS, SIDEBAR_STATE_SCRIPT } from '@/components/shells/sidebarState';
@@ -20,6 +21,7 @@ export default function AppShell({ children }: AppShellProps) {
       <script dangerouslySetInnerHTML={{ __html: SIDEBAR_STATE_SCRIPT }} />
       <style>{SIDEBAR_STATE_CSS}</style>
       <ShellProvider>
+        <DirectoryWarmup />
         <SideNav />
         <SidebarInset
           id="main"

@@ -21,7 +21,6 @@ export default function MemberListRow({ item, today, timeZone }: MemberListRowPr
       detail={memberListDetail(item, today, timeZone)}
       status={<StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>}
       href={`/admin/members/${item.id}`}
-      prefetch={false}
     />
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import EmptyState from '@/components/common/EmptyState';
 import DueRow from '@/components/pages/due/DueRow';
 import PagedRows from '@/components/pages/members/PagedRows';
@@ -8,6 +9,9 @@ import { tabToStatus } from '@/lib/due/links';
 import { emptyDueLine } from '@/lib/due/status';
 import type { DueTarget } from '@/lib/due/target';
 import type { DueTab } from '@/lib/due/types';
+
+// From 1024 px (lg) the rows become a DataTable (BR-REC-183); its code loads only then.
+const DueTable = dynamic(() => import('@/components/pages/due/DueTable'));
 
 interface DueListProps {
   tab: DueTab;
@@ -26,6 +30,7 @@ export default function DueList({ tab, typeId, onMore }: DueListProps) {
       query={query}
       skeletonChips
       empty={<EmptyState title={emptyDueLine(tab)} />}
+      renderTable={(items) => <DueTable items={items} onMore={onMore} />}
       renderRow={(item) => (
         <DueRow key={`${item.memberId}:${item.typeId}`} item={item} onMore={onMore} />
       )}

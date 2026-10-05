@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import EmptyState from '@/components/common/EmptyState';
 import EndingRow from '@/components/pages/members/EndingRow';
 import PagedRows from '@/components/pages/members/PagedRows';
@@ -7,6 +8,9 @@ import { useEndingList } from '@/lib/api/members/queries';
 import { ENDING_EMPTY } from '@/lib/members/endingParams';
 import type { EndingStatus } from '@/lib/members/types';
 import { useToday } from '@/lib/members/useToday';
+
+// From 1024 px (lg) the rows become a DataTable (BR-REC-183); its code loads only then.
+const EndingTable = dynamic(() => import('@/components/pages/members/EndingTable'));
 
 interface EndingListProps {
   status: EndingStatus;
@@ -24,6 +28,9 @@ export default function EndingList({ status, onRenew }: EndingListProps) {
       query={query}
       skeletonChips
       empty={<EmptyState title={ENDING_EMPTY[status]} />}
+      renderTable={(items) => (
+        <EndingTable items={items} status={status} today={today} onRenew={onRenew} />
+      )}
       renderRow={(item) => (
         <EndingRow
           key={item.memberId}

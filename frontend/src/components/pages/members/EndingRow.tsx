@@ -38,7 +38,6 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
       title={item.fullName}
       detail={formatPhone(item.phone)}
       href={`/admin/members/${item.memberId}`}
-      prefetch={false}
       trailing={
         <div className="flex items-center pr-3">
           <Button
