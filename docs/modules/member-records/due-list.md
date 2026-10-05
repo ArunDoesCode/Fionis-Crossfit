@@ -21,7 +21,7 @@ Endpoints: E31 due list (query `status` = `overdue` | `upcoming`; the S3 URL tab
 | backend | `backend/src/{routes/due,controller/dueController,service/dueService,repository/dueRepository}.ts`, `types/due.types.ts` | `dueService.{list,memberItems,setAction,clearAction}`; `dueRepository.{listMembers,listCatalog,listLastMeasured,listOverrides,findOverride,upsertOverride,deleteOverride}` |
 | domain | `backend/src/lib/domain/due.ts` (pure; `today` and the lead days are arguments) | `computeDue`, `dueListRows` (sorted, not paged), `memberDueItems`, `isListedInDueList` (due-C3) |
 | admin lib | `frontend/src/lib/due/{status,remind,links,searchParams,optimistic,target,text,types,useDueSheet}.ts`, `lib/api/due/{fetchers,queries}.ts` | pure `dueRowStatus`, `memberDueStatus`, `remindChoices`, `remindDateIssue`, `recordHref`, `dueListHref`, `sortDueRows`, `applyDueChange`; `dueKeys` (`['due']`), `useDuePreview` (5 rows), `useDueList` (25/page, infinite), `useMemberDue`, `useSetDueAction`, `useClearDueAction` (mutation key `['due-write']`) |
-| admin ui | `frontend/src/components/pages/due/*`, `components/views/due/DueListView.tsx`, `app/(app)/admin/due/page.tsx` | `DueSheetLazy` (one `import()`), `DueSection` (Home), `DueList`/`DueListPanel` (S3), `MemberDueRow` |
+| admin ui | `frontend/src/components/pages/due/*`, `components/views/due/DueListView.tsx`, `app/(app)/admin/due/page.tsx` | `lazySheets.ts (DueSheet)` (one `import()`), `DueSection` (Home), `DueList`/`DueListPanel` (S3), `MemberDueRow` |
 | slots | Home `components/pages/home/DueSections.tsx`; Member `components/pages/member/DueBlock.tsx` | `DueBlock` takes `{ memberId }` |
 
 ## Gotchas

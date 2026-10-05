@@ -21,7 +21,7 @@ Endpoints: E16 list/search · E17 create (`Idempotency-Key`) · E18 get · E19 u
 |---|---|---|
 | backend | `backend/src/{routes/members,controller/{members,memberships}Controller,service/{members,memberships}Service,repository/{members,memberships}Repository}.ts`, `service/{membersView,membershipsRules}.ts`, `repository/membersSql.ts`, `types/members.types.ts` | `membersService.{list,create,get,update,archive,restore,restoreInTransaction}`, `membershipsService.{add,update,ending}`; pure `periodsOverlap`, `coversDay`, `restoresMember`, `RECENTLY_ENDED_DAYS`; `statusCondition()`; `cleanPhone`/`phoneDigits` |
 | admin lib | `frontend/src/lib/{validators/members.ts,members/*,api/members/*}` | `memberFormSchema`, `cleanPhone`, `samePhone`, `membershipStatusText`, `memberListBadge`, `memberBannerText`, `renewDefaults`, `duplicatePhoneMatches`, `clampSearchText` (E16 `q` ≤ 100); hooks `useMemberList` (25/page), `useMember`, `useSavePeriod`, `useEndingList`/`useEndingPreview`; keys `memberKeys` `['members']`, `membershipKeys` `['memberships']` |
-| admin ui | `frontend/src/components/{views,pages}/members/*`, routes `app/(app)/admin/{members,memberships}/**` | `PeriodSheetLazy` + `useLazySheet`, `AfterHydration`, `MembershipHistory` |
+| admin ui | `frontend/src/components/{views,pages}/members/*`, routes `app/(app)/admin/{members,memberships}/**` | `lazySheets.ts (PeriodSheet)` + `useLazySheet`, `AfterHydration`, `MembershipHistory` |
 | slots | Home `components/pages/home/{HomeSearch,MembershipSections}`; Member `components/pages/member/{MemberHeader,MembershipBlock}` | member slots take `{ memberId }` |
 
 ## Gotchas
