@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { API_ROUTES } from '@/lib/api/routes';
 import { LOGIN_PATH, loginPath, SESSION_ENDED_REASON } from '@/lib/auth/loginUrl';
 import { safeNextPath } from '@/lib/auth/safeNextPath';
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv } from '@/lib/envServer';
 
 // Page guard (BR-REC-01, 39, 40, 42). Cookie names and attributes: backend contract (BR-REC-30).
 // Optimistic: it reads cookie presence, never a token; the API stays the authoritative check.

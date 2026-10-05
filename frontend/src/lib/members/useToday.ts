@@ -4,7 +4,12 @@ import { useSyncExternalStore } from 'react';
 import { gymToday, type IsoDate } from '@/lib/domain/dates';
 
 /** The device's time zone (the gym and its phones are in one zone; the server stays authoritative). */
-export const deviceTimeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const DateTimeFormat = Intl.DateTimeFormat;
+let cachedZone: string | undefined;
+export const deviceTimeZone = (): string => {
+  cachedZone ??= DateTimeFormat().resolvedOptions().timeZone; // looked up once (BR-REC-211)
+  return cachedZone;
+};
 
 /** Gym today = the device's calendar day (BR-REC-93, due-list.md). */
 export const gymTodayNow = (): IsoDate => gymToday(new Date(), deviceTimeZone());

@@ -42,11 +42,12 @@ export const assessmentKeys = {
  */
 const DUE_ROOT = ['due'] as const;
 /**
- * The key root of every member read (`memberKeys.all()` in `lib/api/members/queries.ts`): a save changes a
- * member's `lastAssessedOn`. Written here, not imported, because that module's lists, search and member
+ * `memberKeys.lists()` in `lib/api/members/queries.ts`: a save changes a member's `lastAssessedOn`, so the
+ * lists (and the directory) refresh; never the whole `['members']` root (BR-REC-209). Written here, not imported, because that module's lists, search and member
  * writes would load with the Record assessment page (BR-REC-146).
  */
-const MEMBERS_ROOT = ['members'] as const;
+const MEMBER_LISTS = ['members', 'list'] as const;
+const MEMBER_DETAILS = ['members', 'detail'] as const;
 const memberDueKey = (memberId: string) => [...DUE_ROOT, 'member', memberId] as const;
 
 /** For `useIsMutating`: the Save buttons follow the form's own request. */
@@ -74,7 +75,8 @@ export async function invalidateAssessmentData(
 ): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: assessmentKeys.all }),
-    queryClient.invalidateQueries({ queryKey: MEMBERS_ROOT }),
+    queryClient.invalidateQueries({ queryKey: MEMBER_LISTS }),
+    queryClient.invalidateQueries({ queryKey: MEMBER_DETAILS }),
     queryClient.invalidateQueries({ queryKey: DUE_ROOT }),
   ]);
 }

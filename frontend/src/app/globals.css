@@ -296,3 +296,13 @@ input[type="search"]::-webkit-search-cancel-button {
     scroll-behavior: auto !important;
   }
 }
+
+/* BR-REC-211: a backdrop blur repaints the page behind every open sheet/dialog on each frame. components/ui is
+   CLI-only, so the shadcn blur is switched off here. */
+[data-slot="sheet-overlay"],
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-overlay"],
+[data-slot="drawer-overlay"] {
+  /* biome-ignore lint/complexity/noImportantStyles: must beat the utility class on the shadcn overlay */
+  backdrop-filter: none !important;
+}

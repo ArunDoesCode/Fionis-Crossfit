@@ -65,6 +65,7 @@ jobs:
       - run: bun run lint
       - run: bun run check:colors
       - run: bun test --pass-with-no-tests
+      - run: bun run build
 
   member:
     runs-on: ubuntu-latest
