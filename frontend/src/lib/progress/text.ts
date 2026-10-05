@@ -21,7 +21,7 @@ export const PROGRESS_TEXT = {
     trend: 'Trend',
     firstShort: 'first',
     bestShort: 'best',
-    oneReading: '(1 reading)',
+    firstReading: 'First reading',
     segmental: 'Segmental',
     bodyPart: 'Body part',
     /** Shown in a table cell with no value (BR-REC-108). */
@@ -48,13 +48,14 @@ export const PROGRESS_TEXT = {
     anySex: 'Any sex',
     anyAge: 'Any age',
     averageChange: 'Average change',
-    sinceFirst: 'since the first reading',
     improved: 'Improved',
     noChange: 'No change',
     worse: 'Worse',
     notEnough: 'Not enough results yet. A member needs two to be counted.',
     noMeasurements: 'No measurements are turned on yet.',
     leaderboard: 'Leaderboard',
+    /** BR-REC-228: the title names the measurement. */
+    leaderboardFor: (measurementName: string): string => `${measurementName} leaderboard`,
     male: 'Male',
     female: 'Female',
     showMore: 'Show more',
@@ -161,6 +162,43 @@ export const outcomeShares = (counts: Outcomes): Outcomes => {
   return shares;
 };
 
-/** BR-REC-113: "n = 12 · 5 with one reading not counted"; "n = 12" when nobody was left out. */
-export const notCountedText = (n: number, notCounted: number): string =>
-  notCounted > 0 ? `n = ${n} · ${notCounted} with one reading not counted` : `n = ${n}`;
+/**
+ * BR-REC-113 / 228: "Based on 12 members (5 more have only one reading)"; with nobody left out just
+ * "Based on 12 members" (the bracket is dropped, 1 left out reads "1 more has only one reading").
+ */
+export const notCountedText = (n: number, notCounted: number): string => {
+  const base = `Based on ${n} ${n === 1 ? 'member' : 'members'}`;
+  if (notCounted <= 0) return base;
+  const left =
+    notCounted === 1 ? '1 more has only one reading' : `${notCounted} more have only one reading`;
+  return `${base} (${left})`;
+};
+
+/** BR-REC-228: the headline of Reports, "17 of 20 members improved Body fat since their first reading". */
+export const improvedHeadline = (
+  improved: number,
+  total: number,
+  measurementName: string,
+): string =>
+  `${improved} of ${total} members improved ${measurementName} since their first reading`;
+
+/**
+ * BR-REC-228: "Body fat down 2.0 % on average · better". The better / worse word follows the measurement's
+ * direction and is left out when it has none; a change that shows as zero is "unchanged".
+ */
+export const averageChangeText = (
+  measurementName: string,
+  change: number,
+  metric: ValueMetric,
+): string => {
+  if (showsAsZero(change, metric)) return `${measurementName} unchanged on average`;
+  const up = change > 0;
+  const base = `${measurementName} ${up ? 'up' : 'down'} ${valueText(Math.abs(change), metric)} on average`;
+  if (metric.better === 'none') return base;
+  const good = metric.better === 'higher' ? up : !up;
+  return `${base} · ${good ? PROGRESS_TEXT.change.better : PROGRESS_TEXT.change.worse}`;
+};
+
+/** BR-REC-229: a measurement with one reading, "First reading · 81.7 kg" (never dashes). */
+export const firstReadingText = (value: number, metric: ValueMetric): string =>
+  `${PROGRESS_TEXT.report.firstReading} · ${valueText(value, metric)}`;

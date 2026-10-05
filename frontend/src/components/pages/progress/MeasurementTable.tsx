@@ -1,6 +1,12 @@
 import Sparkline from '@/components/pages/progress/Sparkline';
 import type { ReportMetric, ReportType } from '@/lib/api/progress/fetchers';
-import { changeText, PROGRESS_TEXT, readingDateText, valueText } from '@/lib/progress/text';
+import {
+  changeText,
+  firstReadingText,
+  PROGRESS_TEXT,
+  readingDateText,
+  valueText,
+} from '@/lib/progress/text';
 
 const text = PROGRESS_TEXT.report;
 
@@ -11,7 +17,7 @@ interface MeasurementTableProps {
 
 type Reading = ReportMetric['first'];
 
-// A reading: the number in the mono font so digits line up (BR-REC-123), its date small beside it.
+// A reading: the number with tabular digits so they line up (BR-REC-220), its date small beside it.
 function ReadingCell({
   reading,
   metric,
@@ -35,6 +41,7 @@ function MeasurementRow({ metric, today }: { metric: ReportMetric; today: string
   const single = metric.readings < 2;
   const points = metric.points.map((point) => point.value);
   const showsUnit = metric.datatype === 'number' && metric.unit !== '';
+  const bare = { ...metric, unit: '' }; // the unit is in the row's name
   return (
     <tr className="break-inside-avoid border-b align-middle">
       <th
@@ -43,20 +50,14 @@ function MeasurementRow({ metric, today }: { metric: ReportMetric; today: string
       >
         <span className="font-medium">{metric.name}</span>
         {showsUnit && <span className="ml-1 text-muted-foreground">{metric.unit}</span>}
-        {single && <span className="ml-1 text-muted-foreground">{text.oneReading}</span>}
       </th>
       {single ? (
-        <>
-          <td className="py-2 pr-2 print:py-[0.4mm]">{text.noValue}</td>
-          <td className="py-2 pr-2 print:py-[0.4mm]">
-            <span className="tabular-nums">
-              {valueText(metric.latest.value, { ...metric, unit: '' })}
-            </span>
-          </td>
-          <td className="py-2 pr-2 print:py-[0.4mm]">{text.noValue}</td>
-          <td className="py-2 pr-2 print:py-[0.4mm]">{text.noValue}</td>
-          <td className="py-2 print:py-[0.4mm]">{text.noValue}</td>
-        </>
+        <td colSpan={5} className="py-2 print:py-[0.4mm]">
+          <span className="tabular-nums">{firstReadingText(metric.latest.value, bare)}</span>{' '}
+          <span className="text-xs text-muted-foreground print:text-[7pt]">
+            {readingDateText(metric.latest.on, metric.latest.isEstimated, today)}
+          </span>
+        </td>
       ) : (
         <>
           <td className="py-2 pr-2 print:py-[0.4mm]">
@@ -93,11 +94,11 @@ function MeasurementRow({ metric, today }: { metric: ReportMetric; today: string
   );
 }
 
-// S12 on desktop and on paper: First · Latest · Best · Change · Trend, one row per measurement (BR-REC-22,
-// 106). Shown from 1024 px and in print (`print:` because paper is narrower than 1024 px); phones get cards.
+// S12 on paper only (BR-REC-229): First · Latest · Best · Change · Trend, one row per measurement (BR-REC-22,
+// 106). On screen, phone and desktop, the cards show the same numbers.
 export default function MeasurementTable({ type, today }: MeasurementTableProps) {
   return (
-    <table className="hidden w-full table-fixed border-collapse text-sm lg:table print:table print:text-[9pt] print:leading-tight">
+    <table className="hidden w-full table-fixed border-collapse text-sm print:table print:text-[9pt] print:leading-tight">
       <caption className="sr-only">{type.name}</caption>
       <colgroup>
         <col className="w-[21%] print:w-[28%]" />

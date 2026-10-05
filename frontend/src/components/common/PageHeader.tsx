@@ -19,6 +19,10 @@ interface PageHeaderProps {
   /** Only for a title the route table cannot know (a name from the data); otherwise it comes from `routeFor`. */
   title?: string;
   subtitle?: string;
+  /** Before the title (the member page's avatar). */
+  leading?: React.ReactNode;
+  /** A line under the title (the member page's status, plan, phone and joined date). */
+  meta?: React.ReactNode;
   /** Small extra control that stays at the right on every width (for example "Edit"). */
   secondary?: React.ReactNode;
   /**
@@ -39,6 +43,8 @@ export default function PageHeader({
   pattern,
   title,
   subtitle,
+  leading,
+  meta,
   secondary,
   action,
   form,
@@ -54,12 +60,14 @@ export default function PageHeader({
       >
         <SidebarTrigger className="-ml-2 size-11 shrink-0 max-md:hidden" />
         <MenuButton className="-ml-2 md:hidden" />
+        {leading}
         <div className="min-w-0 flex-1">
           <Suspense
             fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
           >
             <RouteHeading title={title} subtitle={subtitle} />
           </Suspense>
+          {meta}
         </div>
         {secondary}
         {action && (

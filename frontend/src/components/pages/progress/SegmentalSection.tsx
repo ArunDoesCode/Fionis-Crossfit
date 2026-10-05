@@ -1,3 +1,4 @@
+import { Card, CardContent } from '@/components/ui/card';
 import type { Segmental } from '@/lib/api/progress/fetchers';
 import { PROGRESS_TEXT, readingDateText, valueText } from '@/lib/progress/text';
 
@@ -23,31 +24,35 @@ const cellText = (value: number | null | undefined, group: Group): string =>
     : valueText(value, { datatype: 'number', decimals: group.decimals, unit: '', better: 'none' });
 
 // The segmental analysis of the latest body scan (BR-REC-22, 108): rows = Whole body, Arms, Trunk, Legs,
-// one column per group, with the scan's date (≈ when estimated). A table on desktop and on paper; on a
-// phone one card per group with the four parts as lines, so nothing scrolls sideways (BR-REC-135, 139).
+// one column per group, with the scan's date (≈ when estimated). On screen one card per group with the four
+// parts as lines (BR-REC-229, 135); the table is for paper only.
 export default function SegmentalSection({ segmental, today }: SegmentalSectionProps) {
   const title = `${text.segmental} · ${readingDateText(segmental.on, segmental.isEstimated, today)}`;
   return (
     <section aria-label={title} className="flex flex-col gap-3 print:gap-1">
       <h2 className="font-heading text-lg font-semibold print:text-[11pt]">{title}</h2>
 
-      <ul className="flex flex-col gap-3 lg:hidden print:hidden">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 print:hidden">
         {segmental.groups.map((group) => (
-          <li key={group.name} className="rounded-2xl border bg-card p-4">
-            <h3 className="text-base font-medium">{groupTitle(group)}</h3>
-            <dl className="mt-2 flex flex-col gap-1">
-              {segmental.rows.map((row) => (
-                <div key={row.part} className="flex items-baseline justify-between gap-3">
-                  <dt className="text-sm text-muted-foreground">{text.parts[row.part]}</dt>
-                  <dd className="tabular-nums">{cellText(row.values[group.name], group)}</dd>
-                </div>
-              ))}
-            </dl>
+          <li key={group.name}>
+            <Card size="sm" className="h-full">
+              <CardContent className="flex flex-col gap-2">
+                <h3 className="text-base font-medium">{groupTitle(group)}</h3>
+                <dl className="flex flex-col gap-1">
+                  {segmental.rows.map((row) => (
+                    <div key={row.part} className="flex items-baseline justify-between gap-3">
+                      <dt className="text-sm text-muted-foreground">{text.parts[row.part]}</dt>
+                      <dd className="tabular-nums">{cellText(row.values[group.name], group)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </CardContent>
+            </Card>
           </li>
         ))}
       </ul>
 
-      <table className="hidden w-full border-collapse text-sm lg:table print:table print:text-[9pt] print:leading-tight">
+      <table className="hidden w-full border-collapse text-sm print:table print:text-[9pt] print:leading-tight">
         <caption className="sr-only">{title}</caption>
         <thead>
           <tr className="border-b text-left text-muted-foreground">

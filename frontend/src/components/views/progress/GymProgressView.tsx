@@ -1,7 +1,9 @@
 'use client';
 
+import { Download01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { type ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import Page from '@/components/common/Page';
@@ -12,8 +14,11 @@ import Leaderboard from '@/components/pages/progress/Leaderboard';
 import ProgressFilterBar from '@/components/pages/progress/ProgressFilterBar';
 import ProgressResults from '@/components/pages/progress/ProgressResults';
 import { FiltersSkeleton } from '@/components/pages/progress/ProgressSkeleton';
-import { useProgressStats } from '@/lib/api/progress/queries';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useDownloadExport, useProgressStats } from '@/lib/api/progress/queries';
 import { useAssessmentTypes } from '@/lib/api/setup/queries';
+import { EXPORT_FILES } from '@/lib/progress/exportFiles';
 import {
   type ProgressFilters,
   parseProgressFilters,
@@ -42,8 +47,53 @@ function writeFilters(filters: ProgressFilters) {
   );
 }
 
+// BR-REC-228: "Download CSV" in the Reports header, the S18 export (same hook, same three files): the button
+// opens the list of files, a pick starts that download (one sign-in check, then the browser downloads it).
+function DownloadCsv() {
+  const [open, setOpen] = useState(false);
+  const download = useDownloadExport();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            disabled={download.isPending}
+          />
+        }
+      >
+        <HugeiconsIcon icon={Download01Icon} strokeWidth={2} aria-hidden="true" />
+        {PROGRESS_TEXT.export.download}
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-auto min-w-52 gap-1 p-1">
+        {EXPORT_FILES.map(({ file, title }) => (
+          <Button
+            key={file}
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="justify-start"
+            onClick={() => {
+              setOpen(false);
+              download.mutate(file);
+            }}
+          >
+            {title}
+          </Button>
+        ))}
+        <p className="px-3 pb-2 text-sm text-muted-foreground">{PROGRESS_TEXT.export.hint}</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // S13 Gym progress (`/admin/reports?metric=&joinedFrom=&joinedTo=&plan=&sex=&age=`), 1080 px wide on desktop:
-// filters in one row, results and leaderboard side by side. No main action. With `metric` in the address the
+// filters in one row, results and leaderboard side by side. "Download CSV" in the header. With `metric` in the address the
 // four reads (E09 catalog, E36, E37, E38) start together; without it E09 and E38 start first and the others
 // follow once the default measurement is known (P11), which is then written to the address so the view can
 // be bookmarked. Every part has its own loading and error state (BR-REC-131) and reads again on every open.
@@ -69,7 +119,7 @@ export default function GymProgressView() {
 
   return (
     <Page>
-      <PageHeader />
+      <PageHeader action={<DownloadCsv />} />
       {catalog.data ? (
         <ProgressFilterBar
           catalog={catalog.data}
