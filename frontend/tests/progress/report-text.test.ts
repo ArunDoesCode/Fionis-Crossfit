@@ -63,6 +63,21 @@ describe('BR-REC-228 improvedHeadline', () => {
       '3 of 8 members improved Weight since their first reading',
     );
   });
+  test('BR-REC-228 singular for one member: "1 of 1 member improved …" (Review round 2)', () => {
+    expect(mod.improvedHeadline(1, 1, 'Body fat')).toBe(
+      '1 of 1 member improved Body fat since their first reading',
+    );
+  });
+  test('BR-REC-228 singular follows the member total, so "0 of 1 member improved …"', () => {
+    expect(mod.improvedHeadline(0, 1, 'Weight')).toBe(
+      '0 of 1 member improved Weight since their first reading',
+    );
+  });
+  test('BR-REC-228 two members stays plural: "2 of 2 members improved …"', () => {
+    expect(mod.improvedHeadline(2, 2, 'Weight')).toBe(
+      '2 of 2 members improved Weight since their first reading',
+    );
+  });
 });
 
 describe('BR-REC-228 averageChangeText: better / worse from the direction, none when there is none', () => {
