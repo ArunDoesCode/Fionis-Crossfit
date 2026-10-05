@@ -114,9 +114,24 @@ describe('BR-REC-201 one MemberSearch', () => {
     expect(ms).toMatch(/tel|numeric/);
     expect(ms).toMatch(/email/);
   });
-  test('BR-REC-201 the Name / Email / Phone picker is a dropdown inside MemberSearch, no ChoiceChips', () => {
-    expect(ms).toMatch(/Select|DropdownMenu/);
+  test('BR-REC-201 (amended 2026-10-05) the field picker is a shadcn Combobox, no ChoiceChips', () => {
+    expect(ms).toMatch(/Combobox|(Command[\s\S]*Popover|Popover[\s\S]*Command)/);
+    expect(ms).toMatch(/from '@\/components\/ui\/(combobox|command|popover)'/);
     expect(ms).not.toMatch(/ChoiceChips/);
+  });
+  test('BR-REC-201 the text box is a plain Input, not an InputGroup', () => {
+    expect(ms).toMatch(/from '@\/components\/ui\/input'/);
+    expect(ms).toMatch(/<Input\b/);
+    expect(ms).not.toMatch(/InputGroup/);
+  });
+  test('BR-REC-201 the two controls sit in a flex row with a gap (not joined)', () => {
+    expect(ms).toMatch(/flex[^'"`]*\bgap-\d|gap-\d[^'"`]*\bflex/);
+  });
+  test('BR-REC-201 the placeholder follows the picked field', () => {
+    const three =
+      /Search by name/.test(ms) && /Search by email/.test(ms) && /Search by phone/.test(ms);
+    expect(three || /Search by \$\{/.test(ms)).toBe(true);
+    expect(ms).toMatch(/placeholder=/);
   });
   test('is controlled by text, field, onChange', () => {
     expect(ms).toMatch(/\btext\b/);
