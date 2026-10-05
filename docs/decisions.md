@@ -229,3 +229,10 @@ owner answers ux Q4, Q5, Q7, Q8, performance Q6. Rejected: 1024 px breakpoint (e
 Completes D-034 (owner answers ux Q9–Q11). Why: one field shape everywhere, so the grid rows line up and nothing moves
 when an error appears. Rejected: a label per box, no minimum height for choice fields, a smaller desktop minimum.
 Detail: ux BR-REC-187.
+
+**D-037 · 2026-10-05 · Visual refresh "Navy & Flame": same Fionis brand applied with more strength — true #F7941E, cool page, card shadows, 5 px radius, two fonts (Geist Mono out), Home number band, initials avatars, member name as page title, sidebar toggle beside the sidebar.**
+Owner answers after the admin UI audit (`docs/design/admin-ui-audit/README.md`): (1) Outfit `tabular-nums` replaces Geist
+Mono; (2) number band and avatars now (spec v10, not later); (3) Record assessment 3 columns from 1280 px so it fits
+1440 × 900; (4) the sidebar toggle sits outside the sidebar as shadcn ships it (reverses the U7 placement). Why: the app
+looked bland — muddy #DC7400 orange, page vs card 1.05:1, grey inputs that read as disabled, no numbers or faces.
+Rejected: a new palette (D-029 stays), photo upload, chart libraries (BR-REC-215). Detail: ux BR-REC-219…235.

@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 9
+version: 10
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -19,7 +19,7 @@ overdue without help on a 1440 × 900 laptop and on a 360 px phone, and every sc
 
 ## Owns
 
-Rules BR-REC-120…140, 177…200 · screen index · app shell, design tokens, shared components, form primitives,
+Rules BR-REC-120…140, 177…200, 218…235 · screen index · app shell, design tokens, shared components, form primitives,
 date pickers, modals, word list, code-health rules. Every stream follows these rules on its own screens.
 
 ## Who can do what
@@ -84,6 +84,30 @@ date pickers, modals, word list, code-health rules. Every stream follows these r
 | BR-REC-200 | CI fails on: a raw colour (BR-REC-184), a hand-edited `components/ui` file, `next build` errors or the bundle budget (performance BR-REC-215), plus the existing typecheck, Biome and tests. | PR adds `bg-[#000]` → red | CI workflow; a deliberately bad branch fails |
 | BR-REC-218 | Code stays simple: (a) a component used in fewer than three places and under ~100 lines lives in the file that uses it — a separate file only when three or more places use it, it is a lazy-loaded boundary, or it is a form primitive; (b) there is no `shells/` folder: the app shell lives in the layout (`app/(app)/admin/layout.tsx` and `_components/` beside it); (c) classes are plain Tailwind: sizes from the density tokens use named utilities (`h-control`, `size-control`, `h-row`, `h-header`, `page-narrow`, `page-wide`), no `calc()` for token maths (`env()`, `dvh` and runtime values stay), and `cn()` is used only to merge a passed-in `className` or conditional classes, never on a static string. | `Skeletons` row → `h-row`, not `h-(--row-height)` | CI grep: no `calc(` with `var(--` and no `h-(--`, `size-(--`, `min-h-(--` in `frontend/src` outside `components/ui`; no `components/shells` |
 
+## Rules (v10 — visual refresh "Navy & Flame", owner 2026-10-05, D-037)
+
+Audit and before/after shots: `docs/design/admin-ui-audit/README.md`. Same Fionis brand (D-029), applied with more strength.
+
+| ID | Rule | Example (given → then) | Check (acceptance) |
+|---|---|---|---|
+| BR-REC-219 | Tokens follow `docs/design/admin-ui-audit/tokens.css` (light + dark, AA-checked): page #EFF1F6, white cards with a soft shadow (light only; dark uses a lighter card and a stronger border), primary true Fionis #F7941E with navy text and a `--primary-edge` #B86200 border on primary buttons, orange text `--brand` #A64F00, radius 5 px (badges and filter chips stay pills), one red (`--destructive` = `--danger`), `--chart-1…5` for SVG charts. Amends BR-REC-185 values and the Design tokens radius. | Primary button, light → #F7941E fill, navy text, #B86200 edge | Token test both themes; axe 0 contrast issues; `check:colors` green |
+| BR-REC-220 | Two fonts: Outfit for text and numbers (number columns and KPIs use `tabular-nums`) and Poppins 600 for titles; Geist Mono is removed (amends BR-REC-123 "mono font", performance BR-REC-214 "three fonts"). Member names are 600; table headers and KPI labels are 12 px 600 uppercase muted; hints and floating labels are at least 13 px; a section count is a small pill with a spoken space ("Overdue 10"). | "95.5" and "102.0" align right in Outfit → no Geist Mono request on any screen | Font test: 2 fonts; network review |
+| BR-REC-221 | One control look: every input, search box, textarea, select and date / month / time-zone trigger has the white `control-fill` and the input border; a grey fill means disabled only. Focus is a solid 2 px `--ring` outline with 2 px offset (≥ 3:1). | Add member → Date of birth looks the same as Name | Screenshot review; contrast probe of fill, edge and focus |
+| BR-REC-222 | Home shows a navy number band under the search with four tiles — Overdue, Due soon, Memberships ending, Recently ended: a 12 px uppercase label, the section total as a big orange number, a tone dot and one line; each tile links to that section's "See all"; 4 across from 768 px, 2 × 2 on phones; totals come from the section data already loaded (no new API); grey shapes while loading. | 10 overdue → tile "OVERDUE 10 · assessments late" → opens the Due list | Screen test of the four links and totals |
+| BR-REC-223 | Every person row (Home sections, Members, Due list, Memberships ending, search results, leaderboard) starts with an initials avatar: first letters of the first and last word of the shown name, at most 2, upper case, neutral circle; the member page shows a 64 px navy circle with orange initials; no photos. | "Surya Pratap" → "SP"; "Madonna" → "M" | Unit test of the initials helper; screenshot |
+| BR-REC-224 | Member page (S7): the page title is the member's name (breadcrumb parents stay static, BR-REC-179) with the avatar and a meta line (membership status, plan, phone, joined date); under it at most one next-step banner — an overdue assessment ("Body composition overdue 34 days" [Record now]) wins over a membership that ended or ends soon ([Renew]); Archive (hide) moves into a ⋯ menu; Report card and All assessments are outline buttons with icons. An unknown member shows only "We couldn't find this member." [Back to members], with no header actions. | Overdue member with membership ending → banner shows the overdue assessment only | Screen test; unknown id → one message, no Edit / Record |
+| BR-REC-225 | Due sub-items show as one line of quiet text "Height · Weight · +13" instead of chips, and "All 15 measurements" when every turned-on measurement is due (amends the word "chips" in due-list BR-REC-16, 98; same information). Names wrap to at most two lines and are never cut to a fragment; below 768 px the status badge sits under the name. | 15 of 15 due → "All 15 measurements" | Unit test of the text; 320 px screenshot shows full names |
+| BR-REC-226 | Desktop tables (S3, S4, S5): header row on a muted band with 12 px uppercase labels; name column 600 with the avatar; filter tabs show counts ("Ends soon (4)"); an action column has the spoken header "Actions"; the Due list shows the phone column (BR-REC-183). | Memberships at 1440 px → "Ends soon (4) · Ended (3)" | Screenshot; axe no empty table header |
+| BR-REC-227 | Sidebar toggle sits outside the sidebar, at the left of the page header, as shadcn ships it (`SidebarTrigger` in the `SidebarInset` header) from 768 px; phones keep ☰ "Open menu" in the top bar (amends the U7 clarification). The sidebar header shows the orange "F" square plus "Fionis CrossFit" when expanded and the "F" only when collapsed (amends BR-REC-186). The active item is an orange-tint pill with a 3 px orange bar at the left and orange 600 icon and text. | Click the toggle beside the page title → sidebar collapses to icons | Sidebar test; the sidebar header holds no toggle |
+| BR-REC-228 | Reports (S13) words and layout (amends progress BR-REC-113 wording, same numbers): a headline sentence "17 of 20 members improved Body fat since their first reading"; a count line "Based on 12 members (5 more have only one reading)"; the average as "Body fat down 2.0 % on average · better" (better / worse from the measurement's direction, no word when it has none); the KPI number in `text-brand`; the leaderboard title names the measurement and ranks 1–3 get a medal badge; "Download CSV" in the Reports header (the S18 export); month pickers use the control height. | n = 12, 5 not counted → "Based on 12 members (5 more have only one reading)" | Unit test of the text helpers |
+| BR-REC-229 | Report card (S12) on screen uses the same cards on desktop as on phones (change line + sparkline); the table stays for print; a measurement with one reading shows "First reading" instead of dashes. | One reading of Weight → "First reading · 81.7 kg" | Screenshot desktop + print preview |
+| BR-REC-230 | Record assessment (S10): 1 column on phones, 2 from 768 px, 3 from 1280 px, so it fits 1440 × 900 (amends assessments BR-REC-216 and the U8 clarification); "Paper column" and "Save & next date" sit in a closed "Copying from the paper card?" Collapsible (open while a paper column is picked); a partial save's toast says "Saved 3 for Naveen Kumar · 12 still due"; a value above 100 in a % measurement is a field error "Use 0 to 100" (no "Save anyway"). | 3 of 15 saved → toast "Saved 3 for Naveen Kumar · 12 still due" | Form test; 1440 × 900 screenshot without page scroll |
+| BR-REC-231 | Search picks the field from the text (amends members BR-REC-201 default): only digits (spaces, `+`, `-` allowed) → Phone, text with `@` → Email, else Name; the picker shows the field in use and a manual pick wins until the text is cleared; each result shows "Last assessed 23 Sep 2026". | Name picked, type "10016" → field Phone, Lakshmi Pillai shows | Unit test of the field picker |
+| BR-REC-232 | `DatePicker` also takes typed dates `dd/mm/yyyy` (`-` or `.` allowed, single digits allowed), checked on Save like any field; the calendar stays (amends BR-REC-192). On Add member, "Starts on" copies "Joined on" until the user changes it. | Type "5/1/1990" → 05 Jan 1990 | Unit test of the date parser |
+| BR-REC-233 | Words (word list): empty gym name → "Enter the gym name"; setup "Please check below / above" → "Warn if lower than / Warn if higher than"; "Report table" → "Show in a group on the report card"; time zone shows city and short name ("India (Kolkata) · IST", value unchanged); empty places get one icon and a warm sentence ("Nobody is overdue. Nice work."). | Overdue list empty → icon + "Nobody is overdue. Nice work." | Copy review |
+| BR-REC-234 | Each page has its own `<title>` "<route title> · Fionis India" (member pages: the name); a "Skip to content" link; on forms the action bar comes after the fields in DOM order; only the error summary is `role="alert"`; a focused field is never hidden under the sticky header or the Save bar; the "d" theme key is removed; ⋯ buttons announce a popup and its open state. | Tab to the last field on a phone form → it shows above the Save bar | axe; keyboard pass |
+| BR-REC-235 | Login (S1) from 1024 px is split: a navy panel at the left with the wordmark and the line "Fionis CrossFit — coach desk", the form on white at the right; phones keep the single card; the wordmark file is served without a sign-in redirect. | `/Fionis-Logo.avif` → 200, not a redirect | Proxy unit test; screenshot |
+
 ## Screens (index — wireframes live in the owner sub-spec)
 
 | # | Screen | Route | Owner |
@@ -120,9 +144,8 @@ Desktop (>= sidebar breakpoint)                         Phone (< breakpoint)
 ## Design tokens
 
 Colours: BR-REC-184, 185 (starting values: issue #41, AA-checked; `--brand`, `--info`, `--info-soft` new). Fonts
-(performance BR-REC-214): Outfit for text, inputs, buttons; Poppins 600 for page and section titles; Geist Mono for
-number columns. Sizes 12 / 13 / 14 / 16 / 18 / 22 / 28 px, weights 400 / 500 / 600. Spacing 4 px steps; density
-per BR-REC-181 as CSS variables with a desktop and a touch value. Radius 10 px. Motion 150 ms, opacity/transform only.
+(performance BR-REC-214, amended by BR-REC-220): Outfit for text, inputs, buttons and numbers (`tabular-nums`); Poppins 600 for page and section titles. Sizes 12 / 13 / 14 / 16 / 18 / 22 / 28 px, weights 400 / 500 / 600. Spacing 4 px steps; density
+per BR-REC-181 as CSS variables with a desktop and a touch value. Radius 5 px (BR-REC-219). Motion 150 ms, opacity/transform only.
 
 ## Word list (rules → screen)
 
@@ -139,10 +162,10 @@ banner → "Archived 02 Jun 2026 · Membership ended 31 May 2026" (members BR-RE
 |---|---|---|
 | See who is overdue | open the app | 0 taps (Home) |
 | Record for an overdue member | Home → row | 1 tap to the form |
-| Find a member | Home search → 2 letters → result (field picker defaults to Name) | 2 taps + typing |
+| Find a member | Home search → 2 letters or digits → result (field picked from the text, BR-REC-231) | 2 taps + typing |
 | Add a member | Members → Add member → one form → Add member | 1 screen |
 | Renew | Home "Ends soon" row → Renew → Renew | 2 taps |
-| Back-fill one paper column | Member → Record → assessment → Q2 → type → Save & next date | 4 taps + typing |
+| Back-fill one paper column | Member → Record → assessment → "Copying from the paper card?" → Q2 → type → Save & next date | 5 taps + typing |
 | Print a report card | Member → Report card → Print | 2 taps |
 
 ## Build plan v2 (dependency order; one batch per slice)
@@ -184,7 +207,7 @@ Names fixed so tests and code agree (no rule changed):
 
 ## Build clarifications (U7, 2026-10-05, owner: simplify)
 
-- **Sidebar and header (BR-REC-177, 178, 186):** the collapse button lives in the sidebar header (next to the text brand when expanded, under the "F" when collapsed); from 768 px the page header has no toggle, below 768 px the top bar keeps ☰. The page header has no gap between its parts beyond `gap-2`.
+- **Sidebar and header (BR-REC-177, 178, 186):** ~~the collapse button lives in the sidebar header~~ → v10 BR-REC-227: toggle beside the sidebar in the page header; (next to the text brand when expanded, under the "F" when collapsed); from 768 px the page header has no toggle, below 768 px the top bar keeps ☰. The page header has no gap between its parts beyond `gap-2`.
 - **Named utilities vs shadcn components (BR-REC-218c):** where a class lands on a shadcn component that has its own base size class (buttons, triggers, sidebar menu buttons, input groups, sheet close buttons), write the token as `h-[var(--control-height)]` / `size-[var(--control-height)]`, because `cn()` (tailwind-merge) de-duplicates only known classes; plain elements use the named utilities (`h-control`, `size-control`, `h-row`, `h-header`, `page-narrow`, `page-wide`).
 - **Home title (BR-REC-179):** the `/admin` route title is "Home" (the gym name is no longer a page title).
 - **Search (members.md BR-REC-201):** one joined control — the Name/Email/Phone dropdown attached to the left of the search input as a single rounded box.
@@ -193,7 +216,7 @@ Names fixed so tests and code agree (no rule changed):
 ## Build clarifications (U8, 2026-10-05, owner review of the screens)
 
 - **Errors only on Save (BR-REC-189):** every RHF form (Add/Edit member, Renew, Login, Change password, setup sheets, Record assessment) uses `mode: 'onSubmit'` and `reValidateMode: 'onSubmit'`; messages come from the schemas (one place sets the type-error wording, e.g. "Enter a number", "Fill this in"); a field that was never touched still has a defined value so a library "expected string, received undefined" can never appear.
-- **Record assessment (assessments.md BR-REC-216):** two columns from 768 px (one on phones), the whole content area, section titles kept; the measurement label is name + unit only (no "· due" tag — the screen is opened because it is due); the "About" tick is renamed "Approximate date" (word list) and sits with the date.
+- **Record assessment (assessments.md BR-REC-216):** two columns from 768 px (v10 BR-REC-230: 3 from 1280 px) (one on phones), the whole content area, section titles kept; the measurement label is name + unit only (no "· due" tag — the screen is opened because it is due); the "About" tick is renamed "Approximate date" (word list) and sits with the date.
 - **Whole page (BR-REC-182):** `Page` has no centred max-width from 768 px; padding is `p-4` on every side.
 - **Default shadcn first (BR-REC-218):** toasts are shadcn `sonner`; custom components are kept only when used in three or more places; where a shadcn default (form, badge, card, skeleton, toggle-group, table, alert) does the job it replaces the custom one.
 
@@ -223,6 +246,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v10 — changed after freeze and re-frozen (owner, D-037): visual refresh "Navy & Flame" from the admin UI audit — new BR-REC-219…235 (tokens, two fonts, one control look, Home number band, avatars, member header, row text, tables, sidebar toggle beside the sidebar, Reports words, report card cards, Record assessment 3 columns + paper tools collapsed, search field from text, typed dates, words, page titles and a11y, Login split); amends 123, 185, 186, 192, U7/U8 clarifications, tap budgets, and members 201, assessments 216, progress 113, due-list 16/98, performance 214; next free ID BR-REC-236
 - 2026-10-05 v9 — owner review of the built screens: errors only on Save and in plain words (BR-REC-189), whole-page width with p-4 on all sides (BR-REC-182/181), reuse threshold three places and shadcn defaults first (BR-REC-218), Record assessment two columns, no "due" label tag, "Approximate date"; next free ID BR-REC-219
 - 2026-10-05 v8 — owner simplification (U7): sidebar brand is text (logo stays on Login), toggle in the sidebar, Home title "Home", joined search control, new BR-REC-218 (simple code: inline single-use components, no shells folder, plain Tailwind, `cn` only to merge); next free ID BR-REC-219
 - 2026-10-05 v7 — clarified during build (U3): day bridge, formatter, DatePicker/MonthPicker module names, lazy calendar chunk; no rule changed
