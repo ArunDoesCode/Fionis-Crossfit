@@ -119,33 +119,18 @@ describe('BR-REC-186 brand surfaces', () => {
     expect(l).not.toBeNull();
     expect(l as number).toBeLessThan(0.4);
   });
-  test('BR-REC-186 the Fionis wordmark file is shipped', () => {
-    expect(existsSync(join(ROOT, 'public/Fionis-Logo.avif'))).toBe(true);
+  test('BR-REC-235 no logo image is shipped (v12: text wordmark)', () => {
+    expect(existsSync(join(ROOT, 'public/Fionis-Logo.avif'))).toBe(false);
   });
-  test('BR-REC-186 wordmark logo is on Login only, via next/image 284 x 106', () => {
-    const users = codeFiles.filter(
-      (f) => f.endsWith('.tsx') && readFileSync(f, 'utf8').includes('Fionis-Logo.avif'),
-    );
-    expect(users.length).toBeGreaterThanOrEqual(1);
-    expect(users.map(rel).some((f) => f.endsWith('views/auth/LoginView.tsx'))).toBe(true);
-    for (const f of users) {
-      const t = readFileSync(f, 'utf8');
-      expect(t).toContain('next/image');
-      expect(t).toMatch(/width=\{?284\}?/);
-      expect(t).toMatch(/height=\{?106\}?/);
-    }
+  test('BR-REC-235 nothing in src refers to Fionis-Logo', () => {
+    const users = codeFiles.filter((f) => readFileSync(f, 'utf8').includes('Fionis-Logo'));
+    expect(users.map(rel)).toEqual([]);
   });
-  test('BR-REC-186 Login logo has priority', () => {
-    const login = readFileSync(join(SRC, 'app/(auth)/login/page.tsx'), 'utf8');
-    const users = codeFiles.filter(
-      (f) =>
-        f.endsWith('.tsx') &&
-        /login/i.test(f) &&
-        readFileSync(f, 'utf8').includes('Fionis-Logo.avif'),
-    );
-    const text = users.map((f) => readFileSync(f, 'utf8')).join('\n') + login;
-    expect(text).toContain('Fionis-Logo.avif');
-    expect(text).toMatch(/\bpriority\b/);
+  test('BR-REC-235 Login shows the text wordmark "Fionis CrossFit" and uses no next/image', () => {
+    const login = readFileSync(join(SRC, 'components/views/auth/LoginView.tsx'), 'utf8');
+    expect(login).toMatch(/Fionis CrossFit|DEFAULT_GYM_NAME|gymName/);
+    expect(login).not.toContain('next/image');
+    expect(login).not.toMatch(/<Image\b/);
   });
   test('BR-REC-186 collapsed sidebar placeholder is an "F" square with AA contrast (bg-primary, text-primary-foreground)', () => {
     const t = codeFiles

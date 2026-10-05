@@ -197,15 +197,18 @@ describe('BR-REC-234 page titles and keyboard / screen reader basics', () => {
 
 describe('BR-REC-235 Login split from 1024 px', () => {
   const login = readCode('components/views/auth/LoginView.tsx');
-  test('BR-REC-235 the navy panel says "Fionis CrossFit — coach desk"', () => {
-    expect(allApp).toContain('Fionis CrossFit — coach desk');
+  test('BR-REC-235 the navy panel has the line "Coach desk"', () => {
+    expect(login).toContain('Coach desk');
+  });
+  test('BR-REC-235 the wordmark is the text "Fionis CrossFit" (name from the gym default)', () => {
+    expect(login).toMatch(/Fionis CrossFit|DEFAULT_GYM_NAME|gymName/);
   });
   test('BR-REC-235 the layout changes at lg (1024 px)', () => {
     expect(login).toMatch(/\blg:/);
   });
-  test('BR-REC-235 the wordmark is still the AVIF via next/image with priority', () => {
-    expect(srcFiles.some((f) => /Fionis-Logo\.avif/.test(readFileSync(f, 'utf8')))).toBe(true);
-    expect(login).toMatch(/Fionis-Logo\.avif/);
-    expect(login).toMatch(/\bpriority\b/);
+  test('BR-REC-235 no logo image anywhere in the app: no Fionis-Logo, no next/image on Login', () => {
+    expect(filesMatching(/Fionis-Logo/, srcFiles)).toEqual([]);
+    expect(login).not.toMatch(/next\/image/);
+    expect(login).not.toMatch(/<Image\b/);
   });
 });
