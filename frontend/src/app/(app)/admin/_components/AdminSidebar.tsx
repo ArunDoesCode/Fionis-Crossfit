@@ -71,6 +71,9 @@ function isActive(item: NavItem, pathname: string): boolean {
   return item.prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+const BUTTON =
+  'h-[var(--control-height)] [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!';
+
 // BR-REC-177: gym name, the four places, theme and Sign out. Fixed to the window (dvh, not svh, so a
 // phone's address bar does not cut Sign out off); only the page content scrolls. Below 768 px the same
 // items are the ☰ drawer (its ☰ is in PageHeader). Collapsed to icons the name gives way to an orange
@@ -95,7 +98,7 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
         >
           F
         </span>
-        <SidebarTrigger className="size-control shrink-0 max-md:hidden group-data-[collapsible=icon]:size-11" />
+        <SidebarTrigger className="size-[var(--control-height)] shrink-0 max-md:hidden group-data-[collapsible=icon]:size-11" />
       </SidebarHeader>
       <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0">
         <nav aria-label="Main">
@@ -105,14 +108,14 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
         </nav>
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-        <ThemeToggle className="size-control group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+        <ThemeToggle className="size-[var(--control-height)] group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         {/* BR-REC-177, 35: ends this device's sign-in (E03). Off while the call runs, so a second tap cannot send it twice. */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               type="button"
               tooltip={UI_TEXT.signOut}
-              className="sidebar-icon-btn"
+              className={BUTTON}
               disabled={isPending || isSuccess}
               onClick={() => signOut()}
             >
@@ -155,7 +158,7 @@ function NavMenu({ pathname }: { pathname: string }) {
             <SidebarMenuButton
               isActive={active}
               tooltip={item.label}
-              className="sidebar-icon-btn"
+              className={BUTTON}
               render={
                 <Link
                   href={item.href}

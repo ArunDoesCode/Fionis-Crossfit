@@ -185,6 +185,7 @@ Names fixed so tests and code agree (no rule changed):
 ## Build clarifications (U7, 2026-10-05, owner: simplify)
 
 - **Sidebar and header (BR-REC-177, 178, 186):** the collapse button lives in the sidebar header (next to the text brand when expanded, under the "F" when collapsed); from 768 px the page header has no toggle, below 768 px the top bar keeps ☰. The page header has no gap between its parts beyond `gap-2`.
+- **Named utilities vs shadcn components (BR-REC-218c):** where a class lands on a shadcn component that has its own base size class (buttons, triggers, sidebar menu buttons, input groups, sheet close buttons), write the token as `h-[var(--control-height)]` / `size-[var(--control-height)]`, because `cn()` (tailwind-merge) de-duplicates only known classes; plain elements use the named utilities (`h-control`, `size-control`, `h-row`, `h-header`, `page-narrow`, `page-wide`).
 - **Home title (BR-REC-179):** the `/admin` route title is "Home" (the gym name is no longer a page title).
 - **Search (members.md BR-REC-201):** one joined control — the Name/Email/Phone dropdown attached to the left of the search input as a single rounded box.
 - **Single-use components (BR-REC-218a):** inlined into their views; kept as files: form primitives, lazy-loaded boundaries (`*Sheet` chunks, desktop tables, `ChooseGate`, `DatePickerCalendar`), `RouteHeading` (client), and anything used by two or more screens or features (those live in `components/common`).

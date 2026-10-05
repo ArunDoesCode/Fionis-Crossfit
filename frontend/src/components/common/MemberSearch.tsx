@@ -39,20 +39,27 @@ const KEYBOARD = { name: 'search', email: 'email', phone: 'tel' } as const;
 export default function MemberSearch({ text, field, onChange, onFieldChange }: MemberSearchProps) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const picked = useRef(false);
 
   return (
     <search>
       <Label htmlFor={id} className="sr-only">
         {UI_TEXT.searchMembers}
       </Label>
-      <InputGroup className="h-control min-h-11">
+      <InputGroup className="h-[var(--control-height)] min-h-11">
         <InputGroupAddon className="h-full self-stretch p-0">
           <Select
             items={FIELDS}
             value={field}
             onValueChange={(next) => {
               if (next) onFieldChange(next as MemberSearchField);
-              inputRef.current?.focus();
+              picked.current = true;
+            }}
+            // Focus the input once the list has closed: the select returns focus to its trigger while closing.
+            onOpenChange={(open) => {
+              if (open || !picked.current) return;
+              picked.current = false;
+              requestAnimationFrame(() => inputRef.current?.focus());
             }}
           >
             <SelectTrigger

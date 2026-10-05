@@ -1,8 +1,8 @@
 'use client';
 
+import ChipList from '@/components/common/ChipList';
 import ListRow from '@/components/common/ListRow';
 import StatusBadge from '@/components/common/StatusBadge';
-import ChipList from '@/components/pages/due/ChipList';
 import DueMoreButton from '@/components/pages/due/DueMoreButton';
 import { recordHref } from '@/lib/due/links';
 import { dueRowStatus } from '@/lib/due/status';

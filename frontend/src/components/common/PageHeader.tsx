@@ -50,7 +50,7 @@ export default function PageHeader({
         )}
       >
         {/* ☰ opens the drawer on phones; from 768 px the sidebar's own header button collapses it. */}
-        <SidebarTrigger className="-ml-2 size-control shrink-0 md:hidden" />
+        <SidebarTrigger className="-ml-2 size-[var(--control-height)] shrink-0 md:hidden" />
         <div className="min-w-0 flex-1">
           <Suspense
             fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
@@ -79,7 +79,7 @@ export default function PageHeader({
           data-slot="action-bar"
           className="page-px fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
         >
-          <div className="mx-auto flex w-full content-narrow flex-col *:h-control *:w-full">
+          <div className="mx-auto flex w-full content-narrow flex-col *:h-[var(--control-height)] *:w-full">
             {action}
           </div>
         </div>

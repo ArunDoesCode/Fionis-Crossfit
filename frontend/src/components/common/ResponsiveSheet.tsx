@@ -53,7 +53,8 @@ export interface ResponsiveSheetProps {
   children?: React.ReactNode;
 }
 
-const FOOTER = 'flex flex-col-reverse gap-2 *:h-control lg:flex-row lg:justify-end lg:*:w-auto';
+const FOOTER =
+  'flex flex-col-reverse gap-2 *:h-[var(--control-height)] lg:flex-row lg:justify-end lg:*:w-auto';
 
 // Desktop: header, body and footer are grid rows; only the body scrolls, so the buttons stay in view (#18).
 const DESKTOP_POPUP = 'max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]';
@@ -109,7 +110,7 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="absolute top-3 right-3 size-control"
+                className="absolute top-3 right-3 size-[var(--control-height)]"
               />
             }
           >
@@ -138,7 +139,7 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="-mr-2 size-control shrink-0"
+                className="-mr-2 size-[var(--control-height)] shrink-0"
               />
             }
           >

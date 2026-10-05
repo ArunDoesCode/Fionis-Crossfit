@@ -21,7 +21,8 @@ export const SIDEBAR_STATE_CSS = `@media (min-width:768px){
 ${COLLAPSED} [data-slot=sidebar-wrapper]{--sidebar-width:var(--sidebar-width-icon)!important}
 ${COLLAPSED} [data-slot=sidebar-wordmark]{display:none}
 ${COLLAPSED} [data-slot=sidebar-mark]{display:flex}
-${COLLAPSED} [data-slot=sidebar-header]{flex-direction:column;height:auto;padding-block:0.5rem}
+${COLLAPSED} [data-slot=sidebar-header]{flex-direction:column;height:auto;padding:0.5rem 0}
+${COLLAPSED} [data-slot=sidebar-trigger]{width:2.75rem;height:2.75rem}
 ${COLLAPSED} [data-slot=sidebar-menu-button]{width:2.75rem;height:2.75rem;padding:0.625rem}
 ${COLLAPSED} [data-slot=sidebar-content],${COLLAPSED} [data-slot=sidebar-footer]{padding-inline:0;align-items:center}
 }`;

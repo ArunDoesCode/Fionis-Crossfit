@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
 import { useEffect, useRef, useState } from 'react';
+import ChipList from '@/components/common/ChipList';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import ListRow, { RowList } from '@/components/common/ListRow';
@@ -17,7 +18,6 @@ import Section from '@/components/common/Section';
 import { CardSkeleton, RowSkeletons } from '@/components/common/Skeletons';
 import StatusBadge from '@/components/common/StatusBadge';
 import AssessmentRow from '@/components/pages/assessments/AssessmentRow';
-import ChipList from '@/components/pages/due/ChipList';
 import DueMoreButton from '@/components/pages/due/DueMoreButton';
 import { DueSheet, PeriodSheet, preloadPeriodSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';

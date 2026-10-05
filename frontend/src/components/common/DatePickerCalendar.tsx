@@ -107,7 +107,7 @@ export function MonthGrid({ value, onSelect, fallbackYear, min, max }: MonthGrid
             aria-pressed={key === value}
             disabled={isMonthDisabled(key, min, max)}
             onClick={() => onSelect(key)}
-            className="h-control"
+            className="h-[var(--control-height)]"
           >
             {name}
           </Button>

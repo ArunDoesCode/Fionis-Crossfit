@@ -246,10 +246,6 @@
 @utility content-narrow {
   max-width: var(--page-max-narrow);
 }
-/* A sidebar button: control height, 20 px icon; a 44 px icon square when the sidebar is collapsed. */
-@utility sidebar-icon-btn {
-  @apply h-control [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!;
-}
 @utility min-h-tap {
   min-height: var(--tap-min);
 }
