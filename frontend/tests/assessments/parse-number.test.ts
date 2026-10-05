@@ -3,7 +3,7 @@
 //               (BR-REC-64); anything else shows "Enter a number like 95.5". Example: "95,5" -> 95.5.
 //   BR-REC-19 — blank fields are simply not recorded (`empty`).
 // Interface: docs/specs/member-records/assessments.md —
-//   `@/lib/assessments/parseNumber`: `parseNumberText(text, decimals)` -> `{ kind: 'empty' } |
+//   `@/lib/forms/numberText`: `parseNumberText(text, decimals)` -> `{ kind: 'empty' } |
 //   { kind: 'ok', value } | { kind: 'invalid' }`; rounds half away from zero on the decimal digits of the text
 //   (not through binary floats); never returns -0; the ROUNDED value's absolute value above 999,999,999.999 is
 //   invalid ("999999999.6"@0 -> invalid, the same rule as the server, D3).
@@ -18,7 +18,7 @@ interface ParseNumber {
 let parser: ParseNumber;
 
 beforeAll(async () => {
-  parser = (await import('@/lib/assessments/parseNumber')) as unknown as ParseNumber;
+  parser = (await import('@/lib/forms/numberText')) as unknown as ParseNumber;
 });
 
 const DECIMALS: Decimals[] = [0, 1, 2];
