@@ -69,7 +69,9 @@ describe('BR-REC-187 / 199 form primitives live once in components/common/form',
         const t = text(f);
         return (
           /<(Label|FieldLabel|label)\b/.test(t) &&
-          /(<FieldError\b|role="alert"|text-destructive)/.test(t)
+          // a per-field error line: <FieldError>, an `…-error` id, or a hand-made <p> that aria-describedby
+          // points at. Page-level role="alert" banners and plain text-destructive text are not field errors.
+          /(<FieldError\b|id=\{`[^`]*-error`\}|id="[^"]*-error"|<p\b[^>]*\bid=)/.test(t)
         );
       })
       .map(rel);
