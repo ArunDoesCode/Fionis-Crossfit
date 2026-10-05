@@ -19,8 +19,8 @@
 # Findings — review round 2
 | # | sev | decision | route |
 |---|---|---|---|
-| R2-1 | major | fix: keep DueTable columns stable; open row via context/meta | frontend-dev |
+| R2-1 | major | fixed + browser-verified (focus returns to ⋯, aria-expanded false) | frontend-dev |
 | R2-2 | minor | fix: retry false on member prefetch | frontend-dev |
-| R2-3 | minor | issue: prefetch due + recent reads (with Home prefetch, BR-REC-213) | issue |
+| R2-3 | minor | issue https://github.com/ArunDoesCode/Fionis-Crossfit/issues/62 | issue |
 | R2-4 | minor | spec v16 clarification + headline test | test-writer |
 | R2-5 | minor | fix: delete unused `andMore` | frontend-dev |

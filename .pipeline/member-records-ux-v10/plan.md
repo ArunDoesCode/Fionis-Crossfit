@@ -19,8 +19,8 @@ BR-REC-235 logo redirect, BR-REC-221 grey control fill.
       `pages/progress/*`, `views/progress/*`, report card components, `lib/progress/text.ts`
 - [x] S4 forms + search — BR-REC-230, 231, 232, 233 (words) · `pages/assessments/*`, `common/MemberSearch.tsx`,
       `DatePicker` parser in `lib/dates/`, add-member fields, `lib/setup/text.ts`, gym settings words
-- [ ] Verify — reviewer + test-runner, ≤ 2 fix loops
-- [ ] Knowledge — map, spec Build clarifications, STATUS
+- [x] Verify — reviewer + test-runner, ≤ 2 fix loops
+- [x] Knowledge — map, spec Build clarifications, STATUS
 
 Order: S0 → S1 → (S2 ∥ S3 ∥ S4, disjoint files) → Verify.
 
