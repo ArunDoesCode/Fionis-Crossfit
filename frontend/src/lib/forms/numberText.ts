@@ -40,3 +40,13 @@ export function parseNumberText(text: string, decimals: Decimals): NumberParse {
   const size = Number(count) / 10 ** decimals;
   return { kind: 'ok', value: negative && size !== 0 ? -size : size };
 }
+
+/**
+ * Flips the leading minus sign of typed number text: "95.5" -> "-95.5", "-95.5" -> "95.5", "" -> "-".
+ * The sign is ASCII "-". Leading spaces are dropped. Used by the "Make negative" button of NumberField,
+ * because the iPhone decimal keypad has no minus key.
+ */
+export const toggleMinus = (text: string): string => {
+  const trimmed = text.trimStart();
+  return trimmed.startsWith('-') ? trimmed.slice(1) : `-${trimmed}`;
+};

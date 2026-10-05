@@ -38,7 +38,7 @@ export function FormField<
 
 interface FormItemProps extends Omit<React.ComponentProps<'div'>, 'children'> {
   children?: ReactNode;
-  /** A sentence under the control; the control is linked to it through aria-describedby. */
+  /** A sentence under the control, linked through aria-describedby. An error takes its place, so the height never changes. */
   hint?: ReactNode;
   /** An error for a field that is not an RHF field (a standalone control); FormControl and FormMessage show it. */
   error?: string;
@@ -62,7 +62,8 @@ export function FormItem({
   const state = error
     ? { name: outer?.name ?? '', error: { type: 'custom', message: error } }
     : outer;
-  const ids = { id, messageId: `${id}-message`, hintId: hint ? `${id}-hint` : undefined };
+  const showHint = Boolean(hint) && !state?.error;
+  const ids = { id, messageId: `${id}-message`, hintId: showHint ? `${id}-hint` : undefined };
   return (
     <ItemIdsContext value={ids}>
       <FieldStateContext value={state}>
@@ -85,7 +86,7 @@ export function FormItem({
           ) : (
             children
           )}
-          {hint ? (
+          {showHint ? (
             <FieldDescription id={ids.hintId} className="text-xs">
               {hint}
             </FieldDescription>

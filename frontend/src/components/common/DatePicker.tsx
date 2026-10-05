@@ -112,7 +112,6 @@ export default function DatePicker({
     return (
       <div className="flex flex-col gap-2">
         <div className="relative">
-          {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: a required date button; assistive tech announces required (BR-REC-187) */}
           <button
             ref={triggerRef}
             id={id}
@@ -120,6 +119,8 @@ export default function DatePicker({
             aria-labelledby={labelledBy}
             aria-expanded={open}
             aria-invalid={invalid}
+            role="combobox"
+            aria-haspopup="dialog"
             aria-required={required || undefined}
             aria-describedby={describedBy}
             disabled={disabled}
@@ -154,13 +155,15 @@ export default function DatePicker({
       <div className="relative">
         <PopoverTrigger
           render={
-            // biome-ignore lint/a11y/useAriaPropsSupportedByRole: a required date button; assistive tech announces required (BR-REC-187)
             <button
               ref={triggerRef}
               id={id}
               type="button"
               aria-labelledby={labelledBy}
               aria-invalid={invalid}
+              role="combobox"
+              aria-expanded={open}
+              aria-haspopup="dialog"
               aria-required={required || undefined}
               aria-describedby={describedBy}
               disabled={disabled}

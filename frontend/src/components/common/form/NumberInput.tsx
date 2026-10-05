@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 import type { Decimals } from '@/lib/assessments/types';
+import { toggleMinus } from '@/lib/forms/numberText';
 import { UI_TEXT } from '@/lib/messages/words';
-import { toggleMinus } from '@/lib/numberText';
 import { FloatingLabelInput, type FloatingLabelInputProps } from './FloatingLabelInput';
 
 interface NumberInputProps
