@@ -73,8 +73,6 @@ interface MetricFieldProps {
   count: number;
   /** The saved assessment holds a value here: emptying the field removes it (BR-REC-77). */
   hadValue: boolean;
-  /** This measurement is due (BR-REC-73). */
-  due: boolean;
   /** The previous values belong to another date until the new ones arrive: hide them. */
   stale: boolean;
   /** Save was tapped once: "please check" shows on every field, not only on the ones that were left. */
@@ -91,12 +89,11 @@ export default function MetricField({
   index,
   count,
   hadValue,
-  due,
   stale,
   submitted,
   today,
 }: MetricFieldProps) {
-  const label = due ? `${metric.name} · ${ASSESSMENT_TEXT.due}` : metric.name;
+  const label = metric.name;
   const enterKeyHint = enterKeyHintFor(index, count);
   return (
     <FormField

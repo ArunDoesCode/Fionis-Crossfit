@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import '@/lib/validators/zodMessages';
 import { exactNumberFromText } from '@/lib/forms/zodNumber';
 
 // Mirrors backend/src/types/setup.types.ts (the server checks again). Limits, issue `path`s and messages are
@@ -93,7 +94,9 @@ export const assessmentFormSchema = z.object({
 });
 
 /** The assessment sheet's schema: the same fields plus the On switch (shown when editing). */
-export const assessmentSheetSchema = assessmentFormSchema.extend({ isActive: z.boolean() });
+export const assessmentSheetSchema = assessmentFormSchema.extend({
+  isActive: z.boolean({ error: 'Fill this in' }),
+});
 
 const rangeBound = exactNumberFromText(1, true).pipe(
   z
@@ -121,7 +124,7 @@ export const measurementFormSchema = z
       .max(NAME_MAX, { error: MESSAGES.name })
       .nullable(),
     tablePart: z.enum(TABLE_PARTS, { error: MESSAGES.tablePart }).nullable(),
-    isActive: z.boolean(),
+    isActive: z.boolean({ error: 'Fill this in' }),
   })
   // These run only when every field has the right type (Zod skips them otherwise), so a wrong type is
   // reported once, on its own field.

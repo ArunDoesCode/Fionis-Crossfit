@@ -47,7 +47,8 @@ export default function LoginForm({ next, expired = false }: LoginFormProps) {
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: { username: '', password: '', remember: true },
   });

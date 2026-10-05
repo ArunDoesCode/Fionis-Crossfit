@@ -44,7 +44,8 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
   const schema = useMemo(() => memberFormSchema(today), [today]);
   const form = useForm<MemberFormInput, unknown, MemberFormValues>({
     resolver: zodResolver(schema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false, // useFocusFirstProblem also handles chips and the closed "More details"
     defaultValues: {
       fullName: '',
@@ -94,7 +95,6 @@ export default function AddMemberForm({ formId }: AddMemberFormProps) {
   // "Joined on" first sets "Starts on" too, until "Starts on" has been changed on its own (BR-REC-50).
   const followJoinDate = (joinedOn: string) => {
     if (!startOnChangedByHand.current) form.setValue('startOn', joinedOn);
-    void form.trigger('startOn');
   };
 
   return (

@@ -60,10 +60,7 @@
   --row-height: 4rem;
   --header-height: 3.5rem;
   --actionbar-h: 4rem;
-  --page-padding: 1rem;
   --section-gap: 1.5rem;
-  --page-max-narrow: 56rem;
-  --page-max-wide: 80rem;
   --motion: 150ms;
   --control-fill: oklch(1 0 0);
 }
@@ -74,7 +71,6 @@
     --header-height: 3.5rem;
     --control-height: 2.5rem;
     --row-height: 3rem;
-    --page-padding: 1.5rem;
     --section-gap: 1rem;
   }
 }
@@ -202,9 +198,6 @@
 }
 
 /* Layout helpers that read the tokens above (4 px steps come from Tailwind's --spacing). */
-@utility page-px {
-  padding-inline: var(--page-padding);
-}
 @utility section-gap {
   gap: var(--section-gap);
 }
@@ -230,21 +223,8 @@
 @utility min-h-actionbar {
   min-height: var(--actionbar-h);
 }
-@utility pb-page {
-  padding-bottom: var(--page-padding);
-}
 @utility pb-actionbar {
   padding-bottom: calc(var(--actionbar-h) + env(safe-area-inset-bottom));
-}
-/* Page widths: the content width plus the side padding, written once. */
-@utility page-narrow {
-  max-width: calc(var(--page-max-narrow) + 2 * var(--page-padding));
-}
-@utility page-wide {
-  max-width: calc(var(--page-max-wide) + 2 * var(--page-padding));
-}
-@utility content-narrow {
-  max-width: var(--page-max-narrow);
 }
 @utility min-h-tap {
   min-height: var(--tap-min);

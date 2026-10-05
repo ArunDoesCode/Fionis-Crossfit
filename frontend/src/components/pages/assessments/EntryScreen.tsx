@@ -19,10 +19,9 @@ import { EntrySkeleton } from '@/components/pages/assessments/EntryLoading';
 import { NeedOneValue, OfferNotice, StatusLine } from '@/components/pages/assessments/EntryNotices';
 import { CheckValuesSheet, LeaveDialog, preloadEntrySheets } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
-import { useEntryForm, useMemberDue } from '@/lib/api/assessments/queries';
+import { useEntryForm } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
 import { draftKey } from '@/lib/assessments/draft';
-import { dueMetricIds } from '@/lib/assessments/dueStatus';
 import { entryOrder, flatErrors, valueName } from '@/lib/assessments/entryErrors';
 import { inputsOf, isChanged } from '@/lib/assessments/entryValues';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
@@ -91,7 +90,8 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
   const form = useForm<EntryFormInput, unknown, EntryFormValues>({
     resolver: (values, context, options) => zodResolver(schema.current)(values, context, options),
     defaultValues: { date: initialDate, isEstimated: false, values: {} },
-    mode: 'onTouched',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
   });
   const date = useWatch({ control: form.control, name: 'date' });
   const query = useEntryForm(memberId, typeId, date);
@@ -106,7 +106,6 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
     fresh: !query.isFetching && !query.isPlaceholderData,
   });
   const member = data?.member ?? NO_MEMBER;
-  const due = useMemberDue(memberId);
   const metrics = useMemo(() => data?.metrics ?? [], [data]);
   const memberHref = `/admin/members/${memberId}` as const;
 
@@ -190,7 +189,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
     );
   } else {
     body = (
-      <form id={FORM_ID} noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form id={FORM_ID} noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
         <NeedOneValue tick={flow.needOne} />
         {form.formState.isSubmitted && (
           <FormErrorSummary
@@ -202,7 +201,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         {session.offer && (
           <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
-        <FormGrid maxCols={4}>
+        <FormGrid maxCols={2} className="gap-y-4">
           <EntryDateSection
             control={form.control}
             date={date}
@@ -216,7 +215,6 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
             control={form.control}
             metrics={metrics}
             baseline={session.baseline}
-            dueIds={dueMetricIds(due.data, typeId)}
             stale={query.isPlaceholderData}
             submitted={form.formState.isSubmitted}
             today={today}

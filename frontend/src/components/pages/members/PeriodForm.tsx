@@ -68,7 +68,8 @@ export default function PeriodForm({ formId, member, period, onDone }: PeriodFor
   const today = useToday();
   const form = useForm<PeriodFormInput, unknown, PeriodFormValues>({
     resolver: zodResolver(periodFormSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: period
       ? { plan: period.plan, startOn: period.startOn }

@@ -51,7 +51,7 @@ function Crumbs({ source, title }: { source: Source; title: string }) {
   if (!source.route.parent) return null;
   const crumbs = [...source.trail, { label: title, href: '' }];
   return (
-    <Breadcrumb className="max-md:hidden">
+    <Breadcrumb className="mb-1 max-md:hidden">
       <BreadcrumbList className="flex-nowrap gap-1.5 text-xs sm:gap-1.5">
         {crumbs.map((crumb, i) => (
           <Fragment key={`${crumb.href}|${crumb.label}`}>

@@ -35,7 +35,8 @@ export default function GymSettingsForm({ settings, formId }: GymSettingsFormPro
     z.output<typeof gymSettingsSchema>
   >({
     resolver: zodResolver(gymSettingsSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: gymSettingsToValues(settings),
   });

@@ -56,32 +56,43 @@ export interface EntrySchemaContext {
   member: { fullName: string; joinedOn: string };
 }
 
+// A box that was never set is a blank box: the schema never answers with the library's own message (BR-REC-189).
+const orBlank = <Out, In>(blank: In, schema: z.ZodType): z.ZodType<Out, In> =>
+  z.preprocess((value) => (value === undefined ? blank : value), schema) as unknown as z.ZodType<
+    Out,
+    In
+  >;
+
 /** The schema of one form: one entry per measurement, with that measurement's decimals. */
 export function entrySchema({ metrics, today, member }: EntrySchemaContext) {
   const shape: Record<string, z.ZodType<number | null, FieldText>> = {};
   for (const metric of metrics) {
     shape[metric.id] =
       metric.datatype === 'duration'
-        ? durationSchema
-        : optionalNumberFromText(asDecimals(metric.decimals));
+        ? orBlank<number | null, FieldText>({ min: '', sec: '' }, durationSchema)
+        : orBlank<number | null, FieldText>(
+            '',
+            optionalNumberFromText(asDecimals(metric.decimals)),
+          );
   }
+  const date = z.string().superRefine((day, ctx) => {
+    if (!isIsoDate(day)) {
+      ctx.issues.push({ code: 'custom', message: ASSESSMENT_TEXT.datePick, input: day });
+      return;
+    }
+    const issue = entryDateIssue({
+      date: day,
+      today,
+      joinedOn: member.joinedOn,
+      memberName: member.fullName,
+    });
+    if (issue.kind === 'future') {
+      ctx.issues.push({ code: 'custom', message: issue.message ?? '', input: day });
+    }
+  });
   return z.object({
-    date: z.string().superRefine((date, ctx) => {
-      if (!isIsoDate(date)) {
-        ctx.issues.push({ code: 'custom', message: ASSESSMENT_TEXT.datePick, input: date });
-        return;
-      }
-      const issue = entryDateIssue({
-        date,
-        today,
-        joinedOn: member.joinedOn,
-        memberName: member.fullName,
-      });
-      if (issue.kind === 'future') {
-        ctx.issues.push({ code: 'custom', message: issue.message ?? '', input: date });
-      }
-    }),
-    isEstimated: z.boolean(),
-    values: z.object(shape),
+    date: orBlank<string, string>('', date),
+    isEstimated: orBlank<boolean, boolean>(false, z.boolean()),
+    values: orBlank<Record<string, number | null>, Record<string, FieldText>>({}, z.object(shape)),
   });
 }

@@ -45,7 +45,7 @@ export default function PageHeader({
     <>
       <header
         className={cn(
-          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-header items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
+          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-header items-center gap-2 bg-background pt-[env(safe-area-inset-top)] md:-mx-4 md:-mt-4 md:px-4 md:pt-4',
           className,
         )}
       >
@@ -77,11 +77,9 @@ export default function PageHeader({
       {form && action && (
         <div
           data-slot="action-bar"
-          className="page-px fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t px-4 bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
         >
-          <div className="mx-auto flex w-full content-narrow flex-col *:h-[var(--control-height)] *:w-full">
-            {action}
-          </div>
+          <div className="flex w-full flex-col *:h-[var(--control-height)] *:w-full">{action}</div>
         </div>
       )}
     </>

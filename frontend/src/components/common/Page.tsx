@@ -1,22 +1,17 @@
 import { cn } from '@/lib/utils';
 
 interface PageProps {
-  /** `narrow` = forms and detail pages (896 px), `wide` = lists, reports and Record assessment (1280 px). BR-REC-182. */
+  /** Ignored: kept so existing screens compile. The page is always the whole content area (BR-REC-182). */
   width?: 'narrow' | 'wide';
   className?: string;
   children: React.ReactNode;
 }
 
-// Centres the screen and gives it the page padding and section gap from the density tokens (BR-REC-181).
-export default function Page({ width = 'wide', className, children }: PageProps) {
+// The whole content area with p-4 on every side and the section gap (BR-REC-181, 182). On phones the top
+// edge is the sticky top bar, so there is no top padding there.
+export default function Page({ className, children }: PageProps) {
   return (
-    <div
-      className={cn(
-        'section-gap page-px mx-auto flex w-full flex-col pb-page',
-        width === 'narrow' ? 'page-narrow' : 'page-wide',
-        className,
-      )}
-    >
+    <div className={cn('section-gap flex w-full flex-col p-4 max-md:pt-0', className)}>
       {children}
     </div>
   );

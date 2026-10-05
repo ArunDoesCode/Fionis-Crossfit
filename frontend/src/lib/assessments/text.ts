@@ -12,7 +12,6 @@ export const ASSESSMENT_TEXT = {
   // Header and date
   recordFor: (name: string) => `Record for ${name}`,
   date: 'Date',
-  about: 'About',
   paperColumn: 'Paper column',
   datePick: 'Pick a date',
   editing: (day: string) => `Edit · ${day}`,

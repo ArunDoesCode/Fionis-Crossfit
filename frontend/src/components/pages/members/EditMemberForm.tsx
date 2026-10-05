@@ -41,7 +41,8 @@ export default function EditMemberForm({ formId, member }: EditMemberFormProps) 
   const schema = useMemo(() => memberEditFormSchema(today), [today]);
   const form = useForm<MemberEditFormInput, unknown, MemberEditFormValues>({
     resolver: zodResolver(schema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: {
       fullName: member.fullName,

@@ -39,7 +39,8 @@ export default function ChangePasswordForm({ formId }: ChangePasswordFormProps) 
   const inFlight = useRef(false);
   const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: { currentPassword: '', newPassword: '' },
   });

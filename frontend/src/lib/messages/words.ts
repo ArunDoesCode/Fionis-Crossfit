@@ -38,6 +38,7 @@ export const UI_TEXT = {
   loadError: "Couldn't load this.",
   loading: 'Loading…',
   saving: 'Saving…',
+  approximateDate: 'Approximate date', // Record assessment tick: the date is estimated (BR-REC-79, 216)
   needOneValue: 'Enter at least one value', // Record assessment, Save with nothing entered (BR-REC-78, 190)
   seeAll: 'See all',
   search: 'Search',

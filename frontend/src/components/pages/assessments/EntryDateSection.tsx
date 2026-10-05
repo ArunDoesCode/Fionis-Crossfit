@@ -5,10 +5,12 @@ import DatePicker from '@/components/common/DatePicker';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/common/form';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import type { EntryControl } from '@/lib/assessments/entryErrors';
 import { assessmentDateLabel, entryDateIssue } from '@/lib/assessments/labels';
 import { paperColumnDate } from '@/lib/assessments/paperColumns';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
+import { UI_TEXT } from '@/lib/messages/words';
 
 const COLUMNS = [1, 2, 3, 4] as const;
 const COLUMN_OPTIONS = COLUMNS.map((column) => ({ value: `q${column}`, label: `Q${column}` }));
@@ -21,13 +23,13 @@ interface EntryDateSectionProps {
   opened: { assessmentId: string; isEstimated: boolean } | null;
   member: { fullName: string; joinedOn: string };
   today: string;
-  /** Another date (and, for a paper column, About ticked). */
+  /** Another date (and, for a paper column, Approximate date ticked). */
   onMoveToDate: (date: string, estimated?: boolean) => void;
 }
 
-// The first row of the grid: date, About and the paper-column chips (BR-REC-19, 216, 79, 80, 83). A date after today is refused with the
+// The first row of the grid: date, Approximate date and the paper-column chips (BR-REC-19, 216, 79, 80, 83). A date after today is refused with the
 // sentence of DATE_IN_FUTURE; one before the join date only warns. Q1–Q4 set the date to the join date + 0 / 3
-// / 6 / 9 months and tick About; the chosen chip shows only while both still match. The picked date goes
+// / 6 / 9 months and tick Approximate date; the chosen chip shows only while both still match. The picked date goes
 // straight to the session (`onMoveToDate`).
 export default function EntryDateSection({
   control,
@@ -50,38 +52,44 @@ export default function EntryDateSection({
 
   return (
     <>
-      <FormField
-        control={control}
-        name="date"
-        render={() => (
-          <FormItem>
-            <FormControl>
-              <DatePicker
-                id="assess-date"
-                label={ASSESSMENT_TEXT.date}
-                value={current}
-                max={today}
-                today={today}
-                onChange={(picked) => onMoveToDate(picked)}
+      <div className="flex flex-col gap-3">
+        <FormField
+          control={control}
+          name="date"
+          render={() => (
+            <FormItem>
+              <FormControl>
+                <DatePicker
+                  id="assess-date"
+                  label={ASSESSMENT_TEXT.date}
+                  value={current}
+                  max={today}
+                  today={today}
+                  onChange={(picked) => onMoveToDate(picked)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="isEstimated"
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="assess-approximate"
+                checked={field.value}
+                onCheckedChange={field.onChange}
               />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={control}
-        name="isEstimated"
-        render={({ field }) => (
-          <FormItem label={ASSESSMENT_TEXT.about}>
-            <FormControl>
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
+              <Label htmlFor="assess-approximate" className="font-normal">
+                {UI_TEXT.approximateDate}
+              </Label>
+            </div>
+          )}
+        />
+      </div>
       <ChoiceChips
-        className="@[30rem]:col-span-2"
         legend={ASSESSMENT_TEXT.paperColumn}
         options={COLUMN_OPTIONS}
         value={chosen ? `q${chosen}` : null}

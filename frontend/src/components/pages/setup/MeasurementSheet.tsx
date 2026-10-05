@@ -84,7 +84,8 @@ export default function MeasurementSheet({
     z.output<typeof measurementFormSchema>
   >({
     resolver: zodResolver(measurementFormSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: measurement ? metricToValues(measurement) : newMeasurementValues(),
   });

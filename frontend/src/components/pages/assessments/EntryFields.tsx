@@ -14,20 +14,17 @@ interface EntryFieldsProps {
   metrics: EntryMetric[];
   /** The saved assessment's values by measurement id (emptying one removes it). */
   baseline: Record<string, number>;
-  /** Measurement ids that are due (empty until E32 answers, D11). */
-  dueIds: Set<string>;
   stale: boolean;
   submitted: boolean;
   today: string;
 }
 
 // The measurements as cells of the form's grid (BR-REC-73, 216): untitled cells straight in it, a titled block as
-// a FormSection with its parts in a 4-up sub-grid. The screen owns the outer FormGrid.
+// a FormSection with its parts in a 2-up sub-grid. The screen owns the outer FormGrid.
 export default function EntryFields({
   control,
   metrics,
   baseline,
-  dueIds,
   stale,
   submitted,
   today,
@@ -48,7 +45,6 @@ export default function EntryFields({
       index={metrics.indexOf(metric)}
       count={metrics.length}
       hadValue={metric.id in baseline}
-      due={dueIds.has(metric.id)}
       stale={stale}
       submitted={submitted}
       today={today}
@@ -58,8 +54,10 @@ export default function EntryFields({
     block.title === null ? (
       block.metrics.map(cell)
     ) : (
-      <FormSection key={block.title} title={block.title}>
-        <FormGrid maxCols={4}>{block.metrics.map(cell)}</FormGrid>
+      <FormSection key={block.title} title={block.title} className="gap-3 border-t pt-4">
+        <FormGrid maxCols={2} className="gap-y-4">
+          {block.metrics.map(cell)}
+        </FormGrid>
       </FormSection>
     ),
   );

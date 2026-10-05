@@ -54,7 +54,8 @@ export default function AssessmentSheet({ assessment, open, onOpenChange }: Asse
   const [waiting, setWaiting] = useState<UpdateAssessmentTypeBody | null>(null);
   const form = useForm<z.input<typeof assessmentSheetSchema>, unknown, Output>({
     resolver: zodResolver(assessmentSheetSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     shouldFocusError: false,
     defaultValues: assessment ? assessmentToValues(assessment) : newAssessmentValues(),
   });
