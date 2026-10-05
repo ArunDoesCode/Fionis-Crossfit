@@ -3,7 +3,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import Toasts from '@/components/common/Toasts';
+import { Toaster } from '@/components/ui/sonner';
 import { getQueryClient } from '@/lib/queryClient';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -12,7 +12,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <NuqsAdapter>
         {children}
-        <Toasts />
+        <Toaster position="top-center" duration={4000} visibleToasts={2} />
       </NuqsAdapter>
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
     </QueryClientProvider>

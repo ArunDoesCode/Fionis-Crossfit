@@ -99,7 +99,7 @@ function SignOutSection() {
 // (header on desktop, bar on phones, tabs hidden because this is a form: BR-REC-120, 121).
 export default function AccountView() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader form action={<ChangePasswordButton formId={FORM_ID} />} />
       <SignedInAs />
       <ChangePasswordForm formId={FORM_ID} />

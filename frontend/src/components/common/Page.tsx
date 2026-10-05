@@ -1,8 +1,6 @@
 import { cn } from '@/lib/utils';
 
 interface PageProps {
-  /** Ignored: kept so existing screens compile. The page is always the whole content area (BR-REC-182). */
-  width?: 'narrow' | 'wide';
   className?: string;
   children: React.ReactNode;
 }

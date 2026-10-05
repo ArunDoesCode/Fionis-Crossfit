@@ -68,7 +68,7 @@ export default function GymProgressView() {
   const nothingToPick = metricId === null && !catalog.isPending;
 
   return (
-    <Page width="wide">
+    <Page>
       <PageHeader />
       {catalog.data ? (
         <ProgressFilterBar

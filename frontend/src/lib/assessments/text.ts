@@ -23,7 +23,6 @@ export const ASSESSMENT_TEXT = {
   noMeasurements: 'This assessment has no measurements turned on.',
 
   // Fields
-  due: 'due',
   last: (value: string, day: string) => `Last ${value} · ${day}`,
   willBeRemoved: 'Will be removed',
   pleaseCheck: 'Please check',

@@ -8,7 +8,7 @@ import { UI_TEXT } from '@/lib/messages/words';
 // Grey shapes in the real layout while the screen loads (BR-REC-129, 143).
 export default function Loading() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader pattern="/admin/members/[memberId]" />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">
         <div className="section-gap flex flex-col">

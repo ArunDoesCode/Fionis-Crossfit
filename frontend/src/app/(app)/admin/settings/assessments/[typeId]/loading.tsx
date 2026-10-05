@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 // and the measurement rows.
 export default function Loading() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader pattern="/admin/settings/assessments/[typeId]" />
       <Skeleton className="h-6 w-48 max-w-full" />
       <RowSkeletons count={5} />

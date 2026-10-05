@@ -64,7 +64,7 @@ export default function AssessmentSetupView() {
   const assessments = catalog.data;
 
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader
         action={
           assessments ? (

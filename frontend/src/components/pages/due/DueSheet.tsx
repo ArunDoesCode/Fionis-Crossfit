@@ -2,10 +2,10 @@
 
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import DatePicker from '@/components/common/DatePicker';
 import { FormControl, FormItem, FormMessage } from '@/components/common/form';
-import LinkButton from '@/components/common/LinkButton';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { Button } from '@/components/ui/button';
 import { useClearDueAction, useSetDueAction } from '@/lib/api/due/queries';
@@ -130,14 +130,15 @@ export default function DueSheet({ target, session, open, onOpenChange }: DueShe
       <div ref={bodyRef} className="flex flex-col gap-2">
         {view.step === 'menu' ? (
           <>
-            <LinkButton
-              replace
+            <Button
               variant="secondary"
+              size="lg"
               className={CHOICE}
-              href={recordHref(memberId, typeId)}
+              nativeButton={false}
+              render={<Link href={recordHref(memberId, typeId)} replace />}
             >
               {DUE_TEXT.sheet.record}
-            </LinkButton>
+            </Button>
             {target.flagged ? (
               <Button type="button" variant="secondary" className={CHOICE} onClick={remove}>
                 {DUE_TEXT.sheet.removeAssessSoon}
@@ -168,14 +169,15 @@ export default function DueSheet({ target, session, open, onOpenChange }: DueShe
               </Button>
             )}
             {target.openMember && (
-              <LinkButton
-                replace
+              <Button
                 variant="secondary"
+                size="lg"
                 className={CHOICE}
-                href={memberHref(memberId)}
+                nativeButton={false}
+                render={<Link href={memberHref(memberId)} replace />}
               >
                 {DUE_TEXT.sheet.openMember}
-              </LinkButton>
+              </Button>
             )}
           </>
         ) : (

@@ -152,7 +152,7 @@ export default function HomeView() {
   const renew = useRenewTarget();
 
   return (
-    <Page width="wide">
+    <Page>
       <PageHeader />
       <HomeSearch />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">

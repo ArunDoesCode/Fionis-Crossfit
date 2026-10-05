@@ -61,7 +61,7 @@ function ThemeChoice() {
 // leads to a screen. Export data is built by the progress stream; until then its row opens a 404.
 export default function SettingsHubView() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader />
       <RowList>
         <ListRow

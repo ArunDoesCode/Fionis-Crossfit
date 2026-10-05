@@ -28,7 +28,7 @@ function EditMemberLoader({ memberId, formId }: { memberId: string; formId: stri
 // fields. The one main action is "Save". Archived members can be edited too (BR-REC-58).
 export default function EditMemberView({ memberId }: EditMemberViewProps) {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader
         form
         action={

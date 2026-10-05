@@ -36,7 +36,7 @@ export default function GymSettingsView() {
   const data = settings.data;
 
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader form action={data ? <GymSettingsSaveButton formId={FORM_ID} /> : undefined} />
       {data ? (
         // A change made on another device (or just saved here) starts the form again from the new values.

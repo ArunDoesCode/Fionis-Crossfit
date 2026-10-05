@@ -6,7 +6,7 @@ import AllAssessmentsSkeleton from '@/components/pages/assessments/AllAssessment
 // the rows.
 export default function Loading() {
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader pattern="/admin/members/[memberId]/assessments" />
       <AllAssessmentsSkeleton />
     </Page>

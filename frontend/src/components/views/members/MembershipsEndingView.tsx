@@ -6,7 +6,7 @@ import EndingTabs from '@/components/pages/members/EndingTabs';
 // (Renew is on each row); the back arrow goes to Home, where the sections link here (BR-REC-53, 121).
 export default function MembershipsEndingView() {
   return (
-    <Page width="wide">
+    <Page>
       <PageHeader />
       <EndingTabs />
     </Page>

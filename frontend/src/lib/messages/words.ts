@@ -18,7 +18,6 @@ export const WORDS = {
   endsSoon: 'Ends soon', // Expiring
   ended: 'Ended', // Expired
   membership: 'Membership', // period
-  about: 'About', // estimated (shown with ≈)
   pleaseCheck: 'Please check', // plausibility warning
   turnOff: 'Turn off', // deactivate
   archive: 'Archive (hide)',

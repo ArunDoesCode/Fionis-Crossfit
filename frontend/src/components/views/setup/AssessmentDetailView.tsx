@@ -1,8 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
-import LinkButton from '@/components/common/LinkButton';
 import ListRow, { RowList } from '@/components/common/ListRow';
 import Page from '@/components/common/Page';
 import PageHeader from '@/components/common/PageHeader';
@@ -77,14 +77,19 @@ export default function AssessmentDetailView({ typeId }: { typeId: string }) {
 
   if (catalog.data !== undefined && assessment === undefined) {
     return (
-      <Page width="narrow">
+      <Page>
         <PageHeader />
         <EmptyState
           title={text.notFound}
           action={
-            <LinkButton href={LIST_HREF} variant="secondary">
+            <Button
+              variant="secondary"
+              size="lg"
+              nativeButton={false}
+              render={<Link href={LIST_HREF} />}
+            >
               {text.backToList}
-            </LinkButton>
+            </Button>
           }
         />
       </Page>
@@ -92,7 +97,7 @@ export default function AssessmentDetailView({ typeId }: { typeId: string }) {
   }
 
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader
         title={assessment?.name ?? text.title}
         secondary={

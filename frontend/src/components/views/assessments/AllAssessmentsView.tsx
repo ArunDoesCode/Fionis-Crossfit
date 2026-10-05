@@ -163,7 +163,7 @@ function AllAssessments({ memberId }: AllAssessmentsViewProps) {
 // loading.tsx; the rows come from the browser's own requests.
 export default function AllAssessmentsView({ memberId }: AllAssessmentsViewProps) {
   return (
-    <Page width="narrow">
+    <Page>
       <AllAssessments memberId={memberId} />
     </Page>
   );

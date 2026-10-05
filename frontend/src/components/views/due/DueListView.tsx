@@ -7,7 +7,7 @@ import DueListPanel from '@/components/pages/due/DueListPanel';
 // 104, 121).
 export default function DueListView() {
   return (
-    <Page width="wide">
+    <Page>
       <PageHeader />
       <DueListPanel />
     </Page>

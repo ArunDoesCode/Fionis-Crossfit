@@ -116,7 +116,7 @@ export default function ReportCardView({ memberId }: ReportCardViewProps) {
     isApiError(report.error) && (report.error.status === 404 || report.error.status === 400);
 
   return (
-    <Page width="wide" className="print:p-0">
+    <Page className="print:p-0">
       <style>{PRINT_CSS}</style>
       <div className="contents print:hidden">
         <PageHeader

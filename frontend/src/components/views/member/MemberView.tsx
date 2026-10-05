@@ -1,4 +1,4 @@
-import LinkButton from '@/components/common/LinkButton';
+import Link from 'next/link';
 import Page from '@/components/common/Page';
 import PageHeader from '@/components/common/PageHeader';
 import {
@@ -7,6 +7,7 @@ import {
   MembershipBlock,
   RecentBlock,
 } from '@/components/pages/member/MemberBlocks';
+import { Button } from '@/components/ui/button';
 import { UI_TEXT } from '@/lib/messages/words';
 
 interface MemberViewProps {
@@ -23,14 +24,23 @@ export default function MemberView({ memberId }: MemberViewProps) {
   const base = `/admin/members/${memberId}` as const;
 
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader
         secondary={
-          <LinkButton href={`${base}/edit`} variant="ghost" size="default">
+          <Button
+            variant="ghost"
+            size="default"
+            nativeButton={false}
+            render={<Link href={`${base}/edit`} />}
+          >
             {UI_TEXT.screens.edit}
-          </LinkButton>
+          </Button>
         }
-        action={<LinkButton href={`${base}/assess`}>{UI_TEXT.screens.recordAssessment}</LinkButton>}
+        action={
+          <Button size="lg" nativeButton={false} render={<Link href={`${base}/assess`} />}>
+            {UI_TEXT.screens.recordAssessment}
+          </Button>
+        }
       />
       <div className="section-gap grid grid-cols-1 lg:grid-cols-2 lg:items-start">
         <div className="section-gap flex flex-col">
@@ -43,12 +53,22 @@ export default function MemberView({ memberId }: MemberViewProps) {
         </div>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row *:flex-1">
-        <LinkButton href={`${base}/assessments`} variant="secondary">
+        <Button
+          variant="secondary"
+          size="lg"
+          nativeButton={false}
+          render={<Link href={`${base}/assessments`} />}
+        >
           {UI_TEXT.screens.allAssessments}
-        </LinkButton>
-        <LinkButton href={`${base}/report`} variant="secondary">
+        </Button>
+        <Button
+          variant="secondary"
+          size="lg"
+          nativeButton={false}
+          render={<Link href={`${base}/report`} />}
+        >
           {UI_TEXT.screens.reportCard}
-        </LinkButton>
+        </Button>
       </div>
     </Page>
   );

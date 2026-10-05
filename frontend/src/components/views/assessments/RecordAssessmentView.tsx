@@ -53,7 +53,7 @@ function RecordAssessment({ memberId }: RecordAssessmentViewProps) {
 // server and the first paint show the same grey shapes as the route's loading.tsx.
 export default function RecordAssessmentView({ memberId }: RecordAssessmentViewProps) {
   return (
-    <Page width="wide">
+    <Page>
       <AfterHydration fallback={<EntryLoading />}>
         <RecordAssessment memberId={memberId} />
       </AfterHydration>

@@ -1,12 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useQueryStates } from 'nuqs';
 import { useMemo } from 'react';
 import ChoiceChips from '@/components/common/ChoiceChips';
 import EmptyState from '@/components/common/EmptyState';
-import LinkButton from '@/components/common/LinkButton';
 import MemberSearch from '@/components/common/MemberSearch';
 import MemberDirectoryResults from '@/components/pages/members/MemberDirectoryResults';
+import { Button } from '@/components/ui/button';
 import { useMemberDirectory } from '@/lib/api/members/queries';
 import { foldText, MIN_SEARCH_CHARS, searchMembers } from '@/lib/members/directory';
 import { MEMBER_FILTERS, type MemberFilter, memberListParams } from '@/lib/members/listParams';
@@ -61,9 +62,14 @@ export default function MemberListPanel() {
             : `No member matches "${text}".`
         }
         action={
-          <LinkButton href="/admin/members/new" variant="secondary">
+          <Button
+            variant="secondary"
+            size="lg"
+            nativeButton={false}
+            render={<Link href="/admin/members/new" />}
+          >
             {UI_TEXT.screens.addMember}
-          </LinkButton>
+          </Button>
         }
       />
     );
@@ -72,9 +78,14 @@ export default function MemberListPanel() {
       <EmptyState
         title="No members yet."
         action={
-          <LinkButton href="/admin/members/new" variant="secondary">
+          <Button
+            variant="secondary"
+            size="lg"
+            nativeButton={false}
+            render={<Link href="/admin/members/new" />}
+          >
             {UI_TEXT.screens.addMember}
-          </LinkButton>
+          </Button>
         }
       />
     );

@@ -19,7 +19,7 @@ export default function RouteError({
   }, [error]);
 
   return (
-    <Page width="narrow">
+    <Page>
       <PageHeader />
       <ErrorState onRetry={retry} />
     </Page>
