@@ -2,7 +2,7 @@
 module: member-records/ux
 parent: member-records
 status: frozen           # draft | frozen | changed-after-freeze
-version: 2
+version: 3
 frozen_on: 2026-10-05
 owner: Arun
 depends_on: []
@@ -156,6 +156,13 @@ banner → "Archived 02 Jun 2026 · Membership ended 31 May 2026" (members BR-RE
 | U5 search + tables | #44, #17 | members 201–205, 183, data-model 206–207 | U1; E16 contract change |
 | U6 performance | #54–#58, #20, #28 | performance 208–213 | U5 (directory keys) |
 
+## Build clarifications (U1, 2026-10-05)
+
+Names fixed so tests and code agree (no rule changed):
+- **Tone map (BR-REC-185):** `frontend/src/lib/statusTone.ts` exports `type StatusTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral'`, `type StatusKey` and `toneFor(key: StatusKey): StatusTone`. Keys: `overdue`→danger, `soon`→warning, `ending`→warning, `active`→success, `done`→success, `reminder`→info, `estimated`→info, `ended`→neutral, `archived`→neutral. `StatusBadge` takes the tone from here only.
+- **Route table (BR-REC-179):** `frontend/src/lib/routes.ts` exports `ROUTES` (one entry per screen-index route: `pattern`, `title`, optional `parent: { label, pattern }`) and `routeFor(pathname): { title: string; parent?: { label: string; href: string } }` (dynamic segments filled from the pathname). Top-level pages (Home, Members, Memberships ending, Reports, Settings) have no parent except as listed in the index.
+- **Density and width tokens (BR-REC-181, 182):** `--header-height` (56 px ≥ 1024 px fine pointer), `--control-height` (40 px), `--row-height` (48 px), `--page-padding` (24 px), `--section-gap` (16 px), `--page-max-narrow` (56rem), `--page-max-wide` (80rem), all in `globals.css`; touch keeps the BR-REC-122 values.
+
 ## Not now
 
 Other languages (Hindi), member-facing screens, gym-chosen colours beyond Fionis, onboarding tour, coach-editable
@@ -182,6 +189,7 @@ v1 Q1–Q3 answered 2026-10-03 (Q1 bottom tabs → retired by v2; Q2 "keep green
 | Q11 | `min-h-19` on desktop | **A** 76 px everywhere, desktop and touch → BR-REC-187 |
 
 ## Changelog
+- 2026-10-05 v3 — clarified during build (U1): module paths and token names for the tone map, route table, density and width tokens (see Build clarifications); no rule changed
 - 2026-10-05 v2 — re-frozen by the owner after the UX redesign review (#59); all open questions answered
 - 2026-10-03 v0 — draft, new in member-records v2 (user decision: phone + tablet, mobile-first)
 - 2026-10-03 v0 — answers folded: three fonts kept; fixed lines for the locked sign-in and the archived/ended banner
