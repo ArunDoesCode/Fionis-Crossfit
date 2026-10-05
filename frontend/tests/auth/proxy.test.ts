@@ -566,3 +566,32 @@ describe('BR-REC-42 v2 Login right after the app ended the sign-in is shown, not
     expect(locationOf(res).pathname).toBe('/login');
   });
 });
+
+// docs/specs/member-records/ux.md (v10) BR-REC-235: "the wordmark file is served without a sign-in redirect";
+// example: `/Fionis-Logo.avif` -> 200, not a redirect (Login shows it to a visitor who is not signed in).
+describe('BR-REC-235 the wordmark file is served without a sign-in redirect', () => {
+  const matches = (url: string) => next.doesMatch({ config: next.config, url });
+
+  test('BR-REC-235 a visitor with no cookies is not redirected for /Fionis-Logo.avif', async () => {
+    fetchSpy = installFetch(() => {
+      throw new Error('the page guard must not call the API for a static file');
+    });
+    // Either the matcher leaves the file alone, or the guard lets it through: never a redirect to Login.
+    if (matches('/Fionis-Logo.avif')) {
+      const res = await next.proxy(request('/Fionis-Logo.avif'));
+      expect(isRedirect(res)).toBe(false);
+    }
+  });
+
+  test('BR-REC-235 the same holds with an expired access cookie and no refresh cookie', async () => {
+    if (matches('/Fionis-Logo.avif')) {
+      const res = await next.proxy(request('/Fionis-Logo.avif', { access_token: OLD_ACCESS }));
+      expect(isRedirect(res)).toBe(false);
+    }
+  });
+
+  test('BR-REC-235 the guard still protects pages (the exception is for the logo file only)', () => {
+    expect(matches('/admin')).toBe(true);
+    expect(matches('/login')).toBe(true);
+  });
+});

@@ -145,8 +145,10 @@ describe('Record assessment form source (BR-REC-216, BR-REC-188)', () => {
   const all = () =>
     ['EntryScreen.tsx', 'EntryFields.tsx', 'EntryDateSection.tsx'].map(read).join('\n');
 
-  test('BR-REC-216 (amended 2026-10-05) the form screen uses FormGrid with maxCols 2', () => {
-    expect(all()).toMatch(/<FormGrid[^>]*maxCols=\{2\}/);
+  // ux.md v10 BR-REC-230 (amends BR-REC-216): "1 column on phones, 2 from 768 px, 3 from 1280 px".
+  test('BR-REC-230 (amends BR-REC-216) the form screen uses FormGrid with maxCols 3', () => {
+    expect(all()).toMatch(/<FormGrid[^>]*maxCols=\{3\}/);
+    expect(all()).not.toMatch(/<FormGrid[^>]*maxCols=\{2\}/);
     expect(all()).not.toMatch(/<FormGrid[^>]*maxCols=\{4\}/);
   });
 

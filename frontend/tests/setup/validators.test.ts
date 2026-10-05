@@ -154,8 +154,6 @@ describe('BR-REC-60 / C1 gymSettingsSchema: gym name is trimmed, 2 to 60 charact
   });
 
   for (const [label, gymName] of [
-    ['an empty name', ''],
-    ['only spaces', '     '],
     ['1 character', 'a'],
     ['1 character between spaces (trimmed first)', '   a   '],
     ['61 characters', chars(61)],
@@ -171,6 +169,19 @@ describe('BR-REC-60 / C1 gymSettingsSchema: gym name is trimmed, 2 to 60 charact
   test('C1 a refused gym name leaves the other fields without issues', () => {
     const issues = issuesOf(validators.gymSettingsSchema, settings({ gymName: 'a' }));
     expect(issues.every((issue) => issue.path[0] === 'gymName')).toBe(true);
+  });
+
+  // ux.md v10 BR-REC-233: "empty gym name -> "Enter the gym name"". (Only spaces: the spec says "empty"; either
+  // sentence is accepted for it, the 2 to 60 rule or the empty sentence.)
+  test('BR-REC-233 an empty gym name -> "Enter the gym name" on gymName', () => {
+    const issues = issuesOf(validators.gymSettingsSchema, settings({ gymName: '' }));
+    expect(messagesOn(issues, 'gymName')).toContain('Enter the gym name');
+  });
+
+  test('BR-REC-233 a gym name of only spaces is refused with the empty sentence or the 2 to 60 rule', () => {
+    const issues = issuesOf(validators.gymSettingsSchema, settings({ gymName: '     ' }));
+    const messages = messagesOn(issues, 'gymName');
+    expect(messages.includes('Enter the gym name') || messages.includes(GYM_NAME_MSG)).toBe(true);
   });
 
   test('C1 a missing gym name gives an issue on gymName', () => {

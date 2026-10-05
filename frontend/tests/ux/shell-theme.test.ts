@@ -218,7 +218,8 @@ describe('BR-REC-178 no tab bar; drawer below 768 px', () => {
   });
 });
 
-describe('BR-REC-214 fonts: Outfit preloaded, Poppins 600 and Geist Mono on demand, Latin only', () => {
+// v10 BR-REC-220 amends BR-REC-214: "Two fonts: Outfit ... and Poppins 600 for titles; Geist Mono is removed".
+describe('BR-REC-214 / 220 fonts: Outfit preloaded, Poppins 600 on demand, Latin only (Geist Mono removed)', () => {
   const layout = readFileSync(join(SRC, 'app/layout.tsx'), 'utf8');
   const callOf = (name: string) =>
     layout.match(new RegExp(`${name}\\(\\{[\\s\\S]*?\\}\\)`))?.[0] ?? '';
@@ -237,13 +238,12 @@ describe('BR-REC-214 fonts: Outfit preloaded, Poppins 600 and Geist Mono on dema
   });
   test('BR-REC-214 Outfit is the only preloaded font', () => {
     expect(callOf('Outfit')).toMatch(/preload:\s*true/);
-    expect(callOf('Geist_Mono')).toMatch(/preload:\s*false/);
     expect((layout.match(/preload:\s*true/g) ?? []).length).toBe(1);
   });
   test('BR-REC-214 headings use the Poppins variable', () => {
     expect(theme).toMatch(/--font-heading:\s*var\(--font-poppins\)/);
   });
-  test('BR-REC-214 exactly three font families are loaded', () => {
+  test('BR-REC-220 exactly two font families are loaded (Geist Mono is removed)', () => {
     expect((layout.match(/from 'next\/font\/google'/g) ?? []).length).toBe(1);
     const imp = layout.match(/import \{([^}]*)\} from 'next\/font\/google'/)?.[1] ?? '';
     expect(
@@ -252,7 +252,7 @@ describe('BR-REC-214 fonts: Outfit preloaded, Poppins 600 and Geist Mono on dema
         .map((s) => s.trim())
         .filter(Boolean)
         .sort(),
-    ).toEqual(['Geist_Mono', 'Outfit', 'Poppins']);
+    ).toEqual(['Outfit', 'Poppins']);
   });
 });
 

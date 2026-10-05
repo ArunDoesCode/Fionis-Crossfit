@@ -1,7 +1,7 @@
 // Spec: docs/specs/member-records/progress.md (v2)
 //   BR-REC-111 "it shows n, the average change ... and Improved / No change / Worse counts" (the S13 sketch draws
 //              them as one bar: [====8====][=3=][1]).
-//   BR-REC-113 "says how many were left out: 'n = 12 · 5 with one reading not counted'".
+//   BR-REC-113 (wording amended by ux v10 BR-REC-228, see the notCountedText block at the end).
 //   BR-REC-23  "Only members with 2+ readings count, and n is shown."
 //   S13 sketch: "n = 12 · 5 not counted", "Improved 8 · No change 3 · Worse 1".
 // Interface: docs/specs/member-records/progress.md — `@/lib/progress/text`:
@@ -128,25 +128,20 @@ describe('BR-REC-111 outcomeShares: the bar of Improved / No change / Worse', ()
   });
 });
 
-describe('BR-REC-113 notCountedText', () => {
+// ux.md v10 BR-REC-228 (amends BR-REC-113, "same numbers"): the count line is
+// "Based on 12 members (5 more have only one reading)". Spec gives no wording for 0 left out: only the start is held.
+describe('BR-REC-228 (amends BR-REC-113) notCountedText', () => {
   test.each([
-    [12, 5, 'n = 12 · 5 with one reading not counted'], // spec example
-    [7, 1, 'n = 7 · 1 with one reading not counted'],
-    [12, 0, 'n = 12'], // nothing left out: only n
-    [0, 0, 'n = 0'],
-    [0, 3, 'n = 0 · 3 with one reading not counted'],
-    [100, 25, 'n = 100 · 25 with one reading not counted'],
-  ])('BR-REC-113 notCountedText(%d, %d) is "%s"', (n, notCounted, expected) => {
+    [12, 5, 'Based on 12 members (5 more have only one reading)'], // spec example
+    [0, 3, 'Based on 0 members (3 more have only one reading)'],
+    [100, 25, 'Based on 100 members (25 more have only one reading)'],
+  ])('BR-REC-228 notCountedText(%d, %d) is "%s"', (n, notCounted, expected) => {
     expect(text.notCountedText(n, notCounted)).toBe(expected);
   });
 
-  test('BR-REC-113 the two parts are joined with a middle dot (U+00B7) and a space on each side', () => {
-    expect(text.notCountedText(12, 5)).toContain(' · ');
-  });
-
-  test('BR-REC-113 with nothing left out there is no dot and no "not counted"', () => {
+  test('BR-REC-228 with nothing left out the line starts "Based on 12 members" and says nothing about one reading', () => {
     const shown = text.notCountedText(12, 0);
-    expect(shown).not.toContain('·');
-    expect(shown).not.toContain('not counted');
+    expect(shown.startsWith('Based on 12 members')).toBe(true);
+    expect(shown).not.toContain('only one reading');
   });
 });
