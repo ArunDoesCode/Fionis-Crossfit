@@ -81,7 +81,11 @@ describe('BR-REC-202 name', () => {
     expect(s('sur')).toEqual(['surya', 'asura', 'kiran', 'zed']);
   });
   test('rest sorted A-Z regardless of input order', () => {
-    const shuffled = [rows[4], rows[3], rows[2], rows[1]];
+    const shuffled = [4, 3, 2, 1].map((i) => {
+      const r = rows[i];
+      if (!r) throw new Error(`no row ${i}`);
+      return r;
+    });
     expect(
       ids(dir.searchMembers(shuffled, { text: 'sur', field: 'name', archived: false })),
     ).toEqual(['surya', 'asura', 'kiran', 'zed']);
