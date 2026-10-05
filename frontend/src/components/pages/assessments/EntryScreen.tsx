@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useReducer } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type FormEvent, useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import ErrorState from '@/components/common/ErrorState';
+import { FormErrorSummary, focusField, useFocusFirstProblem } from '@/components/common/form';
 import PageHeader from '@/components/common/PageHeader';
 import EntryDateFields from '@/components/pages/assessments/EntryDateFields';
 import EntryFields from '@/components/pages/assessments/EntryFields';
-import { OfferNotice, StatusLine } from '@/components/pages/assessments/EntryNotices';
+import { NeedOneValue, OfferNotice, StatusLine } from '@/components/pages/assessments/EntryNotices';
 import EntrySkeleton from '@/components/pages/assessments/EntrySkeleton';
 import {
   CheckValuesSheetLazy,
@@ -15,25 +18,29 @@ import {
 import SaveBar from '@/components/pages/assessments/SaveBar';
 import { useEntryForm, useMemberDue } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
-import { browserDraftStorage, clearDraft, draftKey } from '@/lib/assessments/draft';
+import { draftKey } from '@/lib/assessments/draft';
 import { dueMetricIds } from '@/lib/assessments/dueStatus';
 import {
-  type EntryAction,
-  emptyEntry,
-  entryReducer,
-  hasTypedValues,
-  isChanged,
-} from '@/lib/assessments/entryState';
+  type EntryControl,
+  entryOrder,
+  flatErrors,
+  valueName,
+} from '@/lib/assessments/entryErrors';
+import { inputsOf, isChanged } from '@/lib/assessments/entryValues';
+import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import { useDraftAutosave } from '@/lib/assessments/useDraftAutosave';
-import { useEntryLoader } from '@/lib/assessments/useEntryLoader';
+import { useEntrySchema } from '@/lib/assessments/useEntrySchema';
+import { useEntrySession } from '@/lib/assessments/useEntrySession';
 import { useLeaveGuard } from '@/lib/assessments/useLeaveGuard';
 import { useSaveFlow } from '@/lib/assessments/useSaveFlow';
 import { messageForCode } from '@/lib/messages/errors';
 import { UI_TEXT } from '@/lib/messages/words';
+import type { EntryFormInput, EntryFormValues } from '@/lib/validators/assessments';
 
 const FORM_ID = 'assess-form';
 // An opened saved assessment left unchanged keeps no draft: every box counts as empty then.
 const NOTHING_TYPED = {};
+const NO_MEMBER = { fullName: '', joinedOn: '' };
 
 interface EntryScreenProps {
   memberId: string;
@@ -43,113 +50,143 @@ interface EntryScreenProps {
   today: string;
 }
 
-// S10 Record assessment for one member and one assessment (BR-REC-12, 19–21, 74–86, 90, 91). Re-keyed by
-// the caller when the member or the assessment changes; the date lives here, so changing it keeps what was
-// typed (BR-REC-74). The form is plain state (`entryReducer`): a number is text until Save and `buildSaveValues`
-// is its validator (BR-REC-76), so 15–60 fields stay cheap and there is no schema to keep in step.
+// S10 Record assessment for one member and one assessment (BR-REC-12, 19–21, 74–86, 90, 91, 190). Re-keyed by
+// the caller when the member or the assessment changes; the date is a form field, so changing it keeps what
+// was typed (BR-REC-74). React Hook Form + Zod (D-034): a number is text until Save and the schema parses it
+// (BR-REC-76); drafts are written from the watched values and the leave question follows what changed (D19).
 export default function EntryScreen({ memberId, typeId, initialDate, today }: EntryScreenProps) {
-  const [state, dispatch] = useReducer(entryReducer, initialDate, emptyEntry);
-  const form = useEntryForm(memberId, typeId, state.date);
-  const due = useMemberDue(memberId);
-  const { data } = form;
-  const memberHref = `/admin/members/${memberId}` as const;
-
-  useEntryLoader({
+  const form = useForm<EntryFormInput, unknown, EntryFormValues>({
+    resolver: (values, context, options) => zodResolver(schema.current)(values, context, options),
+    defaultValues: { date: initialDate, isEstimated: false, values: {} },
+    mode: 'onTouched',
+  });
+  const control = form.control as unknown as EntryControl;
+  const date = useWatch({ control: form.control, name: 'date' });
+  const query = useEntryForm(memberId, typeId, date);
+  const { data } = query;
+  const schema = useEntrySchema(data, today);
+  const { session, moveToDate, answerOffer, startNext } = useEntrySession({
+    form,
     memberId,
     typeId,
-    state,
-    dispatch,
+    date,
     data,
-    fresh: !form.isFetching && !form.isPlaceholderData,
+    fresh: !query.isFetching && !query.isPlaceholderData,
   });
+  const member = data?.member ?? NO_MEMBER;
+  const due = useMemberDue(memberId);
+  const metrics = useMemo(() => data?.metrics ?? [], [data]);
+  const memberHref = `/admin/members/${memberId}` as const;
 
-  const dirty = isChanged(state);
-  const key = state.date === '' ? null : draftKey(memberId, typeId, state.date);
+  const typed: EntryFormInput = useWatch({ control: form.control }) as EntryFormInput;
+  // RHF's own flag is the cheap gate; `isChanged` is D19 (a date alone, About on a new one, "95.50" over 95.5
+  // are not changes).
+  const changed = form.formState.isDirty && isChanged(typed, session);
+  const key = date === '' ? null : draftKey(memberId, typeId, date);
+  const draftInputs = useMemo(() => inputsOf(typed.values ?? {}), [typed.values]);
   useDraftAutosave({
     key,
     // Only an offered draft pauses it (writing now would erase that draft); "open the saved one?" does not.
-    active: key !== null && state.loadedFor === state.date && state.offer?.kind !== 'draft',
-    isEstimated: state.isEstimated,
-    inputs: dirty ? state.inputs : NOTHING_TYPED,
+    active: key !== null && session.loadedFor === date && session.offer?.kind !== 'draft',
+    isEstimated: typed.isEstimated,
+    inputs: changed ? draftInputs : NOTHING_TYPED,
   });
 
-  const guard = useLeaveGuard(dirty, memberHref);
+  const guard = useLeaveGuard(changed, memberHref);
   useEffect(() => {
-    if (dirty) preloadEntrySheets(); // the check sheet and the leave question may be needed now
-  }, [dirty]);
+    if (changed) preloadEntrySheets(); // the check sheet and the leave question may be needed now
+  }, [changed]);
 
-  const member = data?.member ?? { fullName: '', joinedOn: '' };
-  const metrics = data?.metrics ?? [];
+  const order = useMemo(() => entryOrder(metrics.map((metric) => metric.id)), [metrics]);
+  const focusFirst = useFocusFirstProblem(order);
   const flow = useSaveFlow({
     memberId,
     typeId,
     member,
-    today,
-    formId: FORM_ID,
     metrics,
-    state,
-    dispatch,
+    session,
+    changed,
+    getTyped: form.getValues,
+    onNext: () => {
+      startNext();
+      requestAnimationFrame(() => focusField('date'));
+    },
     exitToStart: guard.exitToStart,
+    focusFirstValue: () => {
+      const first = metrics[0];
+      if (first) focusField(valueName(first.id));
+    },
   });
 
-  // A date picked while values are typed takes them along; the draft of the old date goes with them (BR-REC-85).
-  const onDateAction = (action: EntryAction) => {
-    const moving =
-      (action.type === 'date' || action.type === 'paper') && action.date !== state.date;
-    if (moving && state.opened === null && key !== null && hasTypedValues(state.inputs)) {
-      const storage = browserDraftStorage();
-      if (storage) clearDraft(storage, key);
-    }
-    dispatch(action);
+  const { clearNeedOne } = flow;
+  useEffect(() => {
+    const subscription = form.watch((_values, { type }) => {
+      if (type === 'change') clearNeedOne();
+    });
+    return () => subscription.unsubscribe();
+  }, [form, clearNeedOne]);
+
+  // Real submit: Enter in a field and both Save buttons come here. Save is the form's default button; the
+  // other one says it wants the next date.
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const next = submitter instanceof HTMLElement && submitter.dataset.next === 'true';
+    void form.handleSubmit(
+      (valid) => flow.save(valid, next),
+      (errors) => focusFirst(flatErrors(errors)),
+    )(event);
   };
 
-  const answerOffer = (answer: 'restore' | 'discard' | 'open' | 'keep') => {
-    if (answer === 'discard' && key !== null) {
-      const storage = browserDraftStorage();
-      if (storage) clearDraft(storage, key);
-    }
-    dispatch({ type: 'answer', answer, metrics });
-  };
+  const labels = useMemo(
+    () => ({
+      date: ASSESSMENT_TEXT.date,
+      ...Object.fromEntries(metrics.map((metric) => [valueName(metric.id), metric.name])),
+    }),
+    [metrics],
+  );
 
   let body: React.ReactNode;
   if (!data) {
-    const missing = isApiError(form.error) && form.error.status === 404;
-    body = form.isError ? (
+    const missing = isApiError(query.error) && query.error.status === 404;
+    body = query.isError ? (
       <ErrorState
         message={missing ? messageForCode('NOT_FOUND') : undefined}
-        onRetry={missing ? undefined : () => void form.refetch()}
+        onRetry={missing ? undefined : () => void query.refetch()}
       />
     ) : (
       <EntrySkeleton />
     );
   } else {
     body = (
-      <form
-        id={FORM_ID}
-        noValidate
-        onSubmit={(event) => event.preventDefault()}
-        className="flex flex-col gap-4"
-      >
-        {state.offer && (
-          <OfferNotice offer={state.offer} date={state.date} today={today} onAnswer={answerOffer} />
+      <form id={FORM_ID} noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+        <NeedOneValue tick={flow.needOne} />
+        {form.formState.isSubmitted && (
+          <FormErrorSummary
+            errors={flatErrors(form.formState.errors)}
+            order={order}
+            labels={labels}
+          />
+        )}
+        {session.offer && (
+          <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
         <EntryDateFields
-          formId={FORM_ID}
-          state={state}
+          control={control}
+          date={date}
+          isEstimated={typed.isEstimated}
+          opened={session.opened}
           member={member}
           today={today}
-          attempted={flow.attempted}
-          dispatch={onDateAction}
+          onMoveToDate={moveToDate}
         />
         <EntryFields
-          formId={FORM_ID}
+          control={control}
           metrics={metrics}
-          state={state}
-          attempted={flow.attempted}
+          baseline={session.baseline}
           dueIds={dueMetricIds(due.data, typeId)}
-          stale={form.isPlaceholderData}
+          stale={query.isPlaceholderData}
+          submitted={form.formState.isSubmitted}
           today={today}
-          dispatch={dispatch}
         />
         <StatusLine text={flow.status} />
       </form>
@@ -164,7 +201,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         form
         action={
           data ? (
-            <SaveBar saving={flow.saving} savingNext={flow.savingNext} onSave={flow.save} />
+            <SaveBar formId={FORM_ID} saving={flow.saving} savingNext={flow.savingNext} />
           ) : undefined
         }
       />

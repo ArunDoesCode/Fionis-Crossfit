@@ -1,56 +1,52 @@
 'use client';
 
-import type { Dispatch } from 'react';
 import EmptyState from '@/components/common/EmptyState';
+import { FormGrid } from '@/components/common/form';
 import MetricField from '@/components/pages/assessments/MetricField';
-import type { EntryAction, EntryState } from '@/lib/assessments/entryState';
+import type { EntryControl } from '@/lib/assessments/entryErrors';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import type { EntryMetric } from '@/lib/assessments/types';
 
 interface EntryFieldsProps {
-  formId: string;
+  control: EntryControl;
   metrics: EntryMetric[];
-  state: EntryState;
-  attempted: boolean;
+  /** The saved assessment's values by measurement id (emptying one removes it). */
+  baseline: Record<string, number>;
   /** Measurement ids that are due (empty until E32 answers, D11). */
   dueIds: Set<string>;
   stale: boolean;
+  submitted: boolean;
   today: string;
-  dispatch: Dispatch<EntryAction>;
 }
 
-// The measurements in setup order (BR-REC-73): one column, 720 px wide on desktop (BR-REC-139).
+// The measurements in setup order (BR-REC-73). One column for now: the 1 / 2 / 3 / 4 column grid is slice U4,
+// which only changes `maxCols` here (BR-REC-188).
 export default function EntryFields({
-  formId,
+  control,
   metrics,
-  state,
-  attempted,
+  baseline,
   dueIds,
   stale,
+  submitted,
   today,
-  dispatch,
 }: EntryFieldsProps) {
   if (metrics.length === 0) return <EmptyState title={ASSESSMENT_TEXT.noMeasurements} />;
   return (
-    <div className="flex flex-col gap-2">
+    <FormGrid maxCols={1}>
       {metrics.map((metric, index) => (
         <MetricField
           key={metric.id}
-          formId={formId}
+          control={control}
           metric={metric}
           index={index}
           count={metrics.length}
-          input={state.inputs[metric.id]}
-          touched={state.touched[metric.id] === true}
-          attempted={attempted}
-          hadValue={metric.id in state.baseline}
-          timeProblem={state.timeProblems[metric.id] === true}
+          hadValue={metric.id in baseline}
           due={dueIds.has(metric.id)}
           stale={stale}
+          submitted={submitted}
           today={today}
-          dispatch={dispatch}
         />
       ))}
-    </div>
+    </FormGrid>
   );
 }

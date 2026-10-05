@@ -1,13 +1,11 @@
 'use client';
 
-import { type Dispatch, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useRef, useState } from 'react';
 import { useSaveAssessment } from '@/lib/api/assessments/queries';
+import type { EntryFormInput, EntryFormValues } from '@/lib/validators/assessments';
 import { browserDraftStorage, clearDraft, draftKey } from './draft';
-import { type EntryAction, type EntryState, isChanged, isUnchangedField } from './entryState';
+import { type EntrySession, isUnchangedField } from './entryValues';
 import { type FlaggedField, flaggedFields } from './fieldView';
-import { dateDomId, fieldDomId, focusField } from './focusField';
-import { entryDateIssue } from './labels';
 import { buildSaveValues, leavesNoValue, type SaveField } from './saveBody';
 import { saveFailureText } from './saveError';
 import { ASSESSMENT_TEXT } from './text';
@@ -16,134 +14,123 @@ import { asDecimals, type EntryMetric } from './types';
 interface SaveFlowInput {
   memberId: string;
   typeId: string;
-  member: { fullName: string; joinedOn: string };
-  today: string;
-  /** The form's id: field ids are built from it. */
-  formId: string;
+  member: { fullName: string };
   metrics: EntryMetric[];
-  state: EntryState;
-  dispatch: Dispatch<EntryAction>;
+  session: EntrySession;
+  /** Something differs from what was opened (D19); an opened assessment left alone saves nothing. */
+  changed: boolean;
+  /** What is typed right now (the text of every box). */
+  getTyped: () => EntryFormInput;
+  /** After "Save & next date": the screen empties the form and puts the cursor on the date. */
+  onNext: () => void;
   /** After a successful Save: back to where the entry started (D12). */
   exitToStart: () => void;
+  /** Save with nothing entered: the cursor goes to the first measurement (BR-REC-190). */
+  focusFirstValue: () => void;
 }
 
 export interface SaveFlow {
   saving: boolean;
   /** The "Save & next date" button is the one saving. */
   savingNext: boolean;
-  /** Save was tapped once: every field now shows its own problems (BR-REC-134). */
-  attempted: boolean;
-  /** The sentence next to the Save bar: nothing filled, not saved, a refusal. */
+  /** Counts the Save clicks that found nothing to save; 0 = none. A new count re-announces the alert. */
+  needOne: number;
+  /** Any edit takes the "Enter at least one value" alert away. */
+  clearNeedOne: () => void;
+  /** The sentence at the end of the form: not saved, a refusal of the server. */
   status: string | null;
   /** The "Check these values" sheet; `lines` keep their text while it closes. */
   check: { open: boolean; lines: FlaggedField[] };
-  save: (next: boolean) => void;
+  /** Runs after the schema accepted the form (React Hook Form's `handleSubmit`). */
+  save: (values: EntryFormValues, next: boolean) => void;
   goBack: () => void;
   saveAnyway: () => void;
 }
 
 interface Prepared {
   values: { metricId: string; value: number | null }[];
+  date: string;
+  isEstimated: boolean;
   next: boolean;
 }
 
 /**
- * Save and "Save & next date" (BR-REC-19, 76–78, 82–84, 86). Order of the checks: a date is picked and not
- * in the future, no Time box out of range, every number readable, the assessment would still hold a value
- * (BR-REC-78, D2), then the one "Check these values" sheet when a value being sent looks odd (BR-REC-82).
- * A saved assessment sends only the boxes that changed (D2): an untouched value is never rewritten, and one
- * with nothing changed sends no request at all (it would only add an identical change-log row). A
- * failed Save keeps everything and says so next to the bar; saving again is the same E26 upsert, never a
- * second assessment (BR-REC-86).
+ * Save and "Save & next date" (BR-REC-19, 76–78, 82–84, 86). The schema has already checked the date and that
+ * every number is readable; here: the assessment would still hold a value (BR-REC-78, D2), then the one "Check
+ * these values" sheet when a value being sent looks odd (BR-REC-82). A saved assessment sends only the boxes
+ * that changed (D2): an untouched value is never rewritten, and one left alone sends no request at
+ * all and closes without a word (BR-REC-190). A failed Save keeps everything and says so at the end of the
+ * form; saving again is the same E26 upsert, never a second assessment (BR-REC-86).
  */
 export function useSaveFlow(input: SaveFlowInput): SaveFlow {
-  const { memberId, typeId, member, today, formId, metrics, state, dispatch, exitToStart } = input;
+  const { memberId, typeId, member, metrics, session, changed, getTyped } = input;
   const mutation = useSaveAssessment(member.fullName);
-  const [attempted, setAttempted] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [needOne, setNeedOne] = useState(0);
   const [checkLines, setCheckLines] = useState<FlaggedField[]>([]);
   const [checkOpen, setCheckOpen] = useState(false);
   const [nextWanted, setNextWanted] = useState(false);
   const prepared = useRef<Prepared | null>(null);
+  const clearNeedOne = useCallback(() => setNeedOne(0), []);
 
   /** The assessment is saved (or there was nothing to write): drop the draft, then leave or start the next date. */
-  function finish(next: boolean) {
+  function finish(date: string, next: boolean) {
     const storage = browserDraftStorage();
-    if (storage) clearDraft(storage, draftKey(memberId, typeId, state.date));
-    if (!next) {
-      exitToStart();
-      return;
-    }
-    dispatch({ type: 'next' });
-    setAttempted(false);
-    requestAnimationFrame(() => focusField(dateDomId(formId)));
+    if (storage) clearDraft(storage, draftKey(memberId, typeId, date));
+    if (next) input.onNext();
+    else input.exitToStart();
   }
 
-  function send({ values, next }: Prepared) {
+  function send({ values, date, isEstimated, next }: Prepared) {
     setStatus(null);
     mutation.mutate(
-      { memberId, typeId, date: state.date, isEstimated: state.isEstimated, values },
+      { memberId, typeId, date, isEstimated, values },
       {
-        onSuccess: () => finish(next),
+        onSuccess: () => finish(date, next),
         onError: (error) => setStatus(saveFailureText(error)),
       },
     );
   }
 
-  function save(next: boolean) {
+  function save(valid: EntryFormValues, next: boolean) {
     if (mutation.isPending) return;
     setNextWanted(next);
-    setAttempted(true);
     setStatus(null);
 
-    if (state.date === '') {
-      focusField(dateDomId(formId)); // the date field says "Pick a date"
-      return;
-    }
-    const issue = entryDateIssue({
-      date: state.date,
-      today,
-      joinedOn: member.joinedOn,
-      memberName: member.fullName,
-    });
-    if (issue.kind === 'future') {
-      focusField(dateDomId(formId)); // the date field shows the sentence
-      return;
-    }
-    const badTime = metrics.find((metric) => state.timeProblems[metric.id]);
-    if (badTime) {
-      focusField(fieldDomId(formId, badTime.id));
-      return;
-    }
-    // An opened saved assessment (still on its own date) with nothing changed: nothing to write (D2).
-    if (state.opened !== null && !isChanged(state)) {
-      toast.success(ASSESSMENT_TEXT.saved);
-      finish(next);
+    // An opened saved assessment (still on its own date) left alone: nothing to write (D2).
+    if (session.opened !== null && !changed) {
+      finish(valid.date, next);
       return;
     }
 
+    const typed = getTyped().values;
     const fields: SaveField[] = metrics.map((metric) => ({
       metricId: metric.id,
       datatype: metric.datatype,
       decimals: asDecimals(metric.decimals),
-      input: state.inputs[metric.id] ?? null,
-      hadValue: metric.id in state.baseline,
-      unchanged: isUnchangedField(state, metric.id),
+      input: valid.values[metric.id] ?? null,
+      hadValue: metric.id in session.baseline,
+      unchanged: isUnchangedField(session, typed, metric.id),
     }));
     const built = buildSaveValues(fields);
     if (!built.ok) {
-      const first = built.problems[0];
-      if (first) focusField(fieldDomId(formId, first.metricId));
+      setStatus(ASSESSMENT_TEXT.numberError); // the schema already caught these; never send a bad number
       return;
     }
     if (leavesNoValue(fields, built)) {
-      setStatus(ASSESSMENT_TEXT.noValues);
+      setNeedOne((count) => count + 1);
+      input.focusFirstValue();
       return;
     }
 
-    prepared.current = { values: built.values, next };
-    const sent = metrics.filter((metric) => !isUnchangedField(state, metric.id));
-    const odd = flaggedFields(sent, state.inputs);
+    prepared.current = {
+      values: built.values,
+      date: valid.date,
+      isEstimated: valid.isEstimated,
+      next,
+    };
+    const sent = metrics.filter((metric) => !isUnchangedField(session, typed, metric.id));
+    const odd = flaggedFields(sent, valid.values);
     if (odd.length > 0) {
       setCheckLines(odd);
       setCheckOpen(true);
@@ -155,7 +142,8 @@ export function useSaveFlow(input: SaveFlowInput): SaveFlow {
   return {
     saving: mutation.isPending,
     savingNext: mutation.isPending && nextWanted,
-    attempted,
+    needOne,
+    clearNeedOne,
     status,
     check: { open: checkOpen, lines: checkLines },
     save,

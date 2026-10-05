@@ -36,13 +36,13 @@ export function RemovedNote() {
 }
 
 /**
- * "Please check — last time 8" under a field (BR-REC-21, 82): amber, with an icon and words, never an error.
- * It sits in the problem line the field already reserves (-mt-5) so it never moves the form; a field has a
- * warning only when it has a readable value, so it never shares that line with a number error.
+ * "Please check — last time 8" in the line under a field (BR-REC-21, 82): amber, with an icon and words, never
+ * an error. It takes the place of the "Last …" line inside the field's own height, so it never moves the form;
+ * a field has a warning only when it has a readable value, so it never shares the line with a number error.
  */
 export function WarningLine({ text }: { text: string }) {
   return (
-    <p role="status" className="-mt-5 flex min-h-5 items-center gap-1.5 text-sm text-warning">
+    <p role="status" className="flex items-center gap-1.5 text-sm text-warning">
       <HugeiconsIcon
         icon={Alert02Icon}
         strokeWidth={2}
