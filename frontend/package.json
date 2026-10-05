@@ -9,6 +9,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
+    "check:colors": "bun scripts/check-colors.ts",
     "fix": "biome check --write .",
     "test": "bun test",
     "types:api": "openapi-typescript ../backend/.contracts/openapi.json -o src/types/api.generated.ts"

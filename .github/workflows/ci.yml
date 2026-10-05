@@ -63,6 +63,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run lint
+      - run: bun run check:colors
       - run: bun test --pass-with-no-tests
 
   member:

@@ -21,7 +21,7 @@ interface ListRowProps<T extends string> {
 }
 
 const ROW =
-  'flex min-h-row min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 hover:bg-muted/50';
+  'flex min-h-row min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 hover:bg-accent/50';
 
 // A list row (BR-REC-122, 135): at least 56 px (we use 64), name, one detail line, status at the right.
 // Render inside <RowList>.

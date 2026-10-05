@@ -12,8 +12,8 @@ interface SparklineProps {
 
 const PAD = 3;
 
-// A tiny trend line drawn as plain SVG from the given points (no chart library, tactic 5). Takes the
-// text colour; the last reading gets a dot. Fewer than 2 points draw just the dot.
+// A tiny trend line drawn as plain SVG from the given points (no chart library, tactic 5). Brand
+// colour (`text-brand`); the last reading gets a dot. Fewer than 2 points draw just the dot.
 export default function Sparkline({
   points,
   label,
@@ -43,7 +43,7 @@ export default function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
-      className={cn('shrink-0 text-muted-foreground', className)}
+      className={cn('shrink-0 text-brand', className)}
     >
       {coords.length > 1 && (
         <polyline

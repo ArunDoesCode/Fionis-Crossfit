@@ -2,8 +2,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { UI_TEXT } from '@/lib/messages/words';
 import { cn } from '@/lib/utils';
 
-// Grey shapes at the real size of what they stand in for (BR-REC-129, 143): a row is 64 px like
-// ListRow, an input 48 px, the page header 56 px, so nothing jumps when data arrives.
+// Grey shapes at the real size of what they stand in for (BR-REC-129, 143): a row, an input and the page
+// header take their size from the density tokens, so nothing jumps when data arrives.
 // Each group is one polite "Loading…" for screen readers.
 
 function Busy({ className, children }: { className?: string; children: React.ReactNode }) {
@@ -23,10 +23,10 @@ export function PageHeaderSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** One list row (64 px): name, detail line, status at the right. `chips` adds the chip line. */
+/** One list row (--row-height): name, detail line, status at the right. `chips` adds the chip line. */
 export function RowSkeleton({ chips = false }: { chips?: boolean }) {
   return (
-    <div className={cn('flex items-center gap-3 px-4', chips ? 'h-24' : 'h-16')}>
+    <div className={cn('flex items-center gap-3 px-4', chips ? 'h-24' : 'h-(--row-height)')}>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Skeleton className="h-5 w-40 max-w-full" />
         <Skeleton className="h-4 w-56 max-w-full" />
@@ -57,7 +57,7 @@ export function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** A one-column form: label (20 px) above a 48 px field, `fields` times. */
+/** A one-column form: label (20 px) above a field, `fields` times. */
 export function FormSkeleton({ fields = 4 }: { fields?: number }) {
   return (
     <Busy className="flex flex-col gap-6">
@@ -65,7 +65,7 @@ export function FormSkeleton({ fields = 4 }: { fields?: number }) {
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
         <div key={i} className="flex flex-col gap-2">
           <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-12 w-full rounded-4xl" />
+          <Skeleton className="h-control w-full rounded-4xl" />
         </div>
       ))}
     </Busy>

@@ -25,7 +25,7 @@ export default function EmptyState({
         'flex flex-col gap-2',
         compact
           ? 'items-start py-1'
-          : 'items-center justify-center rounded-2xl border border-dashed p-8 text-center',
+          : 'items-center justify-center rounded-2xl border border-dashed border-primary/40 bg-brand-wash p-8 text-center',
         className,
       )}
     >

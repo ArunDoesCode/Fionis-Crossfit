@@ -5,102 +5,113 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.3);
+  --background: oklch(0.982 0.006 80);
+  --foreground: oklch(0.18 0.03 273);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.3);
+  --card-foreground: oklch(0.18 0.03 273);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.3);
-  --primary: oklch(0.508 0.118 165.612);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.96 0.002 17.2);
-  --muted-foreground: oklch(0.48 0.021 43.1);
-  --accent: oklch(0.96 0.002 17.2);
-  --accent-foreground: oklch(0.214 0.009 43.1);
-  --destructive: oklch(0.48 0.225 27.3);
-  --border: oklch(0.922 0.005 34.3);
-  --input: oklch(0.64 0.01 40);
-  --ring: oklch(0.508 0.118 165.612);
-  --chart-1: oklch(0.879 0.169 91.605);
-  --chart-2: oklch(0.769 0.188 70.08);
-  --chart-3: oklch(0.666 0.179 58.318);
-  --chart-4: oklch(0.555 0.163 48.998);
-  --chart-5: oklch(0.473 0.137 46.201);
+  --popover-foreground: oklch(0.18 0.03 273);
+  --primary: oklch(0.664 0.165 58);
+  --primary-foreground: oklch(0.16 0.03 273);
+  --secondary: oklch(0.945 0.01 285);
+  --secondary-foreground: oklch(0.22 0.03 273);
+  --muted: oklch(0.955 0.008 80);
+  --muted-foreground: oklch(0.46 0.02 285);
+  --accent: oklch(0.95 0.05 75);
+  --accent-foreground: oklch(0.22 0.04 60);
+  --destructive: oklch(0.5 0.21 25);
+  --border: oklch(0.9 0.012 80);
+  --input: oklch(0.6 0.02 285);
+  --ring: oklch(0.6 0.17 55);
+  --brand: oklch(0.53 0.15 55);
+  --chart-1: oklch(0.664 0.165 58);
+  --chart-2: oklch(0.5 0.11 255);
+  --chart-3: oklch(0.58 0.1 195);
+  --chart-4: oklch(0.55 0.17 340);
+  --chart-5: oklch(0.45 0.03 273);
   --radius: 0.625rem;
-  --sidebar: oklch(0.986 0.002 67.8);
-  --sidebar-foreground: oklch(0.147 0.004 49.3);
-  --sidebar-primary: oklch(0.596 0.145 163.225);
-  --sidebar-primary-foreground: oklch(0.979 0.021 166.113);
-  --sidebar-accent: oklch(0.96 0.002 17.2);
-  --sidebar-accent-foreground: oklch(0.214 0.009 43.1);
-  --sidebar-border: oklch(0.922 0.005 34.3);
-  --sidebar-ring: oklch(0.714 0.014 41.2);
+  --sidebar: oklch(0.165 0.034 273);
+  --sidebar-foreground: oklch(0.96 0.008 80);
+  --sidebar-primary: oklch(0.754 0.165 62.7);
+  --sidebar-primary-foreground: oklch(0.16 0.03 273);
+  --sidebar-accent: oklch(0.754 0.165 62.7 / 16%);
+  --sidebar-accent-foreground: oklch(0.84 0.13 72);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.754 0.165 62.7);
 
-  /* Status colours (ux.md, BR-REC-124/125). `--x` is text and icon colour (>= 4.5:1 on the page,
+  /* Status colours (BR-REC-124/125/184). `--x` is text and icon colour (>= 4.5:1 on the page,
      the card and on its own `-soft` fill); `-soft` is the badge fill. Always paired with words and an icon. */
-  --success: oklch(0.43 0.12 155);
-  --success-soft: oklch(0.95 0.05 155);
-  --warning: oklch(0.46 0.1 65);
-  --warning-soft: oklch(0.96 0.06 90);
-  --danger: oklch(0.5 0.2 27);
-  --danger-soft: oklch(0.95 0.035 25);
-  --neutral: oklch(0.44 0.02 45);
-  --neutral-soft: oklch(0.94 0.005 45);
+  --success: oklch(0.42 0.12 150);
+  --success-soft: oklch(0.955 0.045 150);
+  --warning: oklch(0.45 0.1 75);
+  --warning-soft: oklch(0.96 0.07 92);
+  --danger: oklch(0.48 0.2 25);
+  --danger-soft: oklch(0.955 0.03 22);
+  --info: oklch(0.45 0.12 255);
+  --info-soft: oklch(0.955 0.03 255);
+  --neutral: oklch(0.44 0.02 285);
+  --neutral-soft: oklch(0.945 0.008 285);
 
-  /* Sizes and rhythm (ux.md "Design tokens"): 4 px steps (Tailwind --spacing), 48 px controls,
-     44 px touch targets, 64 px rows, page padding 16 px phone / 24 px desktop, 24 px between sections. */
+  /* Sizes and rhythm (BR-REC-181, 182): 4 px steps (Tailwind --spacing). These are the touch values
+     (48 px controls, 44 px tap targets, 64 px rows, 16 px page padding); a desktop mouse gets denser
+     values below. */
   --control-height: 3rem;
   --tap-min: 2.75rem;
   --row-height: 4rem;
   --header-height: 3.5rem;
-  --tabbar-h: 4rem;
   --actionbar-h: 4rem;
   --page-padding: 1rem;
   --section-gap: 1.5rem;
+  --page-max-narrow: 56rem;
+  --page-max-wide: 80rem;
   --motion: 150ms;
   --control-fill: oklch(1 0 0);
 }
 
-@media (min-width: 1024px) {
+/* BR-REC-181: density for a mouse on a desktop; touch and anything narrower keep the values above. */
+@media (min-width: 1024px) and (pointer: fine) {
   :root {
+    --header-height: 3.5rem;
+    --control-height: 2.5rem;
+    --row-height: 3rem;
     --page-padding: 1.5rem;
+    --section-gap: 1rem;
   }
 }
 
 .dark {
-  --background: oklch(0.147 0.004 49.3);
-  --foreground: oklch(0.986 0.002 67.8);
-  --card: oklch(0.214 0.009 43.1);
-  --card-foreground: oklch(0.986 0.002 67.8);
-  --popover: oklch(0.214 0.009 43.1);
-  --popover-foreground: oklch(0.986 0.002 67.8);
-  --primary: oklch(0.432 0.095 166.913);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.268 0.011 36.5);
-  --muted-foreground: oklch(0.714 0.014 41.2);
-  --accent: oklch(0.268 0.011 36.5);
-  --accent-foreground: oklch(0.986 0.002 67.8);
-  --destructive: oklch(0.83 0.14 22);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(0.56 0.012 40);
-  --ring: oklch(0.696 0.17 162.48);
-  --chart-1: oklch(0.879 0.169 91.605);
-  --chart-2: oklch(0.769 0.188 70.08);
-  --chart-3: oklch(0.666 0.179 58.318);
-  --chart-4: oklch(0.555 0.163 48.998);
-  --chart-5: oklch(0.473 0.137 46.201);
-  --sidebar: oklch(0.214 0.009 43.1);
-  --sidebar-foreground: oklch(0.986 0.002 67.8);
-  --sidebar-primary: oklch(0.696 0.17 162.48);
-  --sidebar-primary-foreground: oklch(0.262 0.051 172.552);
-  --sidebar-accent: oklch(0.268 0.011 36.5);
-  --sidebar-accent-foreground: oklch(0.986 0.002 67.8);
+  --background: oklch(0.17 0.03 273);
+  --foreground: oklch(0.965 0.006 80);
+  --card: oklch(0.21 0.032 273);
+  --card-foreground: oklch(0.965 0.006 80);
+  --popover: oklch(0.235 0.034 273);
+  --popover-foreground: oklch(0.965 0.006 80);
+  --primary: oklch(0.754 0.165 62.7);
+  --primary-foreground: oklch(0.16 0.03 273);
+  --secondary: oklch(0.29 0.03 275);
+  --secondary-foreground: oklch(0.965 0.006 80);
+  --muted: oklch(0.26 0.03 275);
+  --muted-foreground: oklch(0.74 0.02 285);
+  --accent: oklch(0.31 0.055 60);
+  --accent-foreground: oklch(0.93 0.05 75);
+  --destructive: oklch(0.8 0.15 22);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(0.62 0.03 280);
+  --ring: oklch(0.754 0.165 62.7);
+  --brand: oklch(0.754 0.165 62.7);
+  --chart-1: oklch(0.754 0.165 62.7);
+  --chart-2: oklch(0.72 0.1 255);
+  --chart-3: oklch(0.78 0.1 195);
+  --chart-4: oklch(0.72 0.15 340);
+  --chart-5: oklch(0.75 0.03 273);
+  --sidebar: oklch(0.135 0.032 273);
+  --sidebar-foreground: oklch(0.96 0.008 80);
+  --sidebar-primary: oklch(0.754 0.165 62.7);
+  --sidebar-primary-foreground: oklch(0.16 0.03 273);
+  --sidebar-accent: oklch(0.754 0.165 62.7 / 16%);
+  --sidebar-accent-foreground: oklch(0.84 0.13 72);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.547 0.021 43.1);
+  --sidebar-ring: oklch(0.754 0.165 62.7);
 
   --success: oklch(0.82 0.15 155);
   --success-soft: oklch(0.3 0.07 155);
@@ -108,15 +119,20 @@
   --warning-soft: oklch(0.32 0.07 80);
   --danger: oklch(0.8 0.14 22);
   --danger-soft: oklch(0.32 0.09 22);
-  --neutral: oklch(0.78 0.015 45);
-  --neutral-soft: oklch(0.3 0.01 45);
+  --info: oklch(0.8 0.1 255);
+  --info-soft: oklch(0.3 0.06 255);
+  --neutral: oklch(0.78 0.015 285);
+  --neutral-soft: oklch(0.3 0.015 285);
   --control-fill: oklch(1 0 0 / 6%);
 }
 
 @theme inline {
   --font-sans: var(--font-outfit);
-  --font-heading: var(--font-raleway);
+  --font-heading: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -204,27 +220,38 @@
 @utility min-w-tap {
   min-width: var(--tap-min);
 }
+/* Faint brand wash for empty states and summary cards (no gradients on the brand site: keep it light). */
+@utility bg-brand-wash {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--primary) 12%, transparent),
+    transparent
+  );
+}
 
 /*
  * ux.md rules the shadcn classes cannot express. shadcn files are never hand-edited, and unlayered
  * rules beat every Tailwind layer, so the sizes are set here once for every screen:
- * - BR-REC-122/123: default and large buttons, inputs and select triggers are 48 px tall, text 16 px;
- *   small and icon buttons keep their own size on purpose (use them with a 44 px hit area).
+ * - BR-REC-122/123: on touch and below 1024 px, default and large buttons, inputs and select triggers
+ *   are at least --control-height (48 px) tall and the text is 16 px (no iOS zoom). A mouse on a desktop
+ *   keeps shadcn's own sizes. Small and icon buttons keep their size on purpose (44 px hit area).
  * - checkbox and switch draw small but their hit area is 48 px.
- * - tabs are 48 px tall.
+ * - tabs follow --control-height.
  */
-[data-slot="button"]:where(.h-9, .h-10),
-[data-slot="input"],
-[data-slot="select-trigger"][data-size="default"] {
-  min-height: var(--control-height);
-}
-[data-slot="input"],
-[data-slot="select-trigger"],
-[data-slot="select-item"] {
-  font-size: 1rem;
-}
-[data-slot="select-item"] {
-  min-height: var(--tap-min);
+@media (max-width: 1023px), (pointer: coarse) {
+  [data-slot="button"]:where(.h-9, .h-10),
+  [data-slot="input"],
+  [data-slot="select-trigger"][data-size="default"] {
+    min-height: var(--control-height);
+  }
+  [data-slot="input"],
+  [data-slot="select-trigger"],
+  [data-slot="select-item"] {
+    font-size: 1rem;
+  }
+  [data-slot="select-item"] {
+    min-height: var(--tap-min);
+  }
 }
 [data-slot="checkbox"]::after,
 [data-slot="switch"]::after {
@@ -252,28 +279,6 @@ input[type="search"]::-webkit-search-cancel-button {
 [data-slot="alert-dialog-content"] {
   transition-duration: var(--motion);
   animation-duration: var(--motion);
-}
-
-/* BR-REC-120: the bottom tab bar steps aside while a sheet, a dialog or a form (a screen whose action
-   bar is marked `data-hide-tabs`) is open; the action bar then sits on the bottom edge. */
-body:has(
-  [data-slot="responsive-sheet"],
-  [data-slot="sheet-content"],
-  [data-slot="dialog-content"],
-  [data-slot="alert-dialog-content"],
-  [data-hide-tabs]
-) {
-  --tabbar-h: 0px;
-}
-body:has(
-    [data-slot="responsive-sheet"],
-    [data-slot="sheet-content"],
-    [data-slot="dialog-content"],
-    [data-slot="alert-dialog-content"],
-    [data-hide-tabs]
-  )
-  [data-slot="bottom-tab-bar"] {
-  display: none;
 }
 
 /* BR-REC-137: no animation when the device asks for less motion. */
