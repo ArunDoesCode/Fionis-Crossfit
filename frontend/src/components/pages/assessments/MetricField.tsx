@@ -99,7 +99,7 @@ export default function MetricField({
             {fieldState.error ? (
               <FormMessage />
             ) : (
-              <div className="flex items-start justify-between gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 text-xs text-muted-foreground">
                 {warning ? <WarningLine text={warning} /> : <span>{previous}</span>}
                 {right}
               </div>

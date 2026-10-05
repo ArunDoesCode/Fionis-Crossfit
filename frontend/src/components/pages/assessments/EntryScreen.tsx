@@ -4,7 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type FormEvent, useEffect, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import ErrorState from '@/components/common/ErrorState';
-import { FormErrorSummary, focusField, useFocusFirstProblem } from '@/components/common/form';
+import {
+  FormErrorSummary,
+  FormGrid,
+  focusField,
+  useFocusFirstProblem,
+} from '@/components/common/form';
 import PageHeader from '@/components/common/PageHeader';
 import EntryDateSection from '@/components/pages/assessments/EntryDateSection';
 import EntryFields from '@/components/pages/assessments/EntryFields';
@@ -164,24 +169,26 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         {session.offer && (
           <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
-        <EntryDateSection
-          control={form.control}
-          date={date}
-          isEstimated={typed.isEstimated}
-          opened={session.opened}
-          member={member}
-          today={today}
-          onMoveToDate={moveToDate}
-        />
-        <EntryFields
-          control={form.control}
-          metrics={metrics}
-          baseline={session.baseline}
-          dueIds={dueMetricIds(due.data, typeId)}
-          stale={query.isPlaceholderData}
-          submitted={form.formState.isSubmitted}
-          today={today}
-        />
+        <FormGrid maxCols={4}>
+          <EntryDateSection
+            control={form.control}
+            date={date}
+            isEstimated={typed.isEstimated}
+            opened={session.opened}
+            member={member}
+            today={today}
+            onMoveToDate={moveToDate}
+          />
+          <EntryFields
+            control={form.control}
+            metrics={metrics}
+            baseline={session.baseline}
+            dueIds={dueMetricIds(due.data, typeId)}
+            stale={query.isPlaceholderData}
+            submitted={form.formState.isSubmitted}
+            today={today}
+          />
+        </FormGrid>
         <StatusLine text={flow.status} />
       </form>
     );
