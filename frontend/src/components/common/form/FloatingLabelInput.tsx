@@ -48,11 +48,14 @@ export interface FloatingLabelInputProps
   label: ReactNode;
   /** Shown at the right inside the box (a unit such as "kg"). */
   suffix?: ReactNode;
+  /** A control at the right edge inside the box (e.g. the ± button); it must be at most 44 px wide. */
+  action?: ReactNode;
 }
 
 export function FloatingLabelInput({
   label,
   suffix,
+  action,
   id,
   required,
   className,
@@ -68,14 +71,25 @@ export function FloatingLabelInput({
         placeholder=" "
         required={false}
         aria-required={required || undefined}
-        className={cn('peer', FLOATING_BOX_CLASS, suffix ? 'pr-12' : undefined, className)}
+        className={cn(
+          'peer',
+          FLOATING_BOX_CLASS,
+          action && suffix ? 'pr-24' : action || suffix ? 'pr-12' : undefined,
+          className,
+        )}
       />
       <FloatingLabel htmlFor={inputId} label={label} required={required} />
       {suffix ? (
-        <span className="pointer-events-none absolute right-3 bottom-1.5 text-sm text-muted-foreground">
+        <span
+          className={cn(
+            'pointer-events-none absolute bottom-1.5 text-sm text-muted-foreground',
+            action ? 'right-12' : 'right-3',
+          )}
+        >
           {suffix}
         </span>
       ) : null}
+      {action ? <div className="absolute inset-y-0 right-0 flex items-center">{action}</div> : null}
     </div>
   );
 }

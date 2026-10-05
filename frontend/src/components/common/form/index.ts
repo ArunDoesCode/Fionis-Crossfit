@@ -1,4 +1,6 @@
-export { DurationInput, type DurationText } from './DurationInput';
+export type { DurationText } from '@/lib/validators/assessments';
+export { ChipGroup } from './ChipGroup';
+export { DurationInput } from './DurationInput';
 export {
   FLOATING_BOX_CLASS,
   FloatingLabel,

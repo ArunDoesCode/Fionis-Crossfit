@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { exactNumber } from '@/lib/forms/numberText';
-import { NUMBER_REQUIRED, numberExample } from '@/lib/forms/zodNumber';
+import { exactNumberFromText } from '@/lib/forms/zodNumber';
 
 // Mirrors backend/src/types/setup.types.ts (the server checks again). Limits, issue `path`s and messages are
 // BR-REC-60 to 62 and the build clarifications C1, C2 of docs/specs/member-records/setup.md; messages are plain sentences that
@@ -50,20 +49,6 @@ const MESSAGES = {
   tablePart: 'Pick a part',
 } as const;
 
-// Number boxes hold typed text until Save (BR-REC-76, 197). These read it with the shared exact parser and
-// messages (`lib/forms`): blank is "Enter a number" (or `null` where the field is optional), a non-number is
-// "Enter a number like 7" / "like 95.5". The range rules are chained after, so a fraction or a number
-// past a limit keeps its own message (the shared rounding pipes would hide both).
-const typedNumber = (decimals: 0 | 1, optional: boolean) =>
-  (optional ? z.string().nullable() : z.string()).transform((text, ctx): number | null => {
-    if (text === null || (text.trim() === '' && optional)) return null;
-    const value = text.trim() === '' ? undefined : exactNumber(text);
-    if (value !== null && value !== undefined) return value;
-    const message = text.trim() === '' ? NUMBER_REQUIRED : numberExample(decimals);
-    ctx.issues.push({ code: 'custom', message, input: text });
-    return z.NEVER;
-  });
-
 export const gymSettingsSchema = z.object({
   gymName: z
     .string({ error: MESSAGES.gymName })
@@ -71,14 +56,14 @@ export const gymSettingsSchema = z.object({
     .min(GYM_NAME_MIN, { error: MESSAGES.gymName })
     .max(GYM_NAME_MAX, { error: MESSAGES.gymName }),
   timezone: z.string({ error: MESSAGES.timezone }).min(1, { error: MESSAGES.timezone }),
-  upcomingLeadDays: typedNumber(0, false).pipe(
+  upcomingLeadDays: exactNumberFromText(0, false).pipe(
     z
       .number({ error: MESSAGES.upcomingLeadDays })
       .int({ error: MESSAGES.wholeDays })
       .min(0, { error: MESSAGES.upcomingLeadDays })
       .max(UPCOMING_LEAD_MAX, { error: MESSAGES.upcomingLeadDays }),
   ),
-  expiryLeadDays: typedNumber(0, false).pipe(
+  expiryLeadDays: exactNumberFromText(0, false).pipe(
     z
       .number({ error: MESSAGES.expiryLeadDays })
       .int({ error: MESSAGES.wholeDays })
@@ -103,14 +88,14 @@ const repeatUnit = z.enum(INTERVAL_UNITS, { error: MESSAGES.repeatUnit });
 
 export const assessmentFormSchema = z.object({
   name: itemName,
-  intervalCount: typedNumber(0, false).pipe(repeatRange),
+  intervalCount: exactNumberFromText(0, false).pipe(repeatRange),
   intervalUnit: repeatUnit,
 });
 
 /** The assessment sheet's schema: the same fields plus the On switch (shown when editing). */
 export const assessmentSheetSchema = assessmentFormSchema.extend({ isActive: z.boolean() });
 
-const rangeBound = typedNumber(1, true).pipe(
+const rangeBound = exactNumberFromText(1, true).pipe(
   z
     .number()
     .min(-RANGE_BOUND, { error: MESSAGES.bound })
@@ -127,7 +112,7 @@ export const measurementFormSchema = z
     better: z.enum(BETTER_VALUES, { error: MESSAGES.better }),
     plausibleMin: rangeBound,
     plausibleMax: rangeBound,
-    intervalCount: typedNumber(0, true).pipe(repeatRange.nullable()),
+    intervalCount: exactNumberFromText(0, true).pipe(repeatRange.nullable()),
     intervalUnit: repeatUnit.nullable(),
     tableGroup: z
       .string({ error: MESSAGES.name })

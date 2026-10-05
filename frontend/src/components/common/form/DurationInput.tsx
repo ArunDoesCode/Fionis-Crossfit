@@ -2,13 +2,9 @@
 
 import { type ReactNode, useId } from 'react';
 import { Input } from '@/components/ui/input';
+import { UI_TEXT } from '@/lib/messages/words';
+import type { DurationText } from '@/lib/validators/assessments';
 import { FLOATING_BOX_CLASS, FloatingLabel } from './FloatingLabelInput';
-
-/** The two boxes as typed; the schema turns them into seconds. */
-export interface DurationText {
-  min: string;
-  sec: string;
-}
 
 interface DurationInputProps {
   /** The one label over both boxes, e.g. "Plank (min:sec)". */
@@ -72,8 +68,8 @@ export function DurationInput({
         required={required}
         floated
       />
-      {box('min', 3, 'min', 'Minutes')}
-      {box('sec', 2, 'sec', 'Seconds')}
+      {box('min', 3, 'min', UI_TEXT.minutesBox)}
+      {box('sec', 2, 'sec', UI_TEXT.secondsBox)}
     </fieldset>
   );
 }

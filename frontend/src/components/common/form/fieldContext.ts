@@ -15,6 +15,8 @@ export const useFieldState = (): FieldState | null => useContext(FieldStateConte
 export interface ItemIds {
   id: string;
   messageId: string;
+  /** Set when the FormItem has a hint line. */
+  hintId?: string;
 }
 export const ItemIdsContext = createContext<ItemIds | null>(null);
 export const useItemIds = (): ItemIds | null => useContext(ItemIdsContext);

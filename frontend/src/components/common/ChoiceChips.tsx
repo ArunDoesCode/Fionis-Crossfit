@@ -1,12 +1,8 @@
 'use client';
 
+import { ChipGroup } from '@/components/common/form/ChipGroup';
 import { FieldLegend, FieldSet } from '@/components/ui/field';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-
-/** One chip: at least 44 px, filled when chosen (BR-REC-122). Shared with the chips inside a form field. */
-export const CHIP_CLASS =
-  'min-h-11 min-w-11 rounded-full px-4 text-base aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground';
 
 interface ChoiceChipsProps<T extends string> {
   /** The question or filter name ("Sex", "Membership", "Show"). */
@@ -43,25 +39,7 @@ export default function ChoiceChips<T extends string>({
         {legend}
         {required && <span className="text-destructive"> *</span>}
       </FieldLegend>
-      <ToggleGroup
-        value={value === null ? [] : [value]}
-        onValueChange={(next) => {
-          const chosen = options.find((option) => option.value === next[0]);
-          if (chosen) onChange(chosen.value);
-        }}
-        className="flex-wrap"
-      >
-        {options.map((option) => (
-          <ToggleGroupItem
-            key={option.value}
-            value={option.value}
-            variant="outline"
-            className={CHIP_CLASS}
-          >
-            {option.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <ChipGroup options={options} value={value} onChange={onChange} />
       <p role={error ? 'alert' : undefined} className="min-h-5 text-sm text-destructive">
         {error}
       </p>

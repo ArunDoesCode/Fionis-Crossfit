@@ -76,11 +76,7 @@ export default function EntryDateSection({
           render={({ field }) => (
             <FormItem label={ASSESSMENT_TEXT.about}>
               <FormControl>
-                <Checkbox
-                  aria-label={ASSESSMENT_TEXT.about}
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
             </FormItem>
           )}

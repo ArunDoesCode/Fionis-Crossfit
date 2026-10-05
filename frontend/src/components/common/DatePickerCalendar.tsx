@@ -14,6 +14,7 @@ import {
 } from '@/lib/dates/dayPicker';
 import { isMonthDisabled, shiftYear, yearOf } from '@/lib/dates/month';
 import { monthShortName } from '@/lib/format';
+import { UI_TEXT } from '@/lib/messages/words';
 
 // The on-demand chunk (BR-REC-215): the only importer of components/ui/calendar (react-day-picker). The day
 // grid and the month grid live here so one chunk serves both pickers. Loaded with next/dynamic.
@@ -33,7 +34,7 @@ export default function DatePickerCalendar({
   defaultMonth,
   yearRange,
 }: DayCalendarProps) {
-  const shown = value || clamp(defaultMonth ?? today, min, max);
+  const shown = value || clamp(defaultMonth ? `${defaultMonth}-01` : today, min, max);
   const disabled = [
     ...(min ? [{ before: isoToDate(min) }] : []),
     ...(max ? [{ after: isoToDate(max) }] : []),
@@ -77,7 +78,7 @@ export function MonthGrid({ value, onSelect, fallbackYear, min, max }: MonthGrid
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Previous year"
+          aria-label={UI_TEXT.previousYear}
           onClick={() => setYear(year - 1)}
           disabled={min !== undefined && year <= yearOf(min)}
         >
@@ -90,7 +91,7 @@ export function MonthGrid({ value, onSelect, fallbackYear, min, max }: MonthGrid
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Next year"
+          aria-label={UI_TEXT.nextYear}
           onClick={() => setYear(year + 1)}
           disabled={max !== undefined && year >= yearOf(max)}
         >

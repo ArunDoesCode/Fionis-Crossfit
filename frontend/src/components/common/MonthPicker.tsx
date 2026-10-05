@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { MonthGridProps } from '@/lib/dates/dayPicker';
 import { formatMonthYear } from '@/lib/format';
+import { UI_TEXT } from '@/lib/messages/words';
 import { cn } from '@/lib/utils';
 
 // BR-REC-194: a month filter. Popover with a year stepper and 12 month buttons; the value stays `YYYY-MM`
@@ -50,7 +51,7 @@ export default function MonthPicker({
   min,
   max,
   today,
-  placeholder = 'Any month',
+  placeholder = UI_TEXT.anyMonth,
   className,
 }: MonthPickerProps) {
   const [open, setOpen] = useState(false);
@@ -101,7 +102,7 @@ export default function MonthPicker({
                   setOpen(false);
                 }}
               >
-                Clear
+                {UI_TEXT.clear}
               </Button>
             </div>
           )}

@@ -1,3 +1,4 @@
+import type { IsoMonth } from '@/lib/dates/month';
 import type { IsoDate } from '@/lib/domain/dates';
 
 // The bridge between a `YYYY-MM-DD` string and the calendar's Date (BR-REC-193). Both ends use the device's
@@ -27,7 +28,8 @@ export interface DayCalendarProps {
   today: IsoDate;
   min?: IsoDate;
   max?: IsoDate;
-  defaultMonth?: IsoDate;
+  /** The month shown when there is no value (`YYYY-MM`, default: today's). */
+  defaultMonth?: IsoMonth;
   /** Month and year dropdowns between these years (birth date). */
   yearRange?: { from: number; to: number };
 }

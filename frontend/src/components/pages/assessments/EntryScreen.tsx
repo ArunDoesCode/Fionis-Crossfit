@@ -20,12 +20,7 @@ import { useEntryForm, useMemberDue } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
 import { draftKey } from '@/lib/assessments/draft';
 import { dueMetricIds } from '@/lib/assessments/dueStatus';
-import {
-  type EntryControl,
-  entryOrder,
-  flatErrors,
-  valueName,
-} from '@/lib/assessments/entryErrors';
+import { entryOrder, flatErrors, valueName } from '@/lib/assessments/entryErrors';
 import { inputsOf, isChanged } from '@/lib/assessments/entryValues';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import { useDraftAutosave } from '@/lib/assessments/useDraftAutosave';
@@ -60,7 +55,6 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
     defaultValues: { date: initialDate, isEstimated: false, values: {} },
     mode: 'onTouched',
   });
-  const control = form.control as unknown as EntryControl;
   const date = useWatch({ control: form.control, name: 'date' });
   const query = useEntryForm(memberId, typeId, date);
   const { data } = query;
@@ -171,7 +165,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
           <OfferNotice offer={session.offer} date={date} today={today} onAnswer={answerOffer} />
         )}
         <EntryDateSection
-          control={control}
+          control={form.control}
           date={date}
           isEstimated={typed.isEstimated}
           opened={session.opened}
@@ -180,7 +174,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
           onMoveToDate={moveToDate}
         />
         <EntryFields
-          control={control}
+          control={form.control}
           metrics={metrics}
           baseline={session.baseline}
           dueIds={dueMetricIds(due.data, typeId)}

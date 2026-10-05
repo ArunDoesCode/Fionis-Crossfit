@@ -1,10 +1,11 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { type ComponentProps, type ReactNode, useState } from 'react';
 import type { Control, FieldValues, Path } from 'react-hook-form';
-import ChoiceChips from '@/components/common/ChoiceChips';
 import {
+  ChipGroup,
   DurationInput,
+  type DurationText,
   FloatingLabelInput,
   FormControl,
   FormField,
@@ -31,13 +32,6 @@ interface BaseProps<Values extends FieldValues, Output extends FieldValues> {
 }
 
 const asValue = <Value,>(value: unknown): Value => value as Value;
-// `FormField` is typed for a control whose output equals its input; the forms' output type differs.
-const asControl = <Values extends FieldValues, Output extends FieldValues>(
-  control: Control<Values, unknown, Output>,
-) => control as unknown as Control<Values>;
-
-const Hint = ({ children }: { children?: ReactNode }) =>
-  children ? <FieldDescription className="text-xs">{children}</FieldDescription> : null;
 
 interface TextFieldProps<V extends FieldValues, O extends FieldValues> extends BaseProps<V, O> {
   label: string;
@@ -57,10 +51,10 @@ export function TextField<V extends FieldValues, O extends FieldValues>({
 }: TextFieldProps<V, O>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={className} hint={hint}>
           <FormControl>
             <FloatingLabelInput
               name={field.name}
@@ -74,7 +68,6 @@ export function TextField<V extends FieldValues, O extends FieldValues>({
               onBlur={field.onBlur}
             />
           </FormControl>
-          <Hint>{hint}</Hint>
           <FormMessage />
         </FormItem>
       )}
@@ -99,10 +92,10 @@ export function TimeZoneField<V extends FieldValues, O extends FieldValues>({
 }: TimeZoneFieldProps<V, O>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={className} hint={hint}>
           <ItemLabel>{label}</ItemLabel>
           <FormControl>
             <TimeZoneComboboxFor
@@ -112,7 +105,6 @@ export function TimeZoneField<V extends FieldValues, O extends FieldValues>({
               options={options}
             />
           </FormControl>
-          <Hint>{hint}</Hint>
           <FormMessage />
         </FormItem>
       )}
@@ -167,10 +159,10 @@ export function NumberField<V extends FieldValues, O extends FieldValues>({
 }: NumberFieldProps<V, O>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={className} hint={hint}>
           <FormControl>
             <NumberInput
               name={field.name}
@@ -185,7 +177,6 @@ export function NumberField<V extends FieldValues, O extends FieldValues>({
               onBlur={field.onBlur}
             />
           </FormControl>
-          <Hint>{hint}</Hint>
           <FormMessage />
         </FormItem>
       )}
@@ -197,10 +188,13 @@ interface DurationFieldProps<V extends FieldValues, O extends FieldValues> exten
   label: string;
 }
 
-const split = (text: string) => {
-  const seconds = Number(text);
-  if (text === '' || !Number.isFinite(seconds)) return { min: '', sec: '' };
-  return { min: String(Math.floor(seconds / 60)), sec: String(seconds % 60) };
+const toSeconds = ({ min, sec }: DurationText): string =>
+  min === '' && sec === '' ? '' : String(Number(min) * 60 + Number(sec));
+
+const split = (seconds: string): DurationText => {
+  const total = Number(seconds);
+  if (seconds === '' || !Number.isFinite(total)) return { min: '', sec: '' };
+  return { min: String(Math.floor(total / 60)), sec: String(total % 60) };
 };
 
 /** Minutes and seconds in two boxes under one label; the form keeps whole seconds as text ("" = empty). */
@@ -212,26 +206,46 @@ export function DurationField<V extends FieldValues, O extends FieldValues>({
 }: DurationFieldProps<V, O>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
       render={({ field, fieldState }) => (
         <FormItem className={className}>
           <FormControl>
-            <DurationInput
+            <DurationBoxes
               label={label}
-              value={split(asValue<string | null>(field.value) ?? '')}
+              seconds={asValue<string | null>(field.value) ?? ''}
               aria-invalid={fieldState.invalid}
-              onChange={({ min, sec }) =>
-                field.onChange(
-                  min === '' && sec === '' ? '' : String(Number(min) * 60 + Number(sec)),
-                )
-              }
+              onChange={field.onChange}
               onBlur={field.onBlur}
             />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
+    />
+  );
+}
+
+// The boxes keep what was typed ("1" in minutes stays "1", an emptied box stays empty); the form gets the
+// seconds. The typed text is only replaced when the form value changes from outside (a reset).
+function DurationBoxes({
+  seconds,
+  onChange,
+  ...props
+}: Omit<ComponentProps<typeof DurationInput>, 'value' | 'onChange'> & {
+  seconds: string;
+  onChange: (seconds: string) => void;
+}) {
+  const [typed, setTyped] = useState<DurationText>(() => split(seconds));
+  const shown = toSeconds(typed) === seconds ? typed : split(seconds);
+  return (
+    <DurationInput
+      {...props}
+      value={shown}
+      onChange={(next) => {
+        setTyped(next);
+        onChange(toSeconds(next));
+      }}
     />
   );
 }
@@ -263,22 +277,25 @@ export function ChipsField<V extends FieldValues, O extends FieldValues, Choice 
 }: ChipsFieldProps<V, O, Choice>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
-      render={({ field, fieldState }) => (
-        <FormItem className={className}>
-          <ChoiceChips
-            legend={legend}
-            hideLegend={hideLegend}
-            required={required}
-            options={options}
-            value={toChip ? toChip(field.value) : asValue<Choice | null>(field.value)}
-            onChange={(value) => {
-              field.onChange(fromChip ? fromChip(value) : value);
-              onPick?.(value);
-            }}
-            error={fieldState.error?.message}
-          />
+      render={({ field }) => (
+        <FormItem
+          className={className}
+          label={hideLegend ? <span className="sr-only">{legend}</span> : legend}
+          required={required}
+        >
+          <FormControl>
+            <ChipGroup
+              options={options}
+              value={toChip ? toChip(field.value) : asValue<Choice | null>(field.value)}
+              onChange={(value) => {
+                field.onChange(fromChip ? fromChip(value) : value);
+                onPick?.(value);
+              }}
+            />
+          </FormControl>
+          <FormMessage className="w-full basis-full" />
         </FormItem>
       )}
     />
@@ -300,7 +317,7 @@ export function SwitchField<V extends FieldValues, O extends FieldValues>({
 }: SwitchFieldProps<V, O>) {
   return (
     <FormField
-      control={asControl(control)}
+      control={control}
       name={name}
       render={({ field }) => (
         <FormItem className={className ?? 'col-span-full'}>

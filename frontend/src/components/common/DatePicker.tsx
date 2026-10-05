@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useId, useRef, useState } from 'react';
 import { FLOATING_BOX_CLASS, FloatingLabel } from '@/components/common/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { IsoMonth } from '@/lib/dates/month';
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatDay } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -40,8 +41,8 @@ export interface DatePickerProps {
   /** Days before `min` or after `max` are greyed out. */
   min?: IsoDate;
   max?: IsoDate;
-  /** The month shown when there is no value (default: today). */
-  defaultMonth?: IsoDate;
+  /** The month shown when there is no value (default: today's). */
+  defaultMonth?: IsoMonth;
   /** Month and year dropdowns between these years (birth date). */
   yearRange?: { from: number; to: number };
   /** `inline` opens the calendar under the button instead of a popover: use it inside a sheet. */
@@ -111,6 +112,7 @@ export default function DatePicker({
     return (
       <div className="flex flex-col gap-2">
         <div className="relative">
+          {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: a required date button; assistive tech announces required (BR-REC-187) */}
           <button
             ref={triggerRef}
             id={id}
@@ -118,6 +120,7 @@ export default function DatePicker({
             aria-labelledby={labelledBy}
             aria-expanded={open}
             aria-invalid={invalid}
+            aria-required={required || undefined}
             aria-describedby={describedBy}
             disabled={disabled}
             onPointerDown={preload}
@@ -151,12 +154,14 @@ export default function DatePicker({
       <div className="relative">
         <PopoverTrigger
           render={
+            // biome-ignore lint/a11y/useAriaPropsSupportedByRole: a required date button; assistive tech announces required (BR-REC-187)
             <button
               ref={triggerRef}
               id={id}
               type="button"
               aria-labelledby={labelledBy}
               aria-invalid={invalid}
+              aria-required={required || undefined}
               aria-describedby={describedBy}
               disabled={disabled}
               onPointerDown={preload}

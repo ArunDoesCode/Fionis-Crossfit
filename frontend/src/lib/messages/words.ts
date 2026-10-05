@@ -44,6 +44,14 @@ export const UI_TEXT = {
   searchMembers: 'Search members',
   clearSearch: 'Clear search',
   minutes: 'min',
+  minutesBox: 'Minutes', // screen-reader name of the minutes box of a Time field
+  secondsBox: 'Seconds',
+  previousYear: 'Previous year',
+  nextYear: 'Next year',
+  clear: 'Clear',
+  anyMonth: 'Any month',
+  searchTimeZones: 'Search time zones',
+  noTimeZone: 'No time zone found.',
   seconds: 'sec',
   makeNegative: 'Make negative', // NumberField ± button, text has no minus
   makePositive: 'Make positive', // NumberField ± button, text starts with a minus

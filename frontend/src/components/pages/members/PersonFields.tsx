@@ -3,15 +3,16 @@
 import { useWatch } from 'react-hook-form';
 import DatePicker from '@/components/common/DatePicker';
 import {
+  ChipGroup,
   FloatingLabelInput,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
 } from '@/components/common/form';
-import ChipGroup from '@/components/pages/members/ChipGroup';
 import type { MemberFormControl } from '@/components/pages/members/memberFormControl';
 import PhoneField from '@/components/pages/members/PhoneField';
+import { shiftYear } from '@/lib/dates/month';
 import type { IsoDate } from '@/lib/domain/dates';
 import { birthDateWarning } from '@/lib/members/dateWarning';
 import { MEMBER_FIELD_LABELS } from '@/lib/members/formFields';
@@ -83,7 +84,7 @@ export default function PersonFields({
                 max={today}
                 today={today}
                 yearRange={{ from: BIRTH_FROM_YEAR, to: Number(today.slice(0, 4)) }}
-                defaultMonth={`${Number(today.slice(0, 4)) - 30}${today.slice(4)}`}
+                defaultMonth={shiftYear(today.slice(0, 7), -30)}
               />
             </FormControl>
             <FormMessage />

@@ -1,8 +1,11 @@
 'use client';
 
-import { CHIP_CLASS } from '@/components/common/ChoiceChips';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
+
+/** One chip: at least 44 px, filled when chosen (BR-REC-122). */
+const CHIP_CLASS =
+  'min-h-11 min-w-11 rounded-full px-4 text-base aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground';
 
 interface ChipGroupProps<T extends string>
   extends Omit<
@@ -15,9 +18,9 @@ interface ChipGroupProps<T extends string>
   onChange: (value: T) => void;
 }
 
-// The chips of one form field (Sex, Membership, Goal). The label and the error belong to the field's
-// FormItem / FormMessage, so unlike ChoiceChips this draws neither. Tapping the chosen chip keeps it.
-export default function ChipGroup<T extends string>({
+// The chips of one choice (Sex, Membership, Goal, Repeat…): the one chip implementation. The label and the error
+// belong to the field's FormItem / FormMessage (or to ChoiceChips for a standalone filter row). Tapping the chosen chip keeps it.
+export function ChipGroup<T extends string>({
   options,
   value,
   onChange,

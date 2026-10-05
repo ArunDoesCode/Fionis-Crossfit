@@ -11,6 +11,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UI_TEXT } from '@/lib/messages/words';
 
 interface TimeZoneComboboxProps {
   /** Id of the trigger: the field's `<Label htmlFor>` points here. */
@@ -57,9 +58,9 @@ export default function TimeZoneCombobox({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) p-0">
         <Command>
-          <CommandInput placeholder="Search time zones" />
+          <CommandInput placeholder={UI_TEXT.searchTimeZones} />
           <CommandList>
-            <CommandEmpty>No time zone found.</CommandEmpty>
+            <CommandEmpty>{UI_TEXT.noTimeZone}</CommandEmpty>
             <CommandGroup>
               {options.map((zone) => (
                 <CommandItem

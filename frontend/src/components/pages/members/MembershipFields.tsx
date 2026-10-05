@@ -2,8 +2,7 @@
 
 import { useWatch } from 'react-hook-form';
 import DatePicker from '@/components/common/DatePicker';
-import { FormControl, FormField, FormItem, FormMessage } from '@/components/common/form';
-import ChipGroup from '@/components/pages/members/ChipGroup';
+import { ChipGroup, FormControl, FormField, FormItem, FormMessage } from '@/components/common/form';
 import type { PeriodFormControl } from '@/components/pages/members/memberFormControl';
 import { formatDay } from '@/lib/format';
 import { MEMBER_FIELD_LABELS } from '@/lib/members/formFields';

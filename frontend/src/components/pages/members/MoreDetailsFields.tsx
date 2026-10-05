@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ChipGroup,
   FloatingLabel,
   FloatingLabelInput,
   FormControl,
@@ -9,7 +10,6 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/common/form';
-import ChipGroup from '@/components/pages/members/ChipGroup';
 import type { MemberFormControl } from '@/components/pages/members/memberFormControl';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Textarea } from '@/components/ui/textarea';

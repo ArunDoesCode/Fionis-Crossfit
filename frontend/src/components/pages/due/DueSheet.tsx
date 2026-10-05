@@ -4,6 +4,7 @@ import { ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect, useRef, useState } from 'react';
 import DatePicker from '@/components/common/DatePicker';
+import { FormControl, FormItem, FormMessage } from '@/components/common/form';
 import LinkButton from '@/components/common/LinkButton';
 import ResponsiveSheet from '@/components/common/ResponsiveSheet';
 import { Button } from '@/components/ui/button';
@@ -204,25 +205,21 @@ export default function DueSheet({ target, session, open, onOpenChange }: DueShe
               {DUE_TEXT.remind.pickDate}
             </Button>
             {view.picking && (
-              <div className="flex min-h-19 flex-col gap-1">
-                <DatePicker
-                  id={DATE_ID}
-                  variant="inline"
-                  label={DUE_TEXT.remind.dateLabel}
-                  value={view.until}
-                  today={today}
-                  min={addDays(today, 1)}
-                  max={addDays(today, REMIND_MAX_DAYS)}
-                  aria-invalid={shownIssue ? true : undefined}
-                  aria-describedby={shownIssue ? `${DATE_ID}-error` : undefined}
-                  onChange={(until) => update({ until })}
-                />
-                {shownIssue && (
-                  <p id={`${DATE_ID}-error`} role="alert" className="text-sm text-destructive">
-                    {shownIssue}
-                  </p>
-                )}
-              </div>
+              <FormItem error={shownIssue || undefined}>
+                <FormControl>
+                  <DatePicker
+                    id={DATE_ID}
+                    variant="inline"
+                    label={DUE_TEXT.remind.dateLabel}
+                    value={view.until}
+                    today={today}
+                    min={addDays(today, 1)}
+                    max={addDays(today, REMIND_MAX_DAYS)}
+                    onChange={(until) => update({ until })}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           </>
         )}

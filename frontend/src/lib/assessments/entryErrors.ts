@@ -1,5 +1,5 @@
 import type { Control, FieldErrors } from 'react-hook-form';
-import type { EntryFormInput } from '@/lib/validators/assessments';
+import type { EntryFormInput, EntryFormValues } from '@/lib/validators/assessments';
 
 /** The name React Hook Form (and `data-field`) uses for a measurement's box. */
 export const valueName = (metricId: string): `values.${string}` => `values.${metricId}`;
@@ -22,4 +22,4 @@ export function flatErrors(errors: FieldErrors): FieldErrors {
 }
 
 /** The form's control as the field components read it (they only need the typed values, not the schema's output). */
-export type EntryControl = Control<EntryFormInput>;
+export type EntryControl = Control<EntryFormInput, unknown, EntryFormValues>;
