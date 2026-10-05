@@ -48,7 +48,9 @@ describe('BR-REC-59 whatsAppUrl: URL shape', () => {
   });
 
   test('BR-REC-59 the same number in different stored forms gives the same link', () => {
-    const urls = ['9845012345', '+919845012345', '919845012345', '98450 12345', '09845012345'].map(wa.whatsAppUrl);
+    const urls = ['9845012345', '+919845012345', '919845012345', '98450 12345', '09845012345'].map(
+      wa.whatsAppUrl,
+    );
     expect(new Set(urls).size).toBe(1);
   });
 });
