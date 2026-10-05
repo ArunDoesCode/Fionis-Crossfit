@@ -103,17 +103,21 @@ export const formatValue = (value: number, decimals: 0 | 1 | 2, unit: string): s
 };
 
 /**
- * A stored phone as "98450 12345" (BR-REC-127): digits only, a leading "91" (12 digits) or "0" (11 digits)
- * dropped, then two groups of five. Anything that is not ten digits after that is shown as typed.
+ * A stored phone's digits only, a leading "91" (12 digits) or "0" (11 digits) dropped (BR-REC-127). The one
+ * normaliser: `formatPhone` groups it, `whatsAppUrl` builds the chat link from it (BR-REC-59, 197).
  */
-export const formatPhone = (phone: string): string => {
+export const nationalDigits = (phone: string): string => {
   const digits = phone.replace(/\D/g, '');
-  const national =
-    digits.length === 12 && digits.startsWith('91')
-      ? digits.slice(2)
-      : digits.length === 11 && digits.startsWith('0')
-        ? digits.slice(1)
-        : digits;
+  return digits.length === 12 && digits.startsWith('91')
+    ? digits.slice(2)
+    : digits.length === 11 && digits.startsWith('0')
+      ? digits.slice(1)
+      : digits;
+};
+
+/** A stored phone as "98450 12345" (BR-REC-127): two groups of five; anything that is not ten digits after normalising is shown as typed. */
+export const formatPhone = (phone: string): string => {
+  const national = nationalDigits(phone);
   return national.length === 10 ? `${national.slice(0, 5)} ${national.slice(5)}` : phone;
 };
 

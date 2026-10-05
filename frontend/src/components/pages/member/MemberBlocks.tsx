@@ -4,10 +4,10 @@ import {
   Alert02Icon,
   Archive02Icon,
   ArrowRight01Icon,
-  Call02Icon,
   InformationCircleIcon,
   Loading03Icon,
   MoreHorizontalIcon,
+  WhatsappIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import type { Route } from 'next';
@@ -45,6 +45,7 @@ import { mostOverdue, NEXT_STEP_TEXT, nextStepFor } from '@/lib/members/nextStep
 import type { MemberPeriod } from '@/lib/members/types';
 import { sheetLoader, useLazySheet } from '@/lib/members/useLazySheet';
 import { deviceTimeZone, useToday } from '@/lib/members/useToday';
+import { whatsAppUrl } from '@/lib/members/whatsapp';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
 
 interface MemberBlockProps {
@@ -137,7 +138,7 @@ function RestoreMemberButton({ memberId }: { memberId: string }) {
 }
 
 // BR-REC-224: under the name, "18 y · Male · [Active] Annual · 98450 22171 · Joined 05 Oct 2026": the membership
-// status in words (badge), the plan, the phone to tap and call, the join date. Grey shapes while loading.
+// status in words (badge), the plan, the phone that opens a WhatsApp chat (BR-REC-59), the join date. Grey shapes while loading.
 export function MemberMeta({ memberId }: MemberBlockProps) {
   const { data: member, isError } = useMember(memberId);
   const today = useToday();
@@ -159,12 +160,14 @@ export function MemberMeta({ memberId }: MemberBlockProps) {
       <span>{parts.join(' · ')}</span>
       <span aria-hidden="true">·</span>
       <a
-        href={`tel:${member.phone}`}
+        href={whatsAppUrl(member.phone)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`WhatsApp ${formatPhone(member.phone)}`}
         className="inline-flex min-h-tap items-center gap-1 font-medium text-foreground underline underline-offset-4"
       >
-        <HugeiconsIcon icon={Call02Icon} strokeWidth={2} aria-hidden="true" className="size-4" />
+        <HugeiconsIcon icon={WhatsappIcon} strokeWidth={2} aria-hidden="true" className="size-4" />
         {formatPhone(member.phone)}
-        <span className="sr-only"> (call)</span>
       </a>
       <span aria-hidden="true">·</span>
       <span>{`Joined ${formatDay(member.joinedOn)}`}</span>
