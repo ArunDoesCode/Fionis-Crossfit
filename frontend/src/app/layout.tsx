@@ -31,8 +31,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Gym admin',
-  description: 'Trainer and owner admin',
+  title: 'Fionis India',
+  description: 'Fionis CRM',
 };
 
 // `viewport-fit=cover` lets the bottom bars use the safe area on phones with a home indicator.
