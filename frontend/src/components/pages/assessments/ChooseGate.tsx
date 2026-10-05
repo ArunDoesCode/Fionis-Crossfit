@@ -4,7 +4,7 @@ import { useState } from 'react';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import PageHeader from '@/components/common/PageHeader';
-import { ChooseAssessmentSheetLazy } from '@/components/pages/assessments/LazySheets';
+import { ChooseAssessmentSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { useMemberDue } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
@@ -61,7 +61,7 @@ export default function ChooseGate({ memberId, today, onPick }: ChooseGateProps)
         />
       )}
       {!member.isError && (
-        <ChooseAssessmentSheetLazy
+        <ChooseAssessmentSheet
           open={open}
           onOpenChange={setOpen}
           firstName={firstName}

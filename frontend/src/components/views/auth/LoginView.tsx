@@ -15,8 +15,8 @@ interface LoginViewProps {
 export default function LoginView({ next, expired }: LoginViewProps) {
   return (
     <main className="relative flex min-h-dvh items-center justify-center p-4">
-      <ThemeToggle className="absolute top-4 right-4 size-(--control-height)" />
-      <Card className="w-full max-w-[400px]">
+      <ThemeToggle className="absolute top-4 right-4 size-control" />
+      <Card className="w-full max-w-100">
         <CardContent className="flex flex-col gap-6">
           <header className="flex flex-col items-center gap-3 text-center">
             {/* The wordmark is the brand name, so the heading below stays for screen readers only. */}

@@ -19,8 +19,7 @@ import StatusBadge from '@/components/common/StatusBadge';
 import AssessmentRow from '@/components/pages/assessments/AssessmentRow';
 import ChipList from '@/components/pages/due/ChipList';
 import DueMoreButton from '@/components/pages/due/DueMoreButton';
-import DueSheet from '@/components/pages/due/DueSheetLazy';
-import PeriodSheet, { preloadPeriodSheet } from '@/components/pages/members/PeriodSheetLazy';
+import { DueSheet, PeriodSheet, preloadPeriodSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,7 +43,6 @@ import { sheetLoader, useLazySheet } from '@/lib/members/useLazySheet';
 import { deviceTimeZone, useToday } from '@/lib/members/useToday';
 import { messageForCode } from '@/lib/messages/errors';
 import { UI_TEXT, WORDS } from '@/lib/messages/words';
-import { cn } from '@/lib/utils';
 
 interface MemberBlockProps {
   memberId: string;
@@ -131,10 +129,7 @@ function MemberBanner({
   return (
     <div
       role="status"
-      className={cn(
-        'flex flex-col gap-3 rounded-2xl p-4 text-base',
-        archived ? 'bg-neutral-soft text-neutral' : 'bg-danger-soft text-danger',
-      )}
+      className={`flex flex-col gap-3 rounded-2xl p-4 text-base ${archived ? 'bg-neutral-soft text-neutral' : 'bg-danger-soft text-danger'}`}
     >
       <p className="flex items-start gap-2">
         <HugeiconsIcon

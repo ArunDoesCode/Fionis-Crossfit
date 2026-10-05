@@ -5,7 +5,7 @@ import { useQueryStates } from 'nuqs';
 import ChoiceChips from '@/components/common/ChoiceChips';
 import EmptyState from '@/components/common/EmptyState';
 import DueRow from '@/components/pages/due/DueRow';
-import DueSheet from '@/components/pages/due/DueSheetLazy';
+import { DueSheet } from '@/components/pages/lazySheets';
 import PagedRows from '@/components/pages/members/PagedRows';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDueList } from '@/lib/api/due/queries';

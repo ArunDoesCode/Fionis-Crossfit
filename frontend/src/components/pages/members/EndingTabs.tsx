@@ -3,9 +3,9 @@
 import dynamic from 'next/dynamic';
 import { useQueryState } from 'nuqs';
 import EmptyState from '@/components/common/EmptyState';
+import { PeriodSheet } from '@/components/pages/lazySheets';
 import EndingRow from '@/components/pages/members/EndingRow';
 import PagedRows from '@/components/pages/members/PagedRows';
-import PeriodSheet from '@/components/pages/members/PeriodSheetLazy';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEndingList } from '@/lib/api/members/queries';
 import { ENDING_EMPTY, endingTabParser, isEndingTab } from '@/lib/members/endingParams';

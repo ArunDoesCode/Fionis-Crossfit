@@ -2,7 +2,7 @@
 
 import { MoreHorizontalIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { preloadDueSheet } from '@/components/pages/due/DueSheetLazy';
+import { preloadDueSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { DUE_TEXT } from '@/lib/due/text';
 

@@ -9,7 +9,7 @@ export const LIST_SKELETON_ROWS = 8;
 // the real chips keep under them, so nothing moves when they arrive (BR-REC-129, 143).
 export function FilterSkeleton() {
   return (
-    <div aria-busy="true" role="status" className="flex h-[4.5rem] gap-2">
+    <div aria-busy="true" role="status" className="flex h-18 gap-2">
       <span className="sr-only">{UI_TEXT.loading}</span>
       <Skeleton className="h-11 w-14 rounded-full" />
       <Skeleton className="h-11 w-36 rounded-full" />

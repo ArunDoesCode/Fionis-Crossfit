@@ -45,7 +45,7 @@ export default function MemberSearch({ text, field, onChange, onFieldChange }: M
       <Label htmlFor={id} className="sr-only">
         {UI_TEXT.searchMembers}
       </Label>
-      <InputGroup className="h-(--control-height) min-h-11">
+      <InputGroup className="h-control min-h-11">
         <InputGroupAddon className="h-full self-stretch p-0">
           <Select
             items={FIELDS}

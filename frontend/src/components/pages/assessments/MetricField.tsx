@@ -18,20 +18,15 @@ import { canBeNegative, enterKeyHintFor } from '@/lib/assessments/fieldOptions';
 import { changeFor, previousLine, readField, warningFor } from '@/lib/assessments/fieldView';
 import { ASSESSMENT_TEXT } from '@/lib/assessments/text';
 import { asDecimals, type EntryMetric } from '@/lib/assessments/types';
-import { cn } from '@/lib/utils';
 
 const ARROWS = { up: '▲', down: '▼' } as const;
 
 /** The live change next to a field: "▼ −1.5 kg better" (BR-REC-81). Never colour alone: arrow + words. */
 function ChangeLine({ change }: { change: Change }) {
   const tone =
-    change.verdict === 'better'
-      ? 'text-success'
-      : change.verdict === 'worse'
-        ? 'text-warning'
-        : undefined;
+    change.verdict === 'better' ? 'text-success' : change.verdict === 'worse' ? 'text-warning' : '';
   return (
-    <span className={cn('inline-flex items-center gap-1', tone)}>
+    <span className={`inline-flex items-center gap-1 ${tone}`}>
       {change.arrow !== 'none' && (
         <>
           <span aria-hidden="true">{ARROWS[change.arrow]}</span>

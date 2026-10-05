@@ -7,7 +7,6 @@ import { isApiError } from '@/lib/api/errors';
 import type { ProgressStats } from '@/lib/api/progress/fetchers';
 import { messageForCode } from '@/lib/messages/errors';
 import { notCountedText, outcomeShares, PROGRESS_TEXT, signedValueText } from '@/lib/progress/text';
-import { cn } from '@/lib/utils';
 
 const text = PROGRESS_TEXT.progress;
 
@@ -45,10 +44,7 @@ export default function ProgressResults({ stats }: ProgressResultsProps) {
   return (
     <div
       aria-busy={stats.isPlaceholderData}
-      className={cn(
-        'flex flex-col gap-3 rounded-2xl border bg-card p-4 transition-opacity',
-        stats.isPlaceholderData && 'opacity-60',
-      )}
+      className={`flex flex-col gap-3 rounded-2xl border bg-card p-4 transition-opacity ${stats.isPlaceholderData ? 'opacity-60' : ''}`}
     >
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">{text.averageChange}</p>
@@ -66,7 +62,7 @@ export default function ProgressResults({ stats }: ProgressResultsProps) {
             <ul className="flex flex-wrap gap-x-4 gap-y-1 text-base">
               {OUTCOMES.map(({ key, label, color }) => (
                 <li key={key} className="flex items-center gap-2">
-                  <span aria-hidden="true" className={cn('size-3 rounded-sm', color)} />
+                  <span aria-hidden="true" className={`size-3 rounded-sm ${color}`} />
                   {`${label} `}
                   <span className="font-mono">{data[key]}</span>
                 </li>
@@ -77,11 +73,7 @@ export default function ProgressResults({ stats }: ProgressResultsProps) {
               className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full"
             >
               {OUTCOMES.filter(({ key }) => shares[key] > 0).map(({ key, color }) => (
-                <div
-                  key={key}
-                  className={cn('h-full', color)}
-                  style={{ width: `${shares[key]}%` }}
-                />
+                <div key={key} className={`h-full ${color}`} style={{ width: `${shares[key]}%` }} />
               ))}
             </div>
           </>

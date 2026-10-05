@@ -18,7 +18,7 @@ function Busy({ className, children }: { className?: string; children: React.Rea
 /** One list row (--row-height): name, detail line, status at the right. `chips` adds the chip line. */
 function RowSkeleton({ chips = false }: { chips?: boolean }) {
   return (
-    <div className={cn('flex items-center gap-3 px-4', chips ? 'h-24' : 'h-(--row-height)')}>
+    <div className={`flex items-center gap-3 px-4 ${chips ? 'h-24' : 'h-row'}`}>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Skeleton className="h-5 w-40 max-w-full" />
         <Skeleton className="h-4 w-56 max-w-full" />

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Geist_Mono, Outfit, Poppins } from 'next/font/google';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import Providers from '@/lib/providers';
-import { cn } from '@/lib/utils';
 import './globals.css';
 
 // BR-REC-150 / 174 (tactic 22): three self-hosted fonts, Latin only, size-matched fallback, swap.
@@ -49,7 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn('antialiased', outfit.variable, poppins.variable, geistMono.variable)}
+      className={`antialiased ${outfit.variable} ${poppins.variable} ${geistMono.variable}`}
     >
       <body>
         <ThemeProvider>

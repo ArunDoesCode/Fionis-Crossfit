@@ -214,6 +214,42 @@
 @utility h-control {
   height: var(--control-height);
 }
+@utility size-control {
+  width: var(--control-height);
+  height: var(--control-height);
+}
+@utility h-row {
+  height: var(--row-height);
+}
+@utility h-header {
+  height: var(--header-height);
+}
+@utility min-h-header {
+  min-height: var(--header-height);
+}
+@utility min-h-actionbar {
+  min-height: var(--actionbar-h);
+}
+@utility pb-page {
+  padding-bottom: var(--page-padding);
+}
+@utility pb-actionbar {
+  padding-bottom: calc(var(--actionbar-h) + env(safe-area-inset-bottom));
+}
+/* Page widths: the content width plus the side padding, written once. */
+@utility page-narrow {
+  max-width: calc(var(--page-max-narrow) + 2 * var(--page-padding));
+}
+@utility page-wide {
+  max-width: calc(var(--page-max-wide) + 2 * var(--page-padding));
+}
+@utility content-narrow {
+  max-width: var(--page-max-narrow);
+}
+/* A sidebar button: control height, 20 px icon; a 44 px icon square when the sidebar is collapsed. */
+@utility sidebar-icon-btn {
+  @apply h-control [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!;
+}
 @utility min-h-tap {
   min-height: var(--tap-min);
 }

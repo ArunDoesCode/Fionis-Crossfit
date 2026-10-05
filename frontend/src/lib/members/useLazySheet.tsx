@@ -77,3 +77,29 @@ export function useLazySheet<P>(
 
   return { Sheet: loaded?.Sheet ?? null, open: open && armed };
 }
+
+/**
+ * One lazy sheet: `Lazy` is the component to render (same props as the sheet; it mounts after the first
+ * open and stays mounted), `preload` starts the code load early (pointer-down, focus; a no-op once loaded,
+ * a failed preload is not an error: the tap loads again). Pass `() => import('…')` (the ONE import site).
+ * `close` says what "closed" means for a sheet whose close prop is not `onOpenChange`.
+ */
+type SheetProps = { open: boolean; onOpenChange?: (open: boolean) => void };
+
+export function lazySheet<P extends SheetProps>(
+  importSheet: () => Promise<{ default: ComponentType<P> }>,
+  close?: (props: P) => void,
+) {
+  const load = sheetLoader(importSheet);
+  function Lazy(props: P) {
+    const { Sheet, open } = useLazySheet(load, props.open, (next) => {
+      if (close) close(props);
+      else props.onOpenChange?.(next);
+    });
+    return Sheet ? <Sheet {...props} open={open} /> : null;
+  }
+  const preload = () => {
+    load().catch(() => undefined);
+  };
+  return { Lazy, preload };
+}

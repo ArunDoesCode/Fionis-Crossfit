@@ -17,11 +17,7 @@ import EntryDateSection from '@/components/pages/assessments/EntryDateSection';
 import EntryFields from '@/components/pages/assessments/EntryFields';
 import { EntrySkeleton } from '@/components/pages/assessments/EntryLoading';
 import { NeedOneValue, OfferNotice, StatusLine } from '@/components/pages/assessments/EntryNotices';
-import {
-  CheckValuesSheetLazy,
-  LeaveDialogLazy,
-  preloadEntrySheets,
-} from '@/components/pages/assessments/LazySheets';
+import { CheckValuesSheet, LeaveDialog, preloadEntrySheets } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { useEntryForm, useMemberDue } from '@/lib/api/assessments/queries';
 import { isApiError } from '@/lib/api/errors';
@@ -244,7 +240,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         }
       />
       {body}
-      <CheckValuesSheetLazy
+      <CheckValuesSheet
         open={flow.check.open}
         onOpenChange={(open) => {
           if (!open) flow.goBack();
@@ -253,7 +249,7 @@ export default function EntryScreen({ memberId, typeId, initialDate, today }: En
         onGoBack={flow.goBack}
         onSaveAnyway={flow.saveAnyway}
       />
-      <LeaveDialogLazy open={guard.open} onStay={guard.stay} onLeave={guard.leave} />
+      <LeaveDialog open={guard.open} onStay={guard.stay} onLeave={guard.leave} />
     </>
   );
 }

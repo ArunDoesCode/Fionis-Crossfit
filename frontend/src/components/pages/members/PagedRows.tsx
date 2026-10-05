@@ -7,7 +7,6 @@ import { RowSkeletons } from '@/components/common/Skeletons';
 import { Button } from '@/components/ui/button';
 import { useDesktop } from '@/lib/members/useDesktop';
 import { UI_TEXT } from '@/lib/messages/words';
-import { cn } from '@/lib/utils';
 
 interface PagedRowsProps<Page extends { data: readonly unknown[] }> {
   query: UseInfiniteQueryResult<InfiniteData<Page>, Error>;
@@ -60,7 +59,7 @@ export default function PagedRows<Page extends { data: readonly unknown[] }>({
 
   return (
     <div className="flex flex-col gap-4">
-      <div aria-busy={isPlaceholderData} className={cn(isPlaceholderData && 'opacity-60')}>
+      <div aria-busy={isPlaceholderData} className={isPlaceholderData ? 'opacity-60' : undefined}>
         {desktop && renderTable ? renderTable(items) : <RowList>{items.map(renderRow)}</RowList>}
       </div>
       {isFetchNextPageError && <ErrorState onRetry={() => void query.fetchNextPage()} />}

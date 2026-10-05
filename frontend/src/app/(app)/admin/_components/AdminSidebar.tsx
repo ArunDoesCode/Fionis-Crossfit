@@ -27,7 +27,6 @@ import {
 import { useSignOut } from '@/lib/api/auth/queries';
 import { afterHistorySettles } from '@/lib/assessments/leave';
 import { DEFAULT_GYM_NAME, UI_TEXT } from '@/lib/messages/words';
-import { cn } from '@/lib/utils';
 
 interface NavItem {
   href: Route;
@@ -72,9 +71,6 @@ function isActive(item: NavItem, pathname: string): boolean {
   return item.prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-const BUTTON =
-  'h-(--control-height) [&_svg]:size-5 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5!';
-
 // BR-REC-177: gym name, the four places, theme and Sign out. Fixed to the window (dvh, not svh, so a
 // phone's address bar does not cut Sign out off); only the page content scrolls. Below 768 px the same
 // items are the ☰ drawer (its ☰ is in PageHeader). Collapsed to icons the name gives way to an orange
@@ -85,7 +81,7 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
 
   return (
     <Sidebar collapsible="icon" className="h-dvh">
-      <SidebarHeader className="h-(--header-height) flex-row items-center justify-between gap-1 px-4 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
+      <SidebarHeader className="h-header flex-row items-center justify-between gap-1 px-4 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
         <span
           data-slot="sidebar-wordmark"
           className="min-w-0 truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden"
@@ -99,7 +95,7 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
         >
           F
         </span>
-        <SidebarTrigger className="size-(--control-height) shrink-0 max-md:hidden group-data-[collapsible=icon]:size-11" />
+        <SidebarTrigger className="size-control shrink-0 max-md:hidden group-data-[collapsible=icon]:size-11" />
       </SidebarHeader>
       <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0">
         <nav aria-label="Main">
@@ -109,14 +105,14 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
         </nav>
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-        <ThemeToggle className="size-(--control-height) group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+        <ThemeToggle className="size-control group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         {/* BR-REC-177, 35: ends this device's sign-in (E03). Off while the call runs, so a second tap cannot send it twice. */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               type="button"
               tooltip={UI_TEXT.signOut}
-              className={BUTTON}
+              className="sidebar-icon-btn"
               disabled={isPending || isSuccess}
               onClick={() => signOut()}
             >
@@ -159,7 +155,7 @@ function NavMenu({ pathname }: { pathname: string }) {
             <SidebarMenuButton
               isActive={active}
               tooltip={item.label}
-              className={BUTTON}
+              className="sidebar-icon-btn"
               render={
                 <Link
                   href={item.href}
@@ -171,7 +167,7 @@ function NavMenu({ pathname }: { pathname: string }) {
               <HugeiconsIcon
                 icon={item.icon}
                 strokeWidth={active ? 2.5 : 2}
-                className={cn(active && 'text-sidebar-primary')}
+                className={active ? 'text-sidebar-primary' : undefined}
               />
               <span>{item.label}</span>
             </SidebarMenuButton>

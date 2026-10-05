@@ -45,12 +45,12 @@ export default function PageHeader({
     <>
       <header
         className={cn(
-          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-(--header-height) items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
+          'sticky top-[var(--offline-h,0px)] z-20 flex min-h-header items-center gap-2 bg-background pt-[env(safe-area-inset-top)]',
           className,
         )}
       >
         {/* ☰ opens the drawer on phones; from 768 px the sidebar's own header button collapses it. */}
-        <SidebarTrigger className="-ml-2 size-(--control-height) shrink-0 md:hidden" />
+        <SidebarTrigger className="-ml-2 size-control shrink-0 md:hidden" />
         <div className="min-w-0 flex-1">
           <Suspense
             fallback={<PatternHeading pattern={pattern} title={title} subtitle={subtitle} />}
@@ -60,7 +60,13 @@ export default function PageHeader({
         </div>
         {secondary}
         {action && (
-          <div className={cn('shrink-0 whitespace-nowrap', form && 'max-md:hidden')}>{action}</div>
+          <div
+            className={
+              form ? 'shrink-0 whitespace-nowrap max-md:hidden' : 'shrink-0 whitespace-nowrap'
+            }
+          >
+            {action}
+          </div>
         )}
       </header>
       <Suspense fallback={<PatternBack pattern={pattern} />}>
@@ -71,9 +77,9 @@ export default function PageHeader({
       {form && action && (
         <div
           data-slot="action-bar"
-          className="page-px fixed inset-x-0 bottom-0 z-30 flex min-h-[var(--actionbar-h)] items-center border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="page-px fixed inset-x-0 bottom-0 z-30 flex min-h-actionbar items-center border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-(--page-max-narrow) flex-col *:h-(--control-height) *:w-full">
+          <div className="mx-auto flex w-full content-narrow flex-col *:h-control *:w-full">
             {action}
           </div>
         </div>

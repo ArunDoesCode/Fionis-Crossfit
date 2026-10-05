@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarInset
           id="main"
           data-slot="app-main"
-          className="min-w-0 max-md:has-[[data-slot=action-bar]]:pb-[calc(var(--actionbar-h)+env(safe-area-inset-bottom))]"
+          className="min-w-0 max-md:has-[[data-slot=action-bar]]:pb-actionbar"
         >
           <OfflineBanner />
           {children}

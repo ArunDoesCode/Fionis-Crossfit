@@ -7,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { IsoMonth } from '@/lib/dates/month';
 import type { IsoDate } from '@/lib/domain/dates';
 import { formatDay } from '@/lib/format';
-import { cn } from '@/lib/utils';
 
 // BR-REC-192: the one date input. The button shows the day as `dd MMM yyyy`; the calendar opens in a popover,
 // or inline inside a sheet (no overlay on an overlay). The calendar library is an on-demand chunk (BR-REC-215),
@@ -24,8 +23,7 @@ const preload = () => {
   void import('@/components/common/DatePickerCalendar');
 };
 
-const TRIGGER_CLASS =
-  'peer flex w-full min-w-0 items-end rounded-4xl border border-input bg-input/30 px-3 text-left text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40';
+const TRIGGER_CLASS = `${FLOATING_BOX_CLASS} peer flex w-full min-w-0 items-end rounded-4xl border border-input bg-input/30 px-3 text-left text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40`;
 
 export interface DatePickerProps {
   /** On the button, so the form's "first problem" and any outside label find it. */
@@ -127,7 +125,7 @@ export default function DatePicker({
             onPointerDown={preload}
             onFocus={preload}
             onClick={() => change(!open)}
-            className={cn(TRIGGER_CLASS, FLOATING_BOX_CLASS)}
+            className={TRIGGER_CLASS}
           >
             {face}
           </button>
@@ -169,7 +167,7 @@ export default function DatePicker({
               disabled={disabled}
               onPointerDown={preload}
               onFocus={preload}
-              className={cn(TRIGGER_CLASS, FLOATING_BOX_CLASS)}
+              className={TRIGGER_CLASS}
             />
           }
         >

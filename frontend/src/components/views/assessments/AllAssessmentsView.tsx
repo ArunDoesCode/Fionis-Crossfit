@@ -12,9 +12,7 @@ import {
   LIST_SKELETON_ROWS,
 } from '@/components/pages/assessments/AllAssessmentsSkeleton';
 import AssessmentRow from '@/components/pages/assessments/AssessmentRow';
-import AssessmentSheetLazy, {
-  preloadAssessmentSheet,
-} from '@/components/pages/assessments/AssessmentSheetLazy';
+import { AssessmentSheet, preloadAssessmentSheet } from '@/components/pages/lazySheets';
 import PagedRows from '@/components/pages/members/PagedRows';
 import { useSheetTarget } from '@/components/pages/setup/useSheetTarget';
 import { useAssessmentList } from '@/lib/api/assessments/listQueries';
@@ -145,7 +143,7 @@ function AllAssessments({ memberId }: AllAssessmentsViewProps) {
         </>
       )}
       {sheet.state && (
-        <AssessmentSheetLazy
+        <AssessmentSheet
           key={sheet.state.key}
           open={sheet.state.open}
           onOpenChange={sheet.onOpenChange}

@@ -8,7 +8,7 @@ export default function Loading() {
       <div
         aria-busy="true"
         role="status"
-        className="flex w-full max-w-[400px] flex-col gap-6 rounded-2xl p-6 ring-1 ring-foreground/10"
+        className="flex w-full max-w-100 flex-col gap-6 rounded-2xl p-6 ring-1 ring-foreground/10"
       >
         <span className="sr-only">{UI_TEXT.loading}</span>
         <div className="flex flex-col items-center gap-2">

@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import ListRow from '@/components/common/ListRow';
 import StatusBadge from '@/components/common/StatusBadge';
-import { preloadPeriodSheet } from '@/components/pages/members/PeriodSheetLazy';
+import { preloadPeriodSheet } from '@/components/pages/lazySheets';
 import { Button } from '@/components/ui/button';
 import { prefetchMember } from '@/lib/api/members/queries';
 import type { IsoDate } from '@/lib/domain/dates';

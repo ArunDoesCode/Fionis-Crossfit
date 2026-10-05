@@ -12,10 +12,8 @@ export default function Page({ width = 'wide', className, children }: PageProps)
   return (
     <div
       className={cn(
-        'section-gap page-px mx-auto flex w-full flex-col pb-(--page-padding)',
-        width === 'narrow'
-          ? 'max-w-[calc(var(--page-max-narrow)+2*var(--page-padding))]'
-          : 'max-w-[calc(var(--page-max-wide)+2*var(--page-padding))]',
+        'section-gap page-px mx-auto flex w-full flex-col pb-page',
+        width === 'narrow' ? 'page-narrow' : 'page-wide',
         className,
       )}
     >

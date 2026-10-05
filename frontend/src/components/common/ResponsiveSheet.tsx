@@ -53,8 +53,7 @@ export interface ResponsiveSheetProps {
   children?: React.ReactNode;
 }
 
-const FOOTER =
-  'flex flex-col-reverse gap-2 *:h-(--control-height) lg:flex-row lg:justify-end lg:*:w-auto';
+const FOOTER = 'flex flex-col-reverse gap-2 *:h-control lg:flex-row lg:justify-end lg:*:w-auto';
 
 // Desktop: header, body and footer are grid rows; only the body scrolls, so the buttons stay in view (#18).
 const DESKTOP_POPUP = 'max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]';
@@ -110,7 +109,7 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="absolute top-3 right-3 size-(--control-height)"
+                className="absolute top-3 right-3 size-control"
               />
             }
           >
@@ -139,19 +138,19 @@ export default function ResponsiveSheet({
                 variant="ghost"
                 size="icon"
                 aria-label={UI_TEXT.close}
-                className="-mr-2 size-(--control-height) shrink-0"
+                className="-mr-2 size-control shrink-0"
               />
             }
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5" />
           </DrawerClose>
         </div>
-        <div className="mx-auto min-h-0 w-full max-w-[32rem] flex-1 overflow-y-auto px-6 pt-4">
+        <div className="mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto px-6 pt-4">
           {children}
         </div>
         {footer && (
           <div
-            className={`${FOOTER} mx-auto w-full max-w-[32rem] px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`}
+            className={`${FOOTER} mx-auto w-full max-w-lg px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`}
           >
             {footer}
           </div>

@@ -50,13 +50,13 @@ export default function TimeZoneCombobox({
             aria-invalid={invalid}
             aria-describedby={describedBy}
             onBlur={onBlur}
-            className="h-(--control-height) w-full justify-start px-3 text-base font-normal"
+            className="h-control w-full justify-start px-3 text-base font-normal"
           />
         }
       >
         {value}
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-(--anchor-width) p-0">
+      <PopoverContent align="start" className="w-[var(--anchor-width)] p-0">
         <Command>
           <CommandInput placeholder={UI_TEXT.searchTimeZones} />
           <CommandList>

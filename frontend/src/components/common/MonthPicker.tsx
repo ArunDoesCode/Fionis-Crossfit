@@ -78,7 +78,7 @@ export default function MonthPicker({
             />
           }
         >
-          <span className={cn('truncate', value === '' && 'text-muted-foreground')}>
+          <span className={value === '' ? 'truncate text-muted-foreground' : 'truncate'}>
             {value ? formatMonthYear(`${value}-01`) : placeholder}
           </span>
           <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-4 shrink-0" />

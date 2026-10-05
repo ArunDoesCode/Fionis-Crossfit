@@ -53,7 +53,7 @@ export default function ProgressSkeleton() {
           <div className="flex min-h-11 items-center">
             <Skeleton className="h-6 w-56 max-w-full" />
           </div>
-          <CardSkeleton className="h-[15.25rem]" />
+          <CardSkeleton className="h-61" />
         </div>
       </div>
     </>
