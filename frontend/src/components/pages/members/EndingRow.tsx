@@ -44,7 +44,7 @@ export default function EndingRow({ item, status, today, onRenew }: EndingRowPro
         <div className="flex items-center pr-3">
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             aria-label={`Renew ${item.fullName}`}
             onPointerDown={prepareRenew}
             onFocus={prepareRenew}

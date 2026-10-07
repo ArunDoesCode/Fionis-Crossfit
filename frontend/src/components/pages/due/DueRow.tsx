@@ -25,11 +25,20 @@ interface DueRowProps {
 // control, never inside the link.
 export default function DueRow({ item, turnedOnCount, onMore, openTarget }: DueRowProps) {
   const status = dueRowStatus(item);
+  // One quiet line: the assessment, then what is due ("Body composition · All 15 measurements").
+  const items =
+    item.items.length > 0
+      ? dueItemsText(
+          item.items.map((chip) => chip.name),
+          turnedOnCount ?? Number.POSITIVE_INFINITY,
+        )
+      : null;
+  const detail = items ? `${item.typeName} · ${items}` : item.typeName;
   return (
     <ListRow
       title={item.fullName}
       avatarName={item.fullName}
-      detail={item.typeName}
+      detail={detail}
       href={recordHref(item.memberId, item.typeId)}
       status={<StatusBadge tone={status.tone}>{status.text}</StatusBadge>}
       trailing={
@@ -39,15 +48,6 @@ export default function DueRow({ item, turnedOnCount, onMore, openTarget }: DueR
           expanded={isSheetOpenFor(openTarget, item.memberId, item.typeId)}
         />
       }
-    >
-      {item.items.length > 0 && (
-        <span className="block text-sm text-muted-foreground">
-          {dueItemsText(
-            item.items.map((chip) => chip.name),
-            turnedOnCount ?? Number.POSITIVE_INFINITY,
-          )}
-        </span>
-      )}
-    </ListRow>
+    />
   );
 }
