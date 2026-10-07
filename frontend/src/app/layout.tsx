@@ -26,6 +26,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: { default: 'Fionis India', template: '%s · Fionis India' },
   description: 'Fionis CRM',
+  icons: { icon: '/Fionis_logo.png' },
 };
 
 // `viewport-fit=cover` lets the bottom bars use the safe area on phones with a home indicator.

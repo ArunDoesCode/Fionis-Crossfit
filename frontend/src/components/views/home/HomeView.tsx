@@ -48,6 +48,15 @@ const DOT: Record<StatusTone, string> = {
   neutral: 'bg-neutral',
 };
 
+// The coloured top edge of a tile: the same tone as its dot, so the four tiles read apart at a glance.
+const EDGE: Record<StatusTone, string> = {
+  success: 'border-t-success',
+  warning: 'border-t-warning',
+  danger: 'border-t-danger',
+  info: 'border-t-info',
+  neutral: 'border-t-neutral',
+};
+
 interface TileProps {
   label: string;
   /** The `meta.total` of the section's preview. */
@@ -64,13 +73,15 @@ function Tile({ label, query, tone, line, href }: TileProps) {
   return (
     <Link
       href={href}
-      className="flex min-w-0 flex-col gap-1 bg-sidebar px-4 py-3 text-sidebar-foreground outline-none hover:bg-sidebar-accent/40 focus-visible:ring-[3px] focus-visible:ring-sidebar-ring focus-visible:ring-inset"
+      className={`flex min-w-0 flex-col gap-1.5 border-t-[3px] bg-sidebar px-5 py-4 text-sidebar-foreground outline-none ${EDGE[toneFor(tone)]} transition-colors hover:bg-sidebar-accent/40 focus-visible:ring-[3px] focus-visible:ring-sidebar-ring focus-visible:ring-inset`}
     >
-      <span className="text-xs font-semibold tracking-wide uppercase">{label}</span>
+      <span className="text-xs font-semibold tracking-wide text-sidebar-foreground/80 uppercase">
+        {label}
+      </span>
       {total === undefined && !query.isError ? (
-        <Skeleton className="my-1 h-9 w-12 bg-sidebar-accent" />
+        <Skeleton className="my-1 h-12 w-14 bg-sidebar-accent" />
       ) : (
-        <span className="font-heading text-4xl leading-none font-semibold text-sidebar-primary tabular-nums">
+        <span className="font-heading text-5xl leading-none font-semibold text-sidebar-primary tabular-nums">
           {total ?? '–'}
         </span>
       )}
