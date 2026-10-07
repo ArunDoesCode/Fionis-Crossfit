@@ -50,9 +50,7 @@ export default function LoginView({ next, expired }: LoginViewProps) {
       <div className="relative flex flex-col gap-4 items-center justify-center p-4 lg:bg-card">
         <ThemeToggle className="absolute top-4 right-4 size-[var(--control-height)]" />
         {/* <div className='gap-4'> */}
-           <p className="font-heading text-4xl font-semibold text-primary lg:flex">
-          Coach desk
-        </p>
+        <p className="font-heading text-4xl font-semibold text-primary lg:flex">Coach desk</p>
         <Card className="w-full max-w-100 lg:bg-transparent lg:shadow-none!">
           <CardContent className="flex flex-col gap-6">
             <header className="flex flex-col items-center gap-3 text-center">
@@ -65,7 +63,6 @@ export default function LoginView({ next, expired }: LoginViewProps) {
         </Card>
 
         {/* </div> */}
-       
       </div>
     </main>
   );
