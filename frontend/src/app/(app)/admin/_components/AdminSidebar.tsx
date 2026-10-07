@@ -9,6 +9,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import type { Route } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
@@ -81,27 +82,33 @@ const ACTIVE =
 // BR-REC-177, 227: gym name, the four places, then theme and Sign out in one row. Fixed to the window (dvh, not
 // svh, so a phone's address bar does not cut Sign out off); only the page content scrolls. Below 768 px the
 // same items are the ☰ drawer (its ☰ "Open menu" is in PageHeader, and the collapse toggle sits in the page
-// header too, outside the sidebar). The header shows the orange "F" square, plus the name when expanded.
+// header too, outside the sidebar). The header shows the Fionis text logo, or the round Fionis mark when collapsed.
 // The "pre-paint" CSS in lib/sidebarState.ts mirrors the `group-data-[collapsible=icon]` classes here.
 export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?: string }) {
   const { mutate: signOut, isPending, isSuccess } = useSignOut();
 
   return (
     <Sidebar collapsible="icon" className="h-dvh">
-      <SidebarHeader className="h-header flex-row items-center gap-2 px-4 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
-        <span
-          aria-hidden="true"
+      <SidebarHeader className="h-20 flex-row items-center gap-2 px-5 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2">
+        <Image
           data-slot="sidebar-mark"
-          className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary font-heading font-semibold text-primary-foreground"
-        >
-          F
-        </span>
-        <span
+          src="/Fionis_logo.png"
+          alt={gymName}
+          width={180}
+          height={180}
+          unoptimized
+          className="hidden size-10 rounded-md group-data-[collapsible=icon]:block"
+        />
+        <Image
           data-slot="sidebar-wordmark"
-          className="min-w-0 truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden"
-        >
-          {gymName}
-        </span>
+          src="/Fionis-Text-Logo.png"
+          alt={gymName}
+          width={142}
+          height={53}
+          unoptimized
+          priority
+          className="h-[53px] w-auto group-data-[collapsible=icon]:hidden"
+        />
       </SidebarHeader>
       <SidebarContent className="px-2 group-data-[collapsible=icon]:px-0">
         <nav aria-label="Main">
@@ -110,10 +117,10 @@ export default function AdminSidebar({ gymName = DEFAULT_GYM_NAME }: { gymName?:
           </Suspense>
         </nav>
       </SidebarContent>
-      <SidebarFooter className="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
+      <SidebarFooter className="flex-row items-center justify-between gap-1 px-4 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
         <ThemeToggle className="size-[var(--control-height)] shrink-0 group-data-[collapsible=icon]:size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         {/* BR-REC-177, 35: ends this device's sign-in (E03). Off while the call runs, so a second tap cannot send it twice. */}
-        <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
+        <SidebarMenu className="w-auto min-w-0 flex-none">
           <SidebarMenuItem>
             <SidebarMenuButton
               type="button"
